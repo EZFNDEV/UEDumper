@@ -17,6 +17,12 @@ namespace Offsets {
 		extern inline uint16_t Func = 0xC0;
 	}
 
+	namespace UObject {
+
+		// VTable
+		extern inline uint16_t ProcessEvent = 0;
+	}
+
 	namespace UStruct {
 		extern inline uint16_t Children = 0;
 	}
@@ -27,5 +33,8 @@ namespace OffsetsFinder {
 	extern uintptr_t FindStaticFindObject();
 	extern uintptr_t FindGObjects();
 
-	extern uint8_t FindUFunctionOffset_Func();
+	extern uint16_t FindUFunctionOffset_Func();
+
+	// VTable Indexes
+	extern uint16_t FindUObject_PEVTableIndex();
 }

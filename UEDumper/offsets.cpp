@@ -4,7 +4,7 @@
 #include <thread>
 #include <iostream>
 
-uint8_t OffsetsFinder::FindUFunctionOffset_Func() {
+uint16_t OffsetsFinder::FindUFunctionOffset_Func() {
     uintptr_t* (__fastcall * _StaticFindObject) (uintptr_t * ObjectClass, uintptr_t * InObjectPackage, const wchar_t* OrigInName, bool ExactClass);
     _StaticFindObject = decltype(_StaticFindObject)(Offsets::StaticFindObject);
 
@@ -12,7 +12,7 @@ uint8_t OffsetsFinder::FindUFunctionOffset_Func() {
     uintptr_t* Object = 0;
     uint16_t tries = 0;
     while (Object == 0 && tries < 0x100) {
-        Object = _StaticFindObject(nullptr, nullptr, L"Engine.PlayerController.ServerUpdateLevelVisibility", false);
+        Object = _StaticFindObject(0, 0, L"Engine.PlayerController.ServerUpdateLevelVisibility", false);
         tries += 1;
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -35,66 +35,68 @@ uint8_t OffsetsFinder::FindUFunctionOffset_Func() {
     return 0;
 }
 
-std::string GetBytes(uintptr_t Address, int count = 10) { // temp
-    std::string Bytes;
+// Note: This is one more of the stupid things, but as said, it only takes a few milliseconds and makes it more readable
+uint16_t OffsetsFinder::FindUObject_PEVTableIndex() {
+    // Find any UObject class
+    uintptr_t* (__fastcall * _StaticFindObject) (uintptr_t * ObjectClass, uintptr_t * InObjectPackage, const wchar_t* OrigInName, bool ExactClass);
+    _StaticFindObject = decltype(_StaticFindObject)(Offsets::StaticFindObject);
 
-    for (int i = 0; i < count; i++) {
-        Bytes += std::format("{:x} ", *(uint8_t*)(Address + i) & 0xff);
+    uintptr_t* Object = Object = _StaticFindObject(0, 0, L"CoreUObject.Object", false);
+    if (Object == 0) return 0;
+
+    __int64** vtable = *reinterpret_cast<__int64***>(Object);
+    uint16_t index = 0;
+    while (!IsBadReadPtr((void*)((__int64)vtable + (index * 8)), 8)) {
+        if (*(__int64*)((__int64)vtable + (index * 8)) == Offsets::ProcessEvent) {
+            return index;
+        }
+
+        index++;
     }
 
-    return Bytes;
+    return 0;
 }
 
-static bool VerifyProcessEvent(uintptr_t Address, int i = 0)
+static bool VerifyProcessEvent(uintptr_t Address)
 {
     // Now this is atleast for Fortnite, but between 1.8 and latest ProcessEvent has always started with this besides a few seasons between like s16-18
 
-    // std::string startsWith = "40 55 56 57 41 54 41 55 41 56 41 57 48 81 EC ? ? ? ? 48 8D 6C 24 ? 48 89 9D ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C5 48 89 85 ? ? ? ?";
-    // std::string startsWithNoSpace = "4055565741544155415641574881EC????488D6C24?48899D????488B05????4833C5488985????";
-
-	// ^ would be better, but like idk how to implement the wild cards.
-
-    std::string startsWith = "40 55 56 57 41 54 41 55 41 56 41";
-    std::string startsWithNoSpace = "4055565741544155415641";
-
-
-    if (GetBytes(Address, startsWithNoSpace.length()).starts_with(startsWith))
-        return true;
+    return (
+        *(uint8_t*)(Address) == 0x40 &&
+        *(uint8_t*)(Address + 1) == 0x55 &&
+        *(uint8_t*)(Address + 2) == 0x56 &&
+        *(uint8_t*)(Address + 3) == 0x57 &&
+        *(uint8_t*)(Address + 4) == 0x41 &&
+        *(uint8_t*)(Address + 5) == 0x54 &&
+        *(uint8_t*)(Address + 6) == 0x41 &&
+        *(uint8_t*)(Address + 7) == 0x55 &&
+        *(uint8_t*)(Address + 8) == 0x41 &&
+        *(uint8_t*)(Address + 9) == 0x56 &&
+        *(uint8_t*)(Address + 10) == 0x41
+    );
 
     // Most of the time UE4 Games have a string above ProcessEvent like 2 functions above "AccessNoNoneContext", we may be able to check if this string is above it.
     return false;
 }
 
-struct UObject // TEMPORARY idk where u want to put lupus
-{
-    void** VFTable;
-};
-
 static uintptr_t FindPE_1() {
-    // loop through all the functions in the vtable and find the processevent one
-    UObject* (__fastcall * _StaticFindObject) (uintptr_t* ObjectClass, uintptr_t* InObjectPackage, const wchar_t* OrigInName, bool ExactClass);
+    // Find any UObject class
+    uintptr_t* (__fastcall * _StaticFindObject) (uintptr_t * ObjectClass, uintptr_t * InObjectPackage, const wchar_t* OrigInName, bool ExactClass);
     _StaticFindObject = decltype(_StaticFindObject)(Offsets::StaticFindObject);
-	
-    UObject* Object = _StaticFindObject(0, 0, L"/Script/CoreUObject", false);
 
-    if (Object)
-    {
-        for (int i = 0; i < 69; i++) // i never see it above 69
+    uintptr_t* Object = Object = _StaticFindObject(0, 0, L"CoreUObject.Object", false);
+    if (Object == 0) return 0;
+
+    __int64** vtable = *reinterpret_cast<__int64***>(Object);
+    uint16_t index = 0;
+    while (!IsBadReadPtr((void*)((__int64)vtable + (index * 8)), 8)) {
+        if (VerifyProcessEvent(__int64(*(__int64*)((__int64)vtable + (index * 8)))))
         {
-            auto func = Object->VFTable[i];
-
-            if (!func)
-                break;
-
-            if (VerifyProcessEvent(__int64(func), i))
-            {
-                // std::cout << std::format("PE 1: {:x} Idx: {}\n", __int64(func), i);
-                return __int64(func);
-            }
+            return *(__int64*)((__int64)vtable + (index * 8));
         }
+		
+        index++;
     }
-    else
-        printf("Failed to find CoreUObject!\n");
 
     return 0;
 }
@@ -137,11 +139,14 @@ uintptr_t OffsetsFinder::FindProcessEvent() {
     
     uintptr_t ProcessEvent = FindPE_1();
 
+    printf("PE1 works: %p\n", ProcessEvent);
+
     if (!ProcessEvent)
     {
         ProcessEvent = FindPE_2();
 
         if (!VerifyProcessEvent(ProcessEvent))
+			// Very unlikly to happen
             ProcessEvent = 0;
     }
 

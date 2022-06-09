@@ -275,5 +275,78 @@ namespace Memory {
 
 			return PatternScanW((uintptr_t)info.lpBaseOfDll, sSignature, 0);
 		}
+
+
+
+
+
+
+		static uintptr_t NO_STRPatternScanW(uintptr_t pModuleBaseAddress, std::vector<int> patternBytes, size_t nSelectResultIndex, uintptr_t maxBytesToSearch)
+		{
+			const auto scanBytes = reinterpret_cast<std::uint8_t*>(pModuleBaseAddress);
+
+			const auto s = patternBytes.size();
+			const auto d = patternBytes.data();
+
+			size_t nFoundResults = 0;
+
+			for (auto i = 0ul; i < maxBytesToSearch - s; ++i)
+			{
+				bool found = true;
+
+				for (auto j = 0ul; j < s; ++j)
+				{
+					if (scanBytes[i + j] != d[j] && d[j] != -1)
+					{
+						found = false;
+						break;
+					}
+				}
+
+				if (found)
+				{
+					if (nSelectResultIndex != 0)
+					{
+						if (nFoundResults < nSelectResultIndex)
+						{
+							nFoundResults++;
+							found = false;
+						}
+						else
+							return reinterpret_cast<uintptr_t>(&scanBytes[i]);
+					}
+					else
+						return reinterpret_cast<uintptr_t>(&scanBytes[i]);
+				}
+			}
+
+			return NULL;
+		}
+
+		static uintptr_t NO_STRPatternScan(std::vector<int> patternBytes, uintptr_t start_at)
+		{
+
+
+			static bool bIsSetted = false;
+
+			static MODULEINFO info = { 0 };
+
+			if (!bIsSetted)
+			{
+				GetModuleInformation(GetCurrentProcess(), GetModuleHandle(0), &info, sizeof(info));
+				bIsSetted = true;
+			}
+
+			if (start_at != 0) {
+				return NO_STRPatternScanW((uintptr_t)start_at, patternBytes, 0, info.SizeOfImage - ((uintptr_t)start_at - (uintptr_t)info.lpBaseOfDll));
+			}
+
+			return NO_STRPatternScanW((uintptr_t)info.lpBaseOfDll, patternBytes, 0, info.SizeOfImage);
+		}
 	}
+
+	// TODO: Rewrite all off the stuff before...
+
+	// Very simple Pattern Scan
+
 }

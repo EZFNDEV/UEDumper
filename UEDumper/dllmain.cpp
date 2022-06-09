@@ -1,8 +1,11 @@
 #include "pch.h"
+#include <thread>
+#include "utils.h"
+#include "dumper.h"
 
 #define SEARCH_OFFSETS
 #define PRINT_OFFSETS
-// #define DUMP
+#define DUMP
 
 static void Main() {
 
@@ -31,6 +34,8 @@ static void Main() {
 			return;
         }
 
+		Offsets::UObject::ProcessEvent = OffsetsFinder::FindUObject_PEVTableIndex();
+
         Offsets::GObjects = OffsetsFinder::FindGObjects();
 		if (!Offsets::GObjects) {
 			printf("Failed to find GObjects\n");
@@ -46,15 +51,34 @@ static void Main() {
         printf("StaticFindObject: %p\n", Offsets::StaticFindObject);
         printf("GObjects: %p\n", Offsets::GObjects);
 
-        printf("UFunction:\n");
-        printf("    Func: %p\n", Offsets::UFunction::Func);
+        printf("    UFunction:\n");
+        printf("        Func: %p\n", Offsets::UFunction::Func);
+
+        printf("    UObject:\n");
+        printf("        ProcessEvent VTable Index: %p\n", Offsets::UObject::ProcessEvent);
     #endif
+
+	// Note: Just temp, you can remove this if you dont inject on startup
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
+		
+    #ifdef DUMP
+        Utils::_StaticFindObject = decltype(Utils::_StaticFindObject)(Offsets::StaticFindObject);
+        Utils::_ProcessEvent = decltype(Utils::_ProcessEvent)(Offsets::ProcessEvent);
+
+        Utils::UKismetStringLibrary::Init();
+
+        Dumper::Dump();
+    #endif
+
+    // TODO: Add FString, FName, UObject, UStruct because we need it for Dump()
+
+    // UFunction: https://github.com/EpicGames/UnrealEngine/blob/46544fa5e0aa9e6740c19b44b0628b72e7bbd5ce/Engine/Source/Runtime/CoreUObject/Public/UObject/Class.h#L1887
+        // Note Milxnor: So we put it into CoreUObject/UObject/Class.h
+
+	// FString: https://github.com/EpicGames/UnrealEngine/blob/46544fa5e0aa9e6740c19b44b0628b72e7bbd5ce/Engine/Source/Runtime/Core/Public/Containers/UnrealString.h#L50
+        // Note Milxnor: Core/Containers/UnrealString.h
 
 	
-
-    #ifdef DUMP
-	    
-    #endif
 }
 
 BOOL APIENTRY DllMain( HMODULE hModule,
