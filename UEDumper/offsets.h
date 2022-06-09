@@ -16,6 +16,10 @@ namespace Offsets {
 		extern inline uint16_t FirstPropertyToInit = 0;
 		extern inline uint16_t Func = 0xC0;
 	}
+
+	namespace UStruct {
+		extern inline uint16_t Children = 0;
+	}
 }
 
 namespace OffsetsFinder {
@@ -23,5 +27,5 @@ namespace OffsetsFinder {
 	extern uintptr_t FindStaticFindObject();
 	extern uintptr_t FindGObjects();
 
-	extern bool FindUFunctionOffset_Func();
+	extern uint8_t FindUFunctionOffset_Func();
 }

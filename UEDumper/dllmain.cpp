@@ -6,6 +6,11 @@
 
 static void Main() {
 
+    AllocConsole();
+
+    FILE* file;
+    freopen_s(&file, "CONOUT$", "w", stdout);
+
     #ifdef SEARCH_OFFSETS 
 	    // Some of this is "dumb", for example we search a function 2 times, but we do that
         // to make the code a bit more clear, it also only takes a few milliseconds so yea...
@@ -18,7 +23,7 @@ static void Main() {
             return;
         }
 
-        OffsetsFinder::FindUFunctionOffset_Func();
+        Offsets::UFunction::Func = OffsetsFinder::FindUFunctionOffset_Func();
 		
         Offsets::ProcessEvent = OffsetsFinder::FindProcessEvent();
         if (!Offsets::ProcessEvent) {
@@ -41,8 +46,8 @@ static void Main() {
         printf("StaticFindObject: %p\n", Offsets::StaticFindObject);
         printf("GObjects: %p\n", Offsets::GObjects);
 
-        printf("    UFunction:\n");
-        printf("        Func: %p\n", Offsets::UFunction::Func);
+        printf("UFunction:\n");
+        printf("    Func: %p\n", Offsets::UFunction::Func);
     #endif
 
 	

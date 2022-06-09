@@ -2,9 +2,9 @@
 #include "offsets.h"
 
 #include <thread>
+#include <iostream>
 
-bool OffsetsFinder::FindUFunctionOffset_Func() {
-    // Find ProcessEvent by StaticFindObject
+uint8_t OffsetsFinder::FindUFunctionOffset_Func() {
     uintptr_t* (__fastcall * _StaticFindObject) (uintptr_t * ObjectClass, uintptr_t * InObjectPackage, const wchar_t* OrigInName, bool ExactClass);
     _StaticFindObject = decltype(_StaticFindObject)(Offsets::StaticFindObject);
 
@@ -18,7 +18,7 @@ bool OffsetsFinder::FindUFunctionOffset_Func() {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-    if (Object == 0) return 0;
+    if (!Object) return 0;
 
     for (uint8_t i = 8; i < 255; i++) { // Mostly it's 0xD8 or 0xE0
 		// Let's find a valid memory address
@@ -27,20 +27,83 @@ bool OffsetsFinder::FindUFunctionOffset_Func() {
 			
             uintptr_t address = *(uintptr_t*)((__int64)Object + i - 5);
             if (address > 0x7FF000000000 && address < 0x7FFFFFFFFFFFF) {
-                Offsets::UFunction::Func = i - 5;
-                return true;
+                return i - 5;
             }
         }
     }
 
+    return 0;
+}
+
+std::string GetBytes(uintptr_t Address, int count = 10) { // temp
+    std::string Bytes;
+
+    for (int i = 0; i < count; i++) {
+        Bytes += std::format("{:x} ", *(uint8_t*)(Address + i) & 0xff);
+    }
+
+    return Bytes;
+}
+
+static bool VerifyProcessEvent(uintptr_t Address, int i = 0)
+{
+    // Now this is atleast for Fortnite, but between 1.8 and latest ProcessEvent has always started with this besides a few seasons between like s16-18
+
+    // std::string startsWith = "40 55 56 57 41 54 41 55 41 56 41 57 48 81 EC ? ? ? ? 48 8D 6C 24 ? 48 89 9D ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C5 48 89 85 ? ? ? ?";
+    // std::string startsWithNoSpace = "4055565741544155415641574881EC????488D6C24?48899D????488B05????4833C5488985????";
+
+	// ^ would be better, but like idk how to implement the wild cards.
+
+    std::string startsWith = "40 55 56 57 41 54 41 55 41 56 41";
+    std::string startsWithNoSpace = "4055565741544155415641";
+
+
+    if (GetBytes(Address, startsWithNoSpace.length()).starts_with(startsWith))
+        return true;
+
+    // Most of the time UE4 Games have a string above ProcessEvent like 2 functions above "AccessNoNoneContext", we may be able to check if this string is above it.
     return false;
+}
+
+struct UObject // TEMPORARY idk where u want to put lupus
+{
+    void** VFTable;
+};
+
+static uintptr_t FindPE_1() {
+    // loop through all the functions in the vtable and find the processevent one
+    UObject* (__fastcall * _StaticFindObject) (uintptr_t* ObjectClass, uintptr_t* InObjectPackage, const wchar_t* OrigInName, bool ExactClass);
+    _StaticFindObject = decltype(_StaticFindObject)(Offsets::StaticFindObject);
+	
+    UObject* Object = _StaticFindObject(0, 0, L"/Script/CoreUObject", false);
+
+    if (Object)
+    {
+        for (int i = 0; i < 69; i++) // i never see it above 69
+        {
+            auto func = Object->VFTable[i];
+
+            if (!func)
+                break;
+
+            if (VerifyProcessEvent(__int64(func), i))
+            {
+                // std::cout << std::format("PE 1: {:x} Idx: {}\n", __int64(func), i);
+                return __int64(func);
+            }
+        }
+    }
+    else
+        printf("Failed to find CoreUObject!\n");
+
+    return 0;
 }
 
 static uintptr_t FindPE_2() {
     uint64_t LastAddress = 0;
     while (true) {
         LastAddress = Memory::Sexy::PatternScan("0F 85 ? ? 00 00 F7 ? ? 00 00 00 00 04 00 00", LastAddress); // test dword ptr [rsi+98h], 400h
-        if (LastAddress == NULL) break;
+        if (!LastAddress) break;
 
         // A small check to make sure its process event ("0F 85 ? ? 00 00")
         // Maximal 10 bytes away ig, I tested it on a UE4 project and there was a mov between the two insturctions so yea
@@ -61,25 +124,28 @@ static uintptr_t FindPE_2() {
         }
 
         // We might reach this, but doesnt matter bc then we will find the correct function
-        // FUCK THIS SHIT
         return 0;
     }
     return 0;
 }
 
 uintptr_t OffsetsFinder::FindProcessEvent() {
-    // "Hacky" was to find process event:
+    // "Hacky" ways to find process event:
         // 1. Search a UObject and loop until you find a function starting with "40 55 56 57 41 54 41 55 41 56 41 57 48 81 EC" (maybe a bit less, but this works for Fortnite...)
             // We can then get 3-4 other objects and check if they have the same function at that index, if all have that we can most likely assume that this is process event
         // 2. There is a small pattern that (almost) every UE4 game has in the PE pattern, so we can search that and go back to the begin of the function
     
-    uintptr_t ProcessEvent = FindPE_2();
-    if (ProcessEvent != 0)
-        return ProcessEvent;
-	
-    printf("TODO: Get process event method 1\n");
-	
-	return 0;
+    uintptr_t ProcessEvent = FindPE_1();
+
+    if (!ProcessEvent)
+    {
+        ProcessEvent = FindPE_2();
+
+        if (!VerifyProcessEvent(ProcessEvent))
+            ProcessEvent = 0;
+    }
+
+    return ProcessEvent;
 }
 
 uintptr_t OffsetsFinder::FindStaticFindObject() {
@@ -93,6 +159,7 @@ uintptr_t OffsetsFinder::FindStaticFindObject() {
     }
 
     for (StaticFindObjectAddr; StaticFindObjectAddr > 0; StaticFindObjectAddr -= 1) {
+        // if (GetBytes(StaticFindObjectAddr, 5).starts_with("48 89 5C 24 08")) // do something like this
         if (
             *(uint8_t*)StaticFindObjectAddr == 0x48 &&
             *(uint8_t*)(StaticFindObjectAddr + 1) == 0x89 &&
