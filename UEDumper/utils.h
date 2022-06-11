@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/UObject/NameTypes.h"
+#include "Core/Containers/UnrealString.h"
 
 namespace Utils {
 	// https://github.com/EpicGames/UnrealEngine/blob/99b6e203a15d04fc7bbbf554c421a985c1ccb8f1/Engine/Source/Runtime/CoreUObject/Private/UObject/UObjectGlobals.cpp#L327
@@ -32,5 +33,36 @@ namespace Utils {
 		}
 
 		extern inline uintptr_t Conv_NameToString(FName inName);
+	}
+
+	namespace UKismetSystemLibrary {
+		extern inline uintptr_t* KismetSystemLibrary = 0;
+		extern inline uintptr_t* _GetObjectName = 0;
+		extern inline uintptr_t* _GetPathName = 0;
+
+		extern inline bool Init() {
+			if (!KismetSystemLibrary) {
+				KismetSystemLibrary = StaticFindObject(L"Engine.KismetSystemLibrary");
+				printf("KismetSystemLibrary: %p\n", KismetSystemLibrary);
+			}
+
+			/*if (!_GetObjectName) {
+				_GetObjectName = StaticFindObject(L"Engine.KismetSystemLibrary.GetObjectName");
+			}*/
+
+			if (!_GetPathName) {
+				_GetPathName = StaticFindObject(L"Engine.KismetSystemLibrary.GetPathName");
+				printf("_GetPathName: %p\n", _GetPathName);
+			}
+
+			return (
+				KismetSystemLibrary != 0 &&
+				// _GetObjectName != 0 &&
+				_GetPathName != 0
+			);
+		}
+
+		extern inline FString GetObjectName(uintptr_t* Object);
+		extern inline FString GetPathName(uintptr_t* Object);
 	}
 }

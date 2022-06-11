@@ -40,6 +40,9 @@
     <Filter Include="Source Files\Core\Containers">
       <UniqueIdentifier>{2f11480d-00af-4020-b03d-a73f8626f9fc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\CoreUObject\UObject">
+      <UniqueIdentifier>{6e0d0935-23da-4a73-a6c9-3fa079d9c773}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -69,6 +72,15 @@
     <ClInclude Include="Core\Containers\Array.h">
       <Filter>Header Files\Core\Containers</Filter>
     </ClInclude>
+    <ClInclude Include="CoreUObject\UObject\UObjectHash.h">
+      <Filter>Header Files\CoreUObject</Filter>
+    </ClInclude>
+    <ClInclude Include="CoreUObject\UObject\UObjectArray.h">
+      <Filter>Header Files\CoreUObject</Filter>
+    </ClInclude>
+    <ClInclude Include="CoreUObject\UObject\ObjectMacros.h">
+      <Filter>Header Files\CoreUObject</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -94,6 +106,15 @@
     </ClCompile>
     <ClCompile Include="Core\Containers\Array.cpp">
       <Filter>Source Files\Core\Containers</Filter>
+    </ClCompile>
+    <ClCompile Include="CoreUObject\UObject\UObjectHash.cpp">
+      <Filter>Source Files\CoreUObject\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="CoreUObject\UObject\UObjectArray.cpp">
+      <Filter>Source Files\CoreUObject\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="CoreUObject\UObject\ObjectMacros.cpp">
+      <Filter>Source Files\CoreUObject\UObject</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

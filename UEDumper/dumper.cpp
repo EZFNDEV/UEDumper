@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "utils.h"
 #include "dumper.h"
+#include "CoreUObject/UObject/UObjectHash.h"
 
 static uintptr_t GetRealFunction_Test() {
     // Let's find all UFunctions
@@ -55,13 +56,11 @@ static uintptr_t GetRealFunction_Test() {
 
         if (NameAddr == 0) continue; // Not the function we want
 
-        FName Name = *(FName*)(NameAddr);
-
-       // printf("NameAddr: %p\n", NameAddr);
-       // printf("FName: %p\n", Name);
-        printf("Name: %i\n", *(uint32_t*)(NameAddr));
-       //  uintptr_t Result = Utils::UKismetStringLibrary::Conv_NameToString(*(FName*)Name);
-        //printf("Result: %p\n", Result);
+        FName* Name = (FName*)(NameAddr);
+        printf("Name: %i\n", Name->GetComparisonIndex().Value);
+        
+        uintptr_t Result = Utils::UKismetStringLibrary::Conv_NameToString(*Name);
+        printf("Result: %p\n", Result);
 
         printf("Function Start: %p\n", FunctionStart);
         printf("UFunction: %p\n", LastAddress);
@@ -76,7 +75,51 @@ static uintptr_t GetRealFunction_Test() {
 }
 
 void Dumper::Dump() {
+    GetRealFunction_Test();
+    return;
+	
     printf("Creating a whole dump now, this will take longer, if u don't need everything please change the settings.");
 
-    GetRealFunction_Test();
+    GUObjectArray = *new FUObjectArray();
+    // TODO: Figure out if its a new object or old
+    GUObjectArray.useNewObjectArray = true;
+    GUObjectArray.ObjObjectsNew = (FChunkedFixedUObjectArray*)Offsets::GObjects;
+
+    printf("We are dumping everythig now...\n");
+
+    printf("There are %p objects\n", GUObjectArray.ObjObjectsNew->Num());
+
+	// TODO: UObject struct for GetClass() etc
+
+    for (uintptr_t i = 0; i < GUObjectArray.ObjObjectsNew->Num(); i++) {
+        auto Item = GUObjectArray.IndexToObject(i);
+        //printf("Item: %p\n", Item);
+        if (Item) {
+            auto Object = (uintptr_t*)Item->Object;
+            //printf("Object: %p\n", Object);
+
+            //printf(Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Item->Object).ToString().c_str());
+			
+
+			
+        }
+    }
+
+   
+}
+
+void Dumper::DumpObjectNames() {
+    GUObjectArray = *new FUObjectArray();
+    // TODO: Figure out if its a new object or old
+    GUObjectArray.useNewObjectArray = true;
+    GUObjectArray.ObjObjectsNew = (FChunkedFixedUObjectArray*)Offsets::GObjects;
+	
+    for (uintptr_t i = 0; i < GUObjectArray.ObjObjectsNew->Num(); i++) {
+        auto Item = GUObjectArray.IndexToObject(i);
+        //printf("Item: %p\n", Item);
+        if (Item) {
+            auto Object = (uintptr_t*)Item->Object;
+            printf("Object: %p\n", Object);
+        }
+    }
 }

@@ -4,6 +4,33 @@
 #include <thread>
 #include <iostream>
 
+// Using ProcessEvent
+uint16_t OffsetsFinder::FindUObjectInternalIndex() {
+    uintptr_t CurrentAddress = Offsets::ProcessEvent;
+
+    // Let's skip the first pushs
+    for (uint8_t i = 0; i < 256; i++) {
+        if (*(uint8_t*)(CurrentAddress + i) == 0x48 && *(uint8_t*)(CurrentAddress + i + 1) == 0x81 && *(uint8_t*)(CurrentAddress + i + 2) == 0xEC) {
+            CurrentAddress += +i + 3;
+            break;
+        }
+
+        if (i == 255) return false;
+    }
+	
+    // InternalIndex = mov eax, [rcx+0Ch]
+    // InternalIndex = movsxd rax, dword ptr [rcx+0Ch]
+    for (uint8_t i = 0; i < 256; i++) {
+        if (*(uint8_t*)(CurrentAddress + i) == 0x41) {
+            return *(uint8_t*)(CurrentAddress + i + 1);
+        }
+
+        if (i == 255) return false;
+    }
+	
+    return 0;
+}
+
 uint16_t OffsetsFinder::FindUFunctionOffset_Func() {
     uintptr_t* (__fastcall * _StaticFindObject) (uintptr_t * ObjectClass, uintptr_t * InObjectPackage, const wchar_t* OrigInName, bool ExactClass);
     _StaticFindObject = decltype(_StaticFindObject)(Offsets::StaticFindObject);

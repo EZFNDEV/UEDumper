@@ -36,6 +36,15 @@ static void Main() {
 
 		Offsets::UObject::ProcessEvent = OffsetsFinder::FindUObject_PEVTableIndex();
 
+        Offsets::UObject::InternalIndex = OffsetsFinder::FindUObjectInternalIndex();
+        if (!Offsets::UObject::InternalIndex) {
+            printf("Failed to find the offset for UObject::InternalIndex\n");
+        } else if (Offsets::UObject::InternalIndex != 0x0C) {
+            printf("UObject::InternalIndex is not 0x0C? Lol (Oh, maybe this will fail for you then...)");
+        }
+
+		
+
         Offsets::GObjects = OffsetsFinder::FindGObjects();
 		if (!Offsets::GObjects) {
 			printf("Failed to find GObjects\n");
@@ -55,6 +64,7 @@ static void Main() {
         printf("        Func: %p\n", Offsets::UFunction::Func);
 
         printf("    UObject:\n");
+        printf("        InternalIndex: %p\n", Offsets::UObject::InternalIndex);
         printf("        ProcessEvent VTable Index: %p\n", Offsets::UObject::ProcessEvent);
     #endif
 
@@ -69,18 +79,17 @@ static void Main() {
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
+        while (!Utils::UKismetSystemLibrary::Init()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+
         Dumper::Dump();
     #endif
 
-    // TODO: Add FString, FName, UObject, UStruct because we need it for Dump()
+    // TODO: Add UObject, UStruct because we need it for Dump()
 
     // UFunction: https://github.com/EpicGames/UnrealEngine/blob/46544fa5e0aa9e6740c19b44b0628b72e7bbd5ce/Engine/Source/Runtime/CoreUObject/Public/UObject/Class.h#L1887
         // Note Milxnor: So we put it into CoreUObject/UObject/Class.h
-
-	// FString: https://github.com/EpicGames/UnrealEngine/blob/46544fa5e0aa9e6740c19b44b0628b72e7bbd5ce/Engine/Source/Runtime/Core/Public/Containers/UnrealString.h#L50
-        // Note Milxnor: Core/Containers/UnrealString.h
-
-	
 }
 
 BOOL APIENTRY DllMain( HMODULE hModule,

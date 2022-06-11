@@ -7,11 +7,11 @@ uintptr_t* Utils::StaticFindObject(const wchar_t* ObjectName) {
 
 uintptr_t Utils::UKismetStringLibrary::Conv_NameToString(FName inName) {
 	struct {
-		uint32_t inName;
+		FName inName;
 		uintptr_t ReturnValue;
 	} params;
 
-	params.inName = 0x88;
+	params.inName = inName;
 
 	printf("inName: %p\n", inName);
 	printf("inName: %p\n", inName.GetComparisonIndex().Value);
@@ -21,6 +21,23 @@ uintptr_t Utils::UKismetStringLibrary::Conv_NameToString(FName inName) {
 	printf("_ProcessEvent: %p\n", Utils::_ProcessEvent);
 
 	Utils::_ProcessEvent(Utils::UKismetStringLibrary::KismetStringLibrary, Utils::UKismetStringLibrary::_Conv_NameToString, &params);
+
+	return params.ReturnValue;
+}
+
+FString Utils::UKismetSystemLibrary::GetPathName(uintptr_t* Object) {
+	struct {
+		uintptr_t* Object;
+		struct FString ReturnValue;
+	} params;
+
+	params.Object = Object;
+
+	Utils::_ProcessEvent(
+		Utils::UKismetSystemLibrary::KismetSystemLibrary,
+		Utils::UKismetSystemLibrary::_GetPathName,
+		&params
+	);
 
 	return params.ReturnValue;
 }

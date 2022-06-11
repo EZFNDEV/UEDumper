@@ -18,6 +18,7 @@ namespace Offsets {
 	}
 
 	namespace UObject {
+		extern inline uint16_t InternalIndex = 0x0C;
 
 		// VTable
 		extern inline uint16_t ProcessEvent = 0;
@@ -43,4 +44,7 @@ namespace OffsetsFinder {
 
 	// VTable Indexes
 	extern uint16_t FindUObject_PEVTableIndex();
+
+	// Find by ProcessEvent
+	extern uint16_t FindUObjectInternalIndex();
 }
