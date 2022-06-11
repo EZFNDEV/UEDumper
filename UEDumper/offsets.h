@@ -24,6 +24,18 @@ namespace Offsets {
 		extern inline uint16_t ProcessEvent = 0;
 	}
 
+	namespace UClass {
+		extern inline uint16_t ClassPrivate = 0;
+		extern inline uint16_t ChildProperties = 0;
+	}
+
+	namespace FField {
+		extern inline uint16_t Next = 0;
+		extern inline uint16_t Owner = 0;
+		extern inline uint16_t NamePrivate = 0;
+		extern inline uint16_t FlagsPrivate = 0;
+	}
+
 	namespace UStruct {
 		extern inline uint16_t Children = 0;
 	}
@@ -47,4 +59,11 @@ namespace OffsetsFinder {
 
 	// Find by ProcessEvent
 	extern uint16_t FindUObjectInternalIndex();
+
+	// UClass stuff
+	extern inline uint16_t FindUClass_ClassPrivate();
+	extern inline uint16_t FindUClass_ChildProperties();
+
+	// Util
+	extern uintptr_t FindRealFunction(uintptr_t* Function);
 }

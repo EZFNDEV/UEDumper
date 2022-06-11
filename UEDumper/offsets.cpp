@@ -3,6 +3,89 @@
 
 #include <thread>
 #include <iostream>
+#include "utils.h"
+#include "CoreUObject/UObject/Class.h"
+
+// Utils
+uintptr_t OffsetsFinder::FindRealFunction(uintptr_t* _Function) { // THIS ONLY WORKS FOR UKISMETSYSTEMLIBRARY 
+	UFunction* Function = (UFunction*)_Function;
+
+    void* Func = Function->GetFunc();
+	uintptr_t Address = (uintptr_t)Func;
+
+    // Try to find the ret
+    for (uint16_t i = 0; i < 500; i++) {
+        if (*(uint8_t*)(Address + i) == 0xC3) {
+            printf("Found at: %p\n", Address + i);
+            Address = Address + i;
+            break;
+        }
+    }
+
+    if (Address == (uintptr_t)Func) {
+		printf("Failed to find ret\n");
+		return 0;
+	}
+
+	// Now we can go backwards and get the 2nd last function
+	// the last one is a __security_check_cookie NOO
+	
+    bool firstFound = true; // FAKED
+	for (uint8_t i = 0; i < 255; i++) {
+        if (*(uint8_t*)(Address - i) == 0xE8) {
+            if (firstFound) {
+                return ((Address - i + 1 + 4) + *(int32_t*)(Address - i + 1));
+            }
+			
+            firstFound = true;
+        }
+    }
+	
+    return 0;
+}
+
+// UClass stuff
+uint16_t OffsetsFinder::FindUClass_ClassPrivate() {
+    uintptr_t* Function = Utils::StaticFindObject(L"Engine.KismetSystemLibrary.SetBoolPropertyByName");
+    printf("Found function at: %p\n", Function);
+
+    uintptr_t RealFunction = OffsetsFinder::FindRealFunction(Function);
+
+    for (uint8_t i = 0; i < 255; i++) {
+        if (
+            *(uint8_t*)(RealFunction + i) == 0x48 &&
+            *(uint8_t*)(RealFunction + i + 1) == 0x8B &&
+            (
+                *(uint8_t*)(RealFunction + i + 2) == 0x41 || // rax
+                *(uint8_t*)(RealFunction + i + 2) == 0x49 || // rcx
+                *(uint8_t*)(RealFunction + i + 2) == 0x51 // rdx
+			)
+        ) {
+            return *(uint8_t*)(RealFunction + i + 3);
+        }
+    }
+
+    return 0;
+}
+
+uint16_t OffsetsFinder::FindUClass_ChildProperties() {
+    uintptr_t* Function = Utils::StaticFindObject(L"Engine.KismetSystemLibrary.SetBoolPropertyByName");
+    printf("Found function at: %p\n", Function);
+
+    uintptr_t RealFunction = OffsetsFinder::FindRealFunction(Function);
+
+	// NOTE: THIS WILL NOT WORK FOR ALL FORTNITE VERSIONS!
+    for (uint8_t i = 0; i < 255; i++) {
+        if (
+            *(uint8_t*)(RealFunction + i) == 0x74 &&
+            *(uint8_t*)(RealFunction + i + 1) == 0x0B
+        ) {
+            return *(uint8_t*)(RealFunction + i + 5);
+        }
+    }
+
+    return 0;
+}
 
 // Using ProcessEvent
 uint16_t OffsetsFinder::FindUObjectInternalIndex() {

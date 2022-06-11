@@ -19,4 +19,6 @@
 #include "include/memory.h"
 #include "offsets.h"
 
+#include "CoreUObject/UObject/Class.h"
+
 #endif //PCH_H

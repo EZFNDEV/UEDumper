@@ -26,6 +26,8 @@ static void Main() {
             return;
         }
 
+        Utils::_StaticFindObject = decltype(Utils::_StaticFindObject)(Offsets::StaticFindObject);
+
         Offsets::UFunction::Func = OffsetsFinder::FindUFunctionOffset_Func();
 		
         Offsets::ProcessEvent = OffsetsFinder::FindProcessEvent();
@@ -33,6 +35,8 @@ static void Main() {
 			printf("Failed to find ProcessEvent\n");
 			return;
         }
+		
+        Utils::_ProcessEvent = decltype(Utils::_ProcessEvent)(Offsets::ProcessEvent);
 
 		Offsets::UObject::ProcessEvent = OffsetsFinder::FindUObject_PEVTableIndex();
 
@@ -43,7 +47,8 @@ static void Main() {
             printf("UObject::InternalIndex is not 0x0C? Lol (Oh, maybe this will fail for you then...)");
         }
 
-		
+        Offsets::UClass::ClassPrivate = OffsetsFinder::FindUClass_ClassPrivate();
+        Offsets::UClass::ChildProperties = OffsetsFinder::FindUClass_ChildProperties();
 
         Offsets::GObjects = OffsetsFinder::FindGObjects();
 		if (!Offsets::GObjects) {
@@ -66,14 +71,17 @@ static void Main() {
         printf("    UObject:\n");
         printf("        InternalIndex: %p\n", Offsets::UObject::InternalIndex);
         printf("        ProcessEvent VTable Index: %p\n", Offsets::UObject::ProcessEvent);
+
+        printf("    UClass:\n");
+        printf("        ClassPrivate: %p\n", Offsets::UClass::ClassPrivate);
+        printf("        ChildProperties: %p\n", Offsets::UClass::ChildProperties);
     #endif
 
 	// Note: Just temp, you can remove this if you dont inject on startup
     // std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
 		
     #ifdef DUMP
-        Utils::_StaticFindObject = decltype(Utils::_StaticFindObject)(Offsets::StaticFindObject);
-        Utils::_ProcessEvent = decltype(Utils::_ProcessEvent)(Offsets::ProcessEvent);
+        
 
         while (!Utils::UKismetStringLibrary::Init()) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));

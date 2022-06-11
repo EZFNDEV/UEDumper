@@ -43,6 +43,9 @@
     <Filter Include="Source Files\CoreUObject\UObject">
       <UniqueIdentifier>{6e0d0935-23da-4a73-a6c9-3fa079d9c773}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\CoreUObject\UObject">
+      <UniqueIdentifier>{b947d5c6-1390-4fb4-8ede-8034859f48d5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -72,14 +75,20 @@
     <ClInclude Include="Core\Containers\Array.h">
       <Filter>Header Files\Core\Containers</Filter>
     </ClInclude>
-    <ClInclude Include="CoreUObject\UObject\UObjectHash.h">
-      <Filter>Header Files\CoreUObject</Filter>
+    <ClInclude Include="CoreUObject\UObject\ObjectMacros.h">
+      <Filter>Header Files\CoreUObject\UObject</Filter>
     </ClInclude>
     <ClInclude Include="CoreUObject\UObject\UObjectArray.h">
-      <Filter>Header Files\CoreUObject</Filter>
+      <Filter>Header Files\CoreUObject\UObject</Filter>
     </ClInclude>
-    <ClInclude Include="CoreUObject\UObject\ObjectMacros.h">
-      <Filter>Header Files\CoreUObject</Filter>
+    <ClInclude Include="CoreUObject\UObject\UObjectHash.h">
+      <Filter>Header Files\CoreUObject\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="CoreUObject\UObject\Class.h">
+      <Filter>Header Files\CoreUObject\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="CoreUObject\UObject\Script.h">
+      <Filter>Header Files\CoreUObject\UObject</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -114,6 +123,12 @@
       <Filter>Source Files\CoreUObject\UObject</Filter>
     </ClCompile>
     <ClCompile Include="CoreUObject\UObject\ObjectMacros.cpp">
+      <Filter>Source Files\CoreUObject\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="CoreUObject\UObject\Class.cpp">
+      <Filter>Source Files\CoreUObject\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="CoreUObject\UObject\Script.cpp">
       <Filter>Source Files\CoreUObject\UObject</Filter>
     </ClCompile>
   </ItemGroup>
