@@ -26,6 +26,12 @@ namespace Offsets {
 	namespace UStruct {
 		extern inline uint16_t Children = 0;
 	}
+
+	namespace FName {
+		extern inline uint16_t ComparisonIndex = 0;
+		extern inline uint16_t DisplayIndex = 0x04;
+		extern inline uint16_t Number = 0x04;
+	}
 }
 
 namespace OffsetsFinder {

@@ -59,13 +59,15 @@ static void Main() {
     #endif
 
 	// Note: Just temp, you can remove this if you dont inject on startup
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
+    // std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
 		
     #ifdef DUMP
         Utils::_StaticFindObject = decltype(Utils::_StaticFindObject)(Offsets::StaticFindObject);
         Utils::_ProcessEvent = decltype(Utils::_ProcessEvent)(Offsets::ProcessEvent);
 
-        Utils::UKismetStringLibrary::Init();
+        while (!Utils::UKismetStringLibrary::Init()) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
 
         Dumper::Dump();
     #endif

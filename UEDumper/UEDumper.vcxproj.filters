@@ -22,6 +22,24 @@
     <Filter Include="Header Files\CoreUObject">
       <UniqueIdentifier>{03e79ee4-4f46-479d-a47e-68ba22743ebe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Core">
+      <UniqueIdentifier>{598ea3bb-58c8-4660-be34-ce79051923f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Core">
+      <UniqueIdentifier>{6e10d618-0a6f-4830-9ce5-966d9be14857}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core\UObject">
+      <UniqueIdentifier>{303ed9b9-c55e-4392-8ff7-b74c071f3a27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Core\UObject">
+      <UniqueIdentifier>{7014f8e2-4540-420b-bdcb-678251782b97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Core\Containers">
+      <UniqueIdentifier>{29ed799c-d893-487b-923f-3c6177247d8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core\Containers">
+      <UniqueIdentifier>{2f11480d-00af-4020-b03d-a73f8626f9fc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -42,6 +60,15 @@
     <ClInclude Include="utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Core\UObject\NameTypes.h">
+      <Filter>Header Files\Core\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Containers\UnrealString.h">
+      <Filter>Header Files\Core\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Containers\Array.h">
+      <Filter>Header Files\Core\Containers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -58,6 +85,15 @@
     </ClCompile>
     <ClCompile Include="utils.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\UObject\NameTypes.cpp">
+      <Filter>Source Files\Core\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Containers\UnrealString.cpp">
+      <Filter>Source Files\Core\Containers</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Containers\Array.cpp">
+      <Filter>Source Files\Core\Containers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core/UObject/NameTypes.h"
+
 namespace Utils {
 	// https://github.com/EpicGames/UnrealEngine/blob/99b6e203a15d04fc7bbbf554c421a985c1ccb8f1/Engine/Source/Runtime/CoreUObject/Private/UObject/UObjectGlobals.cpp#L327
 	extern inline uintptr_t* (__fastcall* _StaticFindObject) (uintptr_t* ObjectClass, uintptr_t* InObjectPackage, const wchar_t* OrigInName, bool ExactClass) = 0;
@@ -15,9 +17,13 @@ namespace Utils {
 		extern inline uintptr_t* _Conv_NameToString = 0;
 
 		extern inline bool Init() {
-			KismetStringLibrary = StaticFindObject(L"Engine.KismetStringLibrary");
-
-			_Conv_NameToString = StaticFindObject(L"Engine.KismetStringLibrary.Conv_NameToString");
+			if (!KismetStringLibrary) {
+				KismetStringLibrary = StaticFindObject(L"Engine.KismetStringLibrary");
+			}
+			
+			if (!_Conv_NameToString) {
+				_Conv_NameToString = StaticFindObject(L"Engine.KismetStringLibrary.Conv_NameToString");
+			}
 
 			return (
 				KismetStringLibrary != 0 &&
@@ -25,23 +31,6 @@ namespace Utils {
 			);
 		}
 
-		extern inline uintptr_t Conv_NameToString(uintptr_t inName) {
-			struct {
-				uintptr_t inName;
-				uintptr_t ReturnValue;
-			} params;
-			
-			params.inName = inName;
-			
-			printf("KismetStringLibrary: %p\n", KismetStringLibrary);
-			printf("_Conv_NameToString: %p\n", _Conv_NameToString);
-			printf("_ProcessEvent: %p\n", _ProcessEvent);
-			
-			return 0;
-			
-			_ProcessEvent(KismetStringLibrary, _Conv_NameToString, &params);
-
-			return params.ReturnValue;
-		}
+		extern inline uintptr_t Conv_NameToString(FName inName);
 	}
 }

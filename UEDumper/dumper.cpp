@@ -40,7 +40,7 @@ static uintptr_t GetRealFunction_Test() {
 
         if (FunctionStart == LastAddress) continue; // Not the function we want
 
-        uintptr_t Name = 0;
+        uintptr_t NameAddr = 0;
         for (uint8_t i = 0; i < 255; i++) {
             if (
                 *(uint8_t*)(FunctionStart + i) == 0x48 &&
@@ -48,16 +48,19 @@ static uintptr_t GetRealFunction_Test() {
                 *(uint8_t*)(FunctionStart + i + 2) == 0x15
                 ) {
                 // Relative
-                Name = ((FunctionStart + i + 3 + 4) + *(int32_t*)(FunctionStart + i + 3));
+                NameAddr = ((FunctionStart + i + 3 + 4) + *(int32_t*)(FunctionStart + i + 3));
                 break;
             }
         }
 
-        if (Name == 0) continue; // Not the function we want
+        if (NameAddr == 0) continue; // Not the function we want
 
-        printf("FName: %p\n", Name);
-        printf("FName: %p\n", *(uint32_t*)Name);
-        uintptr_t Result = Utils::UKismetStringLibrary::Conv_NameToString(Name);
+        FName Name = *(FName*)(NameAddr);
+
+       // printf("NameAddr: %p\n", NameAddr);
+       // printf("FName: %p\n", Name);
+        printf("Name: %i\n", *(uint32_t*)(NameAddr));
+       //  uintptr_t Result = Utils::UKismetStringLibrary::Conv_NameToString(*(FName*)Name);
         //printf("Result: %p\n", Result);
 
         printf("Function Start: %p\n", FunctionStart);

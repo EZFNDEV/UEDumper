@@ -155,6 +155,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Core\Containers\Array.h" />
+    <ClInclude Include="Core\Containers\UnrealString.h" />
+    <ClInclude Include="Core\UObject\NameTypes.h" />
     <ClInclude Include="dumper.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="include\memory.h" />
@@ -163,6 +166,9 @@
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Core\Containers\Array.cpp" />
+    <ClCompile Include="Core\Containers\UnrealString.cpp" />
+    <ClCompile Include="Core\UObject\NameTypes.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="dumper.cpp" />
     <ClCompile Include="offsets.cpp" />

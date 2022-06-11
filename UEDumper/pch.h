@@ -13,6 +13,8 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <locale>
+#include <string>
 
 #include "include/memory.h"
 #include "offsets.h"
