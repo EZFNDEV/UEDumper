@@ -47,7 +47,8 @@ static void Main() {
             printf("UObject::InternalIndex is not 0x0C? Lol (Oh, maybe this will fail for you then...)");
         }
 
-        Offsets::UClass::ClassPrivate = OffsetsFinder::FindUClass_ClassPrivate();
+        Offsets::UObjectBase::ClassPrivate = OffsetsFinder::FindUObjectBase_ClassPrivate();
+		
         Offsets::UClass::ChildProperties = OffsetsFinder::FindUClass_ChildProperties();
 
 		// TODO: Next...
@@ -75,8 +76,10 @@ static void Main() {
         printf("        ProcessEvent VTable Index: %p\n", Offsets::UObject::ProcessEvent);
 
         printf("    UClass:\n");
-        printf("        ClassPrivate: %p\n", Offsets::UClass::ClassPrivate);
         printf("        ChildProperties: %p\n", Offsets::UClass::ChildProperties);
+
+        printf("    UObjectBase:\n");
+        printf("        ClassPrivate: %p\n", Offsets::UObjectBase::ClassPrivate);
     #endif
 
 	// Note: Just temp, you can remove this if you dont inject on startup

@@ -159,6 +159,7 @@
     <ClInclude Include="CoreUObject\UObject\ObjectMacros.h" />
     <ClInclude Include="CoreUObject\UObject\Script.h" />
     <ClInclude Include="CoreUObject\UObject\UObjectArray.h" />
+    <ClInclude Include="CoreUObject\UObject\UObjectBase.h" />
     <ClInclude Include="CoreUObject\UObject\UObjectHash.h" />
     <ClInclude Include="Core\Containers\Array.h" />
     <ClInclude Include="Core\Containers\UnrealString.h" />
@@ -175,6 +176,7 @@
     <ClCompile Include="CoreUObject\UObject\ObjectMacros.cpp" />
     <ClCompile Include="CoreUObject\UObject\Script.cpp" />
     <ClCompile Include="CoreUObject\UObject\UObjectArray.cpp" />
+    <ClCompile Include="CoreUObject\UObject\UObjectBase.cpp" />
     <ClCompile Include="CoreUObject\UObject\UObjectHash.cpp" />
     <ClCompile Include="Core\Containers\Array.cpp" />
     <ClCompile Include="Core\Containers\UnrealString.cpp" />

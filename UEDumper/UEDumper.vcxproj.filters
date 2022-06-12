@@ -90,6 +90,9 @@
     <ClInclude Include="CoreUObject\UObject\Script.h">
       <Filter>Header Files\CoreUObject\UObject</Filter>
     </ClInclude>
+    <ClInclude Include="CoreUObject\UObject\UObjectBase.h">
+      <Filter>Header Files\CoreUObject\UObject</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -129,6 +132,9 @@
       <Filter>Source Files\CoreUObject\UObject</Filter>
     </ClCompile>
     <ClCompile Include="CoreUObject\UObject\Script.cpp">
+      <Filter>Source Files\CoreUObject\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="CoreUObject\UObject\UObjectBase.cpp">
       <Filter>Source Files\CoreUObject\UObject</Filter>
     </ClCompile>
   </ItemGroup>

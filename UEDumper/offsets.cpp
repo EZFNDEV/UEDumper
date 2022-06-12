@@ -45,12 +45,13 @@ uintptr_t OffsetsFinder::FindRealFunction(uintptr_t* _Function) { // THIS ONLY W
 }
 
 // UClass stuff
-uint16_t OffsetsFinder::FindUClass_ClassPrivate() {
+uint16_t OffsetsFinder::FindUObjectBase_ClassPrivate() {
     uintptr_t* Function = Utils::StaticFindObject(L"Engine.KismetSystemLibrary.SetBoolPropertyByName");
-    printf("Found function at: %p\n", Function);
+    if (!Function) return 0;
 
     uintptr_t RealFunction = OffsetsFinder::FindRealFunction(Function);
-
+    if (!RealFunction) return 0;
+	
     for (uint8_t i = 0; i < 255; i++) {
         if (
             *(uint8_t*)(RealFunction + i) == 0x48 &&
