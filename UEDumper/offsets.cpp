@@ -70,11 +70,38 @@ uint16_t OffsetsFinder::FindUClass_ClassPrivate() {
 
 uint16_t OffsetsFinder::FindUClass_ChildProperties() {
     uintptr_t* Function = Utils::StaticFindObject(L"Engine.KismetSystemLibrary.SetBoolPropertyByName");
-    printf("Found function at: %p\n", Function);
-
+    if (!Function) return 0;
+	
     uintptr_t RealFunction = OffsetsFinder::FindRealFunction(Function);
+    if (!RealFunction) return 0;
+	
+    uint16_t SizeOfFunction = 0;
+    for (uint16_t i = 0; i < 500; i++) {
+        if (*(uint8_t*)(RealFunction + i) == 0xC3) {
+            SizeOfFunction = i;
+            break;
+        }
+    }
 
-	// NOTE: THIS WILL NOT WORK FOR ALL FORTNITE VERSIONS!
+    if (SizeOfFunction == 0) return 0;
+
+    uintptr_t StartPoint = RealFunction;
+
+    if (SizeOfFunction < 100) { // Small = its called FindField/FindFProperty
+		// It's using FindField/FindFProperty, so we nee to find the (first) E8
+        uintptr_t FindPropery = 0;
+        for (uint8_t i = 0; i < 255; i++) {
+            if (*(uint8_t*)(RealFunction + i) == 0xE8) {
+                FindPropery = ((RealFunction + i + 1 + 4) + *(int32_t*)(RealFunction + i + 1));
+                break;
+            }
+        }
+
+        if (FindPropery == 0) return 0;
+
+        StartPoint = FindPropery;
+    }
+
     for (uint8_t i = 0; i < 255; i++) {
         if (
             *(uint8_t*)(RealFunction + i) == 0x74 &&
@@ -94,7 +121,7 @@ uint16_t OffsetsFinder::FindUObjectInternalIndex() {
     // Let's skip the first pushs
     for (uint8_t i = 0; i < 256; i++) {
         if (*(uint8_t*)(CurrentAddress + i) == 0x48 && *(uint8_t*)(CurrentAddress + i + 1) == 0x81 && *(uint8_t*)(CurrentAddress + i + 2) == 0xEC) {
-            CurrentAddress += +i + 3;
+            CurrentAddress += i + 3;
             break;
         }
 

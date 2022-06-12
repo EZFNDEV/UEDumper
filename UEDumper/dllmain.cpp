@@ -50,6 +50,8 @@ static void Main() {
         Offsets::UClass::ClassPrivate = OffsetsFinder::FindUClass_ClassPrivate();
         Offsets::UClass::ChildProperties = OffsetsFinder::FindUClass_ChildProperties();
 
+		// TODO: Next...
+
         Offsets::GObjects = OffsetsFinder::FindGObjects();
 		if (!Offsets::GObjects) {
 			printf("Failed to find GObjects\n");
@@ -91,7 +93,7 @@ static void Main() {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
-        Dumper::Dump();
+        // Dumper::Dump();
     #endif
 
     // TODO: Add UObject, UStruct because we need it for Dump()
