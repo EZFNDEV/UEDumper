@@ -2,7 +2,7 @@
 #include "utils.h"
 #include "dumper.h"
 #include "CoreUObject/UObject/UObjectHash.h"
-#include "CoreUObject/UObject/UObjectBase.h"
+#include "CoreUObject/UObject/UObjectBaseUtility.h"
 
 static uintptr_t GetRealFunction_Test() {
     // Let's find all UFunctions
@@ -83,6 +83,7 @@ void Dumper::Dump() {
 
     // TODO: Find a way to determine the object array type.
     bool bNewObjectArray = false;
+    printf("Offsets::GObjects: %p\n", Offsets::GObjects);
     GUObjectArray = *new FUObjectArray(Offsets::GObjects, bNewObjectArray);
 
     printf("We are dumping everything now...\n");
@@ -91,19 +92,30 @@ void Dumper::Dump() {
 
 	// TODO: UObject struct for GetClass() etc
 
+    UClass* CoreUObjectFunction = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Function");
+    UClass* CoreUObjectClass = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Class");
+
     for (uintptr_t i = 0; i < GUObjectArray.Num(); i++) {
         auto Item = GUObjectArray.IndexToObject(i);
         //printf("Item: %p\n", Item);
         if (Item) {
-            UObjectBase* Object = (UObjectBase*)Item->Object;
+            UObjectBaseUtility* Object = (UObjectBaseUtility*)Item->Object;
             // printf("Object: %p\n", Object);
 
             // printf("Class: %p\n", Object->GetClass());
 			
             //printf(Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Item->Object).ToString().c_str());
 			
+            
+            if (Object->IsA(CoreUObjectFunction)) {
+                // printf("This is a function\n");
+                // printf(Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Item->Object).ToString().c_str());
+            }
+            else if (Object->IsA(CoreUObjectClass)) {
+                // printf("This is a chlass\n");
 
-			
+                // TODO: Get the superthing
+            }
         }
     }
 

@@ -54,6 +54,8 @@ static void Main() {
         Offsets::UClass::ChildProperties = OffsetsFinder::FindUClass_ChildProperties();
 		// TODO: Next...
 
+        Offsets::UStruct::SuperStruct = OffsetsFinder::FindUStruct_SuperStruct();
+
         Offsets::GObjects = OffsetsFinder::FindGObjects();
 		if (!Offsets::GObjects) {
 			printf("Failed to find GObjects\n");
@@ -81,6 +83,9 @@ static void Main() {
 
         printf("    UObjectBase:\n");
         printf("        ClassPrivate: %p\n", Offsets::UObjectBase::ClassPrivate);
+
+        printf("    UStruct:\n");
+        printf("        SuperStruct: %p\n", Offsets::UStruct::SuperStruct);
     #endif
 
 	// Note: Just temp, you can remove this if you dont inject on startup

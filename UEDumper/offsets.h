@@ -45,7 +45,7 @@ namespace Offsets {
 
 	namespace UStruct {
 		extern inline uint16_t Children = 0;
-		extern inline uint16_t SuperStruct = 0;
+		extern inline uint16_t SuperStruct = 48;
 	}
 
 	namespace FName {
@@ -71,6 +71,9 @@ namespace OffsetsFinder {
 	// UClass stuff
 	extern inline uint16_t FindUObjectBase_ClassPrivate();
 	extern inline uint16_t FindUClass_ChildProperties();
+
+	// UStruct
+	extern inline uint16_t FindUStruct_SuperStruct();		
 
 	// Util
 	extern uintptr_t FindRealFunction(uintptr_t* Function);
