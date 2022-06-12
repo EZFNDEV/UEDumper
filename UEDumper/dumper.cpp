@@ -2,6 +2,7 @@
 #include "utils.h"
 #include "dumper.h"
 #include "CoreUObject/UObject/UObjectHash.h"
+#include "CoreUObject/UObject/UObjectBase.h"
 
 static uintptr_t GetRealFunction_Test() {
     // Let's find all UFunctions
@@ -75,8 +76,8 @@ static uintptr_t GetRealFunction_Test() {
 }
 
 void Dumper::Dump() {
-    GetRealFunction_Test();
-    return;
+    //GetRealFunction_Test();
+    //return;
 	
     printf("Creating a whole dump now, this will take longer, if u don't need everything please change the settings.");
 
@@ -95,9 +96,11 @@ void Dumper::Dump() {
         auto Item = GUObjectArray.IndexToObject(i);
         //printf("Item: %p\n", Item);
         if (Item) {
-            auto Object = (uintptr_t*)Item->Object;
+            UObjectBase* Object = (UObjectBase*)Item->Object;
             //printf("Object: %p\n", Object);
 
+            printf("Class: %p\n", Object->GetClass());
+			
             //printf(Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Item->Object).ToString().c_str());
 			
 

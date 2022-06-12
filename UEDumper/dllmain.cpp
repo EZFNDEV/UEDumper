@@ -96,7 +96,7 @@ static void Main() {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
-        // Dumper::Dump();
+        Dumper::Dump();
     #endif
 
     // TODO: Add UObject, UStruct because we need it for Dump()
