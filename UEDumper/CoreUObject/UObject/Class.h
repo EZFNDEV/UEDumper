@@ -5,32 +5,36 @@
 
 class UField : public UObjectBase
 {
-	UField* GetNext() const
-	{
-		return *(UField**)((__int64)this + Offsets::UField::Next);
-	}
+	public:
+		UField* GetNext() const
+		{
+			return *(UField**)((__int64)this + Offsets::UField::Next);
+		}
 };
 
 class UStruct : public UField
 {
-public:
-
-	UStruct* GetSuperStruct() const
-	{
-		return *(UStruct**)((__int64)this + Offsets::UStruct::SuperStruct);
-	}
-
-	/** Returns true if this struct either is SomeBase, or is a child of SomeBase. This will not crash on null structs */
-	bool IsChildOf(const UStruct* SomeBase) const
-	{
-		for (const UStruct* Struct = this; Struct; Struct = Struct->GetSuperStruct())
+	public:
+		UStruct* GetSuperStruct() const
 		{
-			if (Struct == SomeBase)
-				return true;
+			return *(UStruct**)((__int64)this + Offsets::UStruct::SuperStruct);
 		}
 
-		return false;
-	}
+		/** Returns true if this struct either is SomeBase, or is a child of SomeBase. This will not crash on null structs */
+		bool IsChildOf(const UStruct* SomeBase) const
+		{
+			for (const UStruct* Struct = this; Struct; Struct = Struct->GetSuperStruct())
+			{
+				if (Struct == SomeBase)
+					return true;
+			}
+
+			return false;
+		}
+
+		UField* GetChildren() {
+			return *(UField**)((__int64)this + Offsets::UStruct::Children);
+		}
 };
 
 class UClass : public UStruct

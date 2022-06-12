@@ -3,6 +3,7 @@
 #include "dumper.h"
 #include "CoreUObject/UObject/UObjectHash.h"
 #include "CoreUObject/UObject/UObjectBaseUtility.h"
+#include "CoreUObject/UObject/UnrealTypePrivate.h"
 
 static uintptr_t GetRealFunction_Test() {
     // Let's find all UFunctions
@@ -113,6 +114,24 @@ void Dumper::Dump() {
             }
             else if (Object->IsA(CoreUObjectClass)) {
                 // printf("This is a chlass\n");
+
+				// Based on IterateToNext
+				
+                
+
+                for (UStruct* CurrentStruct = (UStruct*)Object->GetClass(); CurrentStruct; CurrentStruct = (UStruct*)CurrentStruct->GetSuperStruct()) {
+                    printf("CurrentStruct: %p\n", CurrentStruct);
+                    printf("Children: %p\n", CurrentStruct->GetChildren());
+
+                    UObjectPropertyBase* Field = (UObjectPropertyBase*)CurrentStruct->GetChildren();
+                    printf("First field: %p\n", Field);
+					
+                    if (IsBadReadPtr(Field, 8)) continue;
+
+                    for (UObjectPropertyBase* CurrentField = (UObjectPropertyBase*)Field->GetNext(); CurrentField; CurrentField = (UObjectPropertyBase*)CurrentField->GetNext()) {
+                        printf("CurrentField: %p\n", CurrentField);
+                    }
+                }
 
                 // TODO: Get the superthing
             }

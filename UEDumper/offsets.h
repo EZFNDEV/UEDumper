@@ -40,7 +40,7 @@ namespace Offsets {
 	}
 
 	namespace UField {
-		extern inline uint16_t Next = 0;
+		extern inline uint16_t Next = 0x20;
 	};
 
 	namespace UStruct {
@@ -52,6 +52,10 @@ namespace Offsets {
 		extern inline uint16_t ComparisonIndex = 0;
 		extern inline uint16_t DisplayIndex = 0x04;
 		extern inline uint16_t Number = 0x04;
+	}
+
+	namespace UProperty {
+		extern inline uint16_t PropertyFlags = 0;
 	}
 }
 

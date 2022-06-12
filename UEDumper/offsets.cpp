@@ -117,6 +117,7 @@ uint16_t OffsetsFinder::FindUClass_ChildProperties() {
         for (uint8_t i = 0; i < 255; i++) {
             if (*(uint8_t*)(RealFunction + i) == 0xE8) {
                 FindPropery = ((RealFunction + i + 1 + 4) + *(int32_t*)(RealFunction + i + 1));
+                printf("FindPropery: %p\n", FindPropery);
                 break;
             }
         }

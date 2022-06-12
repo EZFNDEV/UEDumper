@@ -96,6 +96,9 @@
     <ClInclude Include="CoreUObject\UObject\UObjectBaseUtility.h">
       <Filter>Header Files\CoreUObject\UObject</Filter>
     </ClInclude>
+    <ClInclude Include="CoreUObject\UObject\UnrealTypePrivate.h">
+      <Filter>Header Files\CoreUObject\UObject</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -141,6 +144,9 @@
       <Filter>Source Files\CoreUObject\UObject</Filter>
     </ClCompile>
     <ClCompile Include="CoreUObject\UObject\UObjectBaseUtility.cpp">
+      <Filter>Source Files\CoreUObject\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="CoreUObject\UObject\UnrealTypePrivate.cpp">
       <Filter>Source Files\CoreUObject\UObject</Filter>
     </ClCompile>
   </ItemGroup>

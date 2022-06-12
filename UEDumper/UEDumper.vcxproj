@@ -158,6 +158,7 @@
     <ClInclude Include="CoreUObject\UObject\Class.h" />
     <ClInclude Include="CoreUObject\UObject\ObjectMacros.h" />
     <ClInclude Include="CoreUObject\UObject\Script.h" />
+    <ClInclude Include="CoreUObject\UObject\UnrealTypePrivate.h" />
     <ClInclude Include="CoreUObject\UObject\UObjectArray.h" />
     <ClInclude Include="CoreUObject\UObject\UObjectBase.h" />
     <ClInclude Include="CoreUObject\UObject\UObjectBaseUtility.h" />
@@ -176,6 +177,7 @@
     <ClCompile Include="CoreUObject\UObject\Class.cpp" />
     <ClCompile Include="CoreUObject\UObject\ObjectMacros.cpp" />
     <ClCompile Include="CoreUObject\UObject\Script.cpp" />
+    <ClCompile Include="CoreUObject\UObject\UnrealTypePrivate.cpp" />
     <ClCompile Include="CoreUObject\UObject\UObjectArray.cpp" />
     <ClCompile Include="CoreUObject\UObject\UObjectBase.cpp" />
     <ClCompile Include="CoreUObject\UObject\UObjectBaseUtility.cpp" />
