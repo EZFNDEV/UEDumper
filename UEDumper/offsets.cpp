@@ -16,7 +16,6 @@ uintptr_t OffsetsFinder::FindRealFunction(uintptr_t* _Function) { // THIS ONLY W
     // Try to find the ret
     for (uint16_t i = 0; i < 500; i++) {
         if (*(uint8_t*)(Address + i) == 0xC3) {
-            printf("Found at: %p\n", Address + i);
             Address = Address + i;
             break;
         }
@@ -75,10 +74,13 @@ uint16_t OffsetsFinder::FindUClass_ChildProperties() {
 	
     uintptr_t RealFunction = OffsetsFinder::FindRealFunction(Function);
     if (!RealFunction) return 0;
-	
+
     uint16_t SizeOfFunction = 0;
     for (uint16_t i = 0; i < 500; i++) {
-        if (*(uint8_t*)(RealFunction + i) == 0xC3) {
+        if (
+            *(uint8_t*)(RealFunction + i) == 0xC3 && 
+            *(uint8_t*)(RealFunction + i - 1) == 0x5F
+        ) {
             SizeOfFunction = i;
             break;
         }
@@ -105,10 +107,10 @@ uint16_t OffsetsFinder::FindUClass_ChildProperties() {
 
     for (uint8_t i = 0; i < 255; i++) {
         if (
-            *(uint8_t*)(RealFunction + i) == 0x74 &&
-            *(uint8_t*)(RealFunction + i + 1) == 0x0B
+            *(uint8_t*)(StartPoint + i) == 0x74 &&
+            *(uint8_t*)(StartPoint + i + 1) == 0x0B
         ) {
-            return *(uint8_t*)(RealFunction + i + 5);
+            return *(uint8_t*)(StartPoint + i + 5);
         }
     }
 

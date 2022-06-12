@@ -52,7 +52,6 @@ static void Main() {
         Offsets::UObjectBase::ClassPrivate = OffsetsFinder::FindUObjectBase_ClassPrivate();
 		
         Offsets::UClass::ChildProperties = OffsetsFinder::FindUClass_ChildProperties();
-
 		// TODO: Next...
 
         Offsets::GObjects = OffsetsFinder::FindGObjects();
