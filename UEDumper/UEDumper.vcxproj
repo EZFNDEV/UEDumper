@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="buildSettings.h" />
     <ClInclude Include="CoreUObject\UObject\Class.h" />
     <ClInclude Include="CoreUObject\UObject\ObjectMacros.h" />
     <ClInclude Include="CoreUObject\UObject\Script.h" />

@@ -5,9 +5,7 @@
 #include "CoreUObject/UObject/UObjectBaseUtility.h"
 #include <iostream>
 
-#define SEARCH_OFFSETS
-#define PRINT_OFFSETS
-#define DUMP
+#include "buildSettings.h"
 
 static void Main() {
 
@@ -57,7 +55,7 @@ static void Main() {
         Offsets::UStruct::SuperStruct = OffsetsFinder::FindUStruct_SuperStruct();
 
         Offsets::UField::Next = 0x20; // TODO: Get this automatically (Easy)
-
+       // return;
         Offsets::GObjects = OffsetsFinder::FindGObjects();
 		if (!Offsets::GObjects) {
 			printf("Failed to find GObjects\n");
@@ -70,14 +68,9 @@ static void Main() {
 
     // A few checks to make sure ChildProperties doesn't exist
 
-        // TODO: LMFAO
+        // TODO: Take the check from Dump::Dump and put it into here (not possible bc then the array will be 0 in dump, fuck... Milxnor help)
 
     Offsets::UStruct::Children = Offsets::UClass::ChildProperties;
-
-    // NOTE: Milxnor
-    // If PropertiesSize is higher than maxint, we do know that it also has ChildProperties, meaning we need to loop them too
-    // otherwise we need to chcek if its 0, if its 0 it might also just be a empty ChildProperty, but if its 0 and Children is 0 too
-    // we do know that its PropertiesSize so yea, what we gonna do is Get the first obj from GObjects (it has no children) and then check everything :)
 
     #ifdef PRINT_OFFSETS
         printf("ProcessEvent: %p\n", Offsets::ProcessEvent);

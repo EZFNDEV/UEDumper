@@ -69,11 +69,20 @@ uint16_t OffsetsFinder::FindUObjectBase_ClassPrivate() {
 }
 
 uint16_t OffsetsFinder::FindUStruct_SuperStruct() {
-    uintptr_t* Function = Utils::StaticFindObject(L"Engine.KismetSystemLibrary.SetObjectPropertyByName");
+    uintptr_t* Function = Utils::StaticFindObject(L"Engine.KismetSystemLibrary.GetActorListFromComponentList");
     if (!Function) return 0;
 
     uintptr_t RealFunction = OffsetsFinder::FindRealFunction(Function);
     if (!RealFunction) return 0;
+
+    // This is really not good....
+    // bruh no, doesn't work at all, we need a different function...
+    printf("RealFunction: %p\n", RealFunction);
+
+	// Milxnor, maybe we should really just do -8
+    return Offsets::UClass::ChildProperties - 8;
+
+  
 
     for (uint8_t i = 0; i < 255; i++) {
         if (
@@ -85,6 +94,9 @@ uint16_t OffsetsFinder::FindUStruct_SuperStruct() {
             return *(uint8_t*)(RealFunction + i + 10);
         }
     }
+
+	// Season 6.21 is VERY weird?
+	
 
     return 0;
 }

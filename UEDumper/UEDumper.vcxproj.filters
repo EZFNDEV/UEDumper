@@ -99,6 +99,9 @@
     <ClInclude Include="CoreUObject\UObject\UnrealTypePrivate.h">
       <Filter>Header Files\CoreUObject\UObject</Filter>
     </ClInclude>
+    <ClInclude Include="buildSettings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">

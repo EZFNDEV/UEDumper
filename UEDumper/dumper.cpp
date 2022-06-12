@@ -76,68 +76,78 @@ static uintptr_t GetRealFunction_Test() {
     return 0;
 }
 
+// Small tools (We should set that in dllmain.cpp but then it will not work from here, can u fix that? Milxnor)
+static bool IsOldObjectArray() {
+	// At least thats how it is for Fortnite... If it doesn't work for you feel free to fix it. Nvm...
+	// return *(__int64*)((__int64)Offsets::GObjects + 0x10) == 0xFFFFFFFFFFFFFFFF;
+
+    if ((new FUObjectArray(Offsets::GObjects, true))->Num() == -1) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 void Dumper::Dump() {
     //GetRealFunction_Test();
     //return;
-	
     printf("Creating a whole dump now, this will take longer, if you don't need everything please change the settings.\n");
 
-    // TODO: Find a way to determine the object array type.
-    bool bNewObjectArray = false;
-    printf("Offsets::GObjects: %p\n", Offsets::GObjects);
-    GUObjectArray = *new FUObjectArray(Offsets::GObjects, bNewObjectArray);
+    bool bNewObjectArray = IsOldObjectArray();
+    GUObjectArray = *new FUObjectArray(Offsets::GObjects, !bNewObjectArray);
 
-    printf("We are dumping everything now...\n");
+    // NOTE: Milxnor
+    // If PropertiesSize is higher than maxint, we do know that it also has ChildProperties, meaning we need to loop them too
+    // otherwise we need to chcek if its 0, if its 0 it might also just be a empty ChildProperty, but if its 0 and Children is 0 too
+    // we do know that its PropertiesSize so yea, what we gonna do is Get the first obj from GObjects (it has no children) and then check everything :)
 
-    printf("There are %d objects\n", GUObjectArray.Num());
+    // Cases:
+        // 1. PropertiesSize isnt actual a int32
+        // 2. PropertiesSize is 0
 
-	// TODO: UObject struct for GetClass() etc
-
+    UObjectBaseUtility* Object = (UObjectBaseUtility*)GUObjectArray.IndexToObject(0)->Object;
+	
     UClass* CoreUObjectFunction = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Function");
     UClass* CoreUObjectClass = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Class");
 
-    for (uintptr_t i = 0; i < GUObjectArray.Num(); i++) {
-        auto Item = GUObjectArray.IndexToObject(i);
-        //printf("Item: %p\n", Item);
-        if (Item) {
-            UObjectBaseUtility* Object = (UObjectBaseUtility*)Item->Object;
-            // printf("Object: %p\n", Object);
-
-            // printf("Class: %p\n", Object->GetClass());
+    #ifdef DUMP_JSON
+        for (uintptr_t i = 0; i < GUObjectArray.Num(); i++) {
+            auto Item = GUObjectArray.IndexToObject(i);
+            if (Item) {
+                Object = (UObjectBaseUtility*)Item->Object;
+                //printf(Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Item->Object).ToString().c_str());
 			
-            //printf(Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Item->Object).ToString().c_str());
-			
-            
-            if (Object->IsA(CoreUObjectFunction)) {
-                // printf("This is a function\n");
-                // printf(Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Item->Object).ToString().c_str());
-            }
-            else if (Object->IsA(CoreUObjectClass)) {
-                // printf("This is a chlass\n");
+                if (Object->IsA(CoreUObjectFunction)) {
+                    // printf("This is a function\n");
+                    // printf(Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Item->Object).ToString().c_str());
+                }
+                else if (Object->IsA(CoreUObjectClass)) {
+                    // printf("This is a chlass\n");
 
-				// Based on IterateToNext
+			        // Based on IterateToNext
 				
                 
 
-                for (UStruct* CurrentStruct = (UStruct*)Object->GetClass(); CurrentStruct; CurrentStruct = (UStruct*)CurrentStruct->GetSuperStruct()) {
-                    printf("CurrentStruct: %p\n", CurrentStruct);
-                    printf("Children: %p\n", CurrentStruct->GetChildren());
+                    for (UStruct* CurrentStruct = (UStruct*)Object->GetClass(); CurrentStruct; CurrentStruct = (UStruct*)CurrentStruct->GetSuperStruct()) {
+                        printf("CurrentStruct: %p\n", CurrentStruct);
+                        printf("Children: %p\n", CurrentStruct->GetChildren());
 
-                    UObjectPropertyBase* Field = (UObjectPropertyBase*)CurrentStruct->GetChildren();
-                    printf("First field: %p\n", Field);
+                        UObjectPropertyBase* Field = (UObjectPropertyBase*)CurrentStruct->GetChildren();
+                        printf("First field: %p\n", Field);
 					
-                    if (IsBadReadPtr(Field, 8)) continue;
+                        if (IsBadReadPtr(Field, 8)) continue;
 
-                    for (UObjectPropertyBase* CurrentField = (UObjectPropertyBase*)Field->GetNext(); CurrentField; CurrentField = (UObjectPropertyBase*)CurrentField->GetNext()) {
-                        printf("CurrentField: %p\n", CurrentField);
+                        for (UObjectPropertyBase* CurrentField = (UObjectPropertyBase*)Field->GetNext(); CurrentField; CurrentField = (UObjectPropertyBase*)CurrentField->GetNext()) {
+                            printf("CurrentField: %p\n", CurrentField);
+                        }
+                        return;
                     }
-                }
 
-                // TODO: Get the superthing
+                    // TODO: Get the superthing
+                }
             }
         }
-    }
-
+    #endif
    
 }
 

@@ -10,6 +10,8 @@
 // add headers that you want to pre-compile here
 #include "framework.h"
 
+#include "buildSettings.h"
+
 #include <cstdint>
 #include <string>
 #include <vector>
