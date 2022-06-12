@@ -2,6 +2,8 @@
 #include <thread>
 #include "utils.h"
 #include "dumper.h"
+#include "CoreUObject/UObject/UObjectBaseUtility.h"
+#include <iostream>
 
 #define SEARCH_OFFSETS
 #define PRINT_OFFSETS
@@ -99,10 +101,22 @@ static void Main() {
         Dumper::Dump();
     #endif
 
-    // TODO: Add UObject, UStruct because we need it for Dump()
+	/*
+        UObjectBaseUtility* (__fastcall * _StaticFindObject) (uintptr_t * ObjectClass, uintptr_t * InObjectPackage, const wchar_t* OrigInName, bool ExactClass);
+    _StaticFindObject = decltype(_StaticFindObject)(Offsets::StaticFindObject);
 
-    // UFunction: https://github.com/EpicGames/UnrealEngine/blob/46544fa5e0aa9e6740c19b44b0628b72e7bbd5ce/Engine/Source/Runtime/CoreUObject/Public/UObject/Class.h#L1887
-        // Note Milxnor: So we put it into CoreUObject/UObject/Class.h
+    UObjectBaseUtility* Engine = _StaticFindObject(0, 0, L"Transient.FortEngine_0_1", false);
+
+    std::cout << "Engine " << Engine << '\n';
+
+	UClass* PlayerControllerClass = (UClass*)_StaticFindObject(0, 0, L"FortniteGame.FortPlayerControllerAthena", false);
+
+    std::cout << "PlayercontrollerClass: " << PlayerControllerClass << '\n';
+
+    std::cout << "IsA: " << Engine->IsA(PlayerControllerClass) << '\n';
+    */
+
+    // TODO: Add UObject because we need it for Dump()
 }
 
 BOOL APIENTRY DllMain( HMODULE hModule,

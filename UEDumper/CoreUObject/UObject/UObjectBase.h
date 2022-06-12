@@ -16,9 +16,9 @@ class UObjectBase
 		}*/
 
 		/** Returns the UClass that defines the fields of this object */
-		uintptr_t* GetClass() const // TODO: Implement UClass
+		struct UClass* GetClass() const
 		{
-			return (uintptr_t*)((__int64)this + Offsets::UObjectBase::ClassPrivate);
+			return *(struct UClass**)((__int64)this + Offsets::UObjectBase::ClassPrivate);
 		}
 
 		/** Returns the UObject this object resides in */

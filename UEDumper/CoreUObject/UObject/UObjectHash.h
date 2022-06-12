@@ -36,16 +36,15 @@ public:
 	 */
 	FUObjectArray() {}
 
-	/**
-	 * Returns the index of a UObject. Be advised this is only for very low level use.
-	 *
-	 * @param Object object to get the index of
-	 * @return index of this object
-	 */
-	 /*inline int32_t ObjectToIndex(const class UObjectBase* Object) const
-	 {
-		 return Object->InternalIndex;
-	 }*/
+	FUObjectArray(uintptr_t ObjectArrayAddr, bool bUseNewObjectArray)
+	{
+		if (!bUseNewObjectArray)
+			ObjObjectsOld = (FFixedUObjectArray*)ObjectArrayAddr;
+		else
+			ObjObjectsNew = (FChunkedFixedUObjectArray*)ObjectArrayAddr;
+
+		useNewObjectArray = bUseNewObjectArray;
+	}
 
 	 /**
 	  * Returns the UObject corresponding to index. Be advised this is only for very low level use.
@@ -60,26 +59,25 @@ public:
 		if (useNewObjectArray) {
 			if (Index < ObjObjectsNew->Num())
 			{
-				return const_cast<FUObjectItem*>(ObjObjectsNew->GetObjectPtr(Index));
+				return ObjObjectsNew->GetObjectPtr(Index);
 			}
 		}
 		else {
-			if (Index < ObjObjectsNew->Num())
+			if (ObjObjectsOld->IsValidIndex(Index))
 			{
-				return const_cast<FUObjectItem*>(ObjObjectsNew->GetObjectPtr(Index));
+				return ObjObjectsOld->GetObjectPtr(Index);
 			}
 		}
 
 		return nullptr;
 	}
 
-	// EZFN-TODO: Is that right lol
-	uintptr_t Num() {
+	int32_t Num() {
 		if (useNewObjectArray) {
-			return (uintptr_t)ObjObjectsNew->Num();
+			return ObjObjectsNew->Num();
 		}
 		else {
-			return (uintptr_t)ObjObjectsNew->Num();
+			return ObjObjectsOld->Num();
 		}
 
 		return 0;
@@ -88,6 +86,7 @@ public:
 public:
 	// EZFN-NOTE: Hacky way to support all versions
 	FChunkedFixedUObjectArray* ObjObjectsNew;
+	FFixedUObjectArray* ObjObjectsOld;
 
 	bool useNewObjectArray;
 };

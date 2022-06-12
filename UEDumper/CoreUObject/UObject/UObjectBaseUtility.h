@@ -1,6 +1,7 @@
 #pragma once
 
 #include "UObjectBase.h"
+#include "Class.h"
 
 /**
  * Provides utility functions for UObject, this class should not be used directly
@@ -8,15 +9,13 @@
 class UObjectBaseUtility : public UObjectBase
 {
 	public:
-		template <typename ClassType>
-		static bool IsChildOfWorkaround(const ClassType* ObjClass, const ClassType* TestCls)
+		static bool IsChildOfWorkaround(const UClass* ObjClass, const UClass* TestCls)
 		{
 			return ObjClass->IsChildOf(TestCls);
 		}
 
 		/**Returns true if this object is of the specified type.*/
-		template <typename OtherClassType>
-		bool IsA(OtherClassType SomeBase) const
+		bool IsA(UClass* SomeBaseClass) const
 		{
 			// We have a cyclic dependency between UObjectBaseUtility and UClass,
 			// so we use a template to allow inlining of something we haven't yet seen, because it delays compilation until the function is called.

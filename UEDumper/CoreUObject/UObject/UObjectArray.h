@@ -315,12 +315,60 @@ public:
 	{
 		return AddRange(1);
 	}*/
+};
+
+/**
+* Fixed size UObject array.
+*/
+class FFixedUObjectArray
+{
+	/** Static master table to chunks of pointers **/
+	FUObjectItem* Objects;
+	/** Number of elements we currently have **/
+	int32_t MaxElements;
+	/** Current number of UObject slots */
+	int32_t NumElements;
+public:
+	FORCEINLINE FUObjectItem const* GetObjectPtr(int32_t Index) const
+	{
+		// check(Index >= 0 && Index < NumElements);
+		return &Objects[Index];
+	}
+
+	FORCEINLINE FUObjectItem* GetObjectPtr(int32_t Index)
+	{
+		// check(Index >= 0 && Index < NumElements);
+		return &Objects[Index];
+	}
 
 	/**
-	* Return a naked pointer to the fundamental data structure for debug visualizers.
+	* Return the number of elements in the array
+	* Thread safe, but you know, someone might have added more elements before this even returns
+	* @return	the number of elements in the array
 	**/
-	/*FUObjectItem*** GetRootBlockForDebuggerVisualizers()
+	FORCEINLINE int32_t Num() const
 	{
-		return nullptr;
-	}*/
+		return NumElements;
+	}
+
+	/**
+	* Return the number max capacity of the array
+	* Thread safe, but you know, someone might have added more elements before this even returns
+	* @return	the maximum number of elements in the array
+	**/
+	FORCEINLINE int32_t Capacity() const
+	{
+		return MaxElements;
+	}
+
+	/**
+	* Return if this index is valid
+	* Thread safe, if it is valid now, it is valid forever. Other threads might be adding during this call.
+	* @param	Index	Index to test
+	* @return	true, if this is a valid
+	**/
+	FORCEINLINE bool IsValidIndex(int32_t Index) const
+	{
+		return Index < Num() && Index >= 0;
+	}
 };

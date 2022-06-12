@@ -39,8 +39,13 @@ namespace Offsets {
 		extern inline uint16_t FlagsPrivate = 0;
 	}
 
+	namespace UField {
+		extern inline uint16_t Next = 0;
+	};
+
 	namespace UStruct {
 		extern inline uint16_t Children = 0;
+		extern inline uint16_t SuperStruct = 0;
 	}
 
 	namespace FName {

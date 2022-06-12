@@ -79,27 +79,26 @@ void Dumper::Dump() {
     //GetRealFunction_Test();
     //return;
 	
-    printf("Creating a whole dump now, this will take longer, if u don't need everything please change the settings.");
+    printf("Creating a whole dump now, this will take longer, if you don't need everything please change the settings.\n");
 
-    GUObjectArray = *new FUObjectArray();
-    // TODO: Figure out if its a new object or old
-    GUObjectArray.useNewObjectArray = true;
-    GUObjectArray.ObjObjectsNew = (FChunkedFixedUObjectArray*)Offsets::GObjects;
+    // TODO: Find a way to determine the object array type.
+    bool bNewObjectArray = false;
+    GUObjectArray = *new FUObjectArray(Offsets::GObjects, bNewObjectArray);
 
-    printf("We are dumping everythig now...\n");
+    printf("We are dumping everything now...\n");
 
-    printf("There are %p objects\n", GUObjectArray.ObjObjectsNew->Num());
+    printf("There are %d objects\n", GUObjectArray.Num());
 
 	// TODO: UObject struct for GetClass() etc
 
-    for (uintptr_t i = 0; i < GUObjectArray.ObjObjectsNew->Num(); i++) {
+    for (uintptr_t i = 0; i < GUObjectArray.Num(); i++) {
         auto Item = GUObjectArray.IndexToObject(i);
         //printf("Item: %p\n", Item);
         if (Item) {
             UObjectBase* Object = (UObjectBase*)Item->Object;
-            //printf("Object: %p\n", Object);
+            // printf("Object: %p\n", Object);
 
-            printf("Class: %p\n", Object->GetClass());
+            // printf("Class: %p\n", Object->GetClass());
 			
             //printf(Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Item->Object).ToString().c_str());
 			
