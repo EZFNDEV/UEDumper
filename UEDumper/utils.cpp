@@ -5,20 +5,16 @@ uintptr_t* Utils::StaticFindObject(const wchar_t* ObjectName) {
 	return _StaticFindObject(nullptr, nullptr, ObjectName, false);
 }
 
-struct FString Utils::UKismetStringLibrary::Conv_NameToString(FName inName) {
+struct FString Utils::UKismetStringLibrary::Conv_NameToString(FName* inName) {
 	struct {
-		FName inName;
+		uint64_t inName;
 		struct FString ReturnValue;
-	} params;
-
-	params.inName = inName;
-
+	} params { .inName = inName->GetComparisonIndex().Value };
+	
 	printf("inName: %p\n", inName);
-	printf("inName: %p\n", inName.GetComparisonIndex().Value);
 
-	printf("KismetStringLibrary: %p\n", Utils::UKismetStringLibrary::KismetStringLibrary);
-	printf("_Conv_NameToString: %p\n", Utils::UKismetStringLibrary::_Conv_NameToString);
-	printf("_ProcessEvent: %p\n", Utils::_ProcessEvent);
+	printf("FName: %i\n", inName->GetComparisonIndex().Value);
+	printf("DisplayIndex: %i\n", inName->GetDisplayIndex().Value);
 
 	Utils::_ProcessEvent(Utils::UKismetStringLibrary::KismetStringLibrary, Utils::UKismetStringLibrary::_Conv_NameToString, &params);
 

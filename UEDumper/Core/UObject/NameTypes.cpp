@@ -3,5 +3,5 @@
 #include "../../utils.h"
 
 FString FName::ToString() const {
-	return Utils::UKismetStringLibrary::Conv_NameToString(*this);
+	return Utils::UKismetStringLibrary::Conv_NameToString((FName*)this);
 }

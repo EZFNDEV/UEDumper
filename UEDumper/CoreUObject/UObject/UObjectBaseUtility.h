@@ -40,7 +40,7 @@ class UObjectBaseUtility : public UObjectBase
 		 *
 		 * @return Name of the object.
 		*/
-		FString GetName() const
+		FString GetName()
 		{
 			return GetFName().ToString();
 		}

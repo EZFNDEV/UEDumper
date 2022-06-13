@@ -29,8 +29,10 @@ class UObjectBase
 		}*/
 
 		/** Returns the logical name of this object */
-		FName GetFName() const
+		struct FName GetFName()
 		{
-			return *(FName*)((__int64)this + Offsets::UObjectBase::NamePrivate);
+			printf("this: %p\n", this);
+			printf("this: %p\n", this);
+			return *(struct FName*)((__int64)this + 0x28);
 		}
 };

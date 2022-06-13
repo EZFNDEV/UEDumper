@@ -60,9 +60,7 @@ static uintptr_t GetRealFunction_Test() {
 
         FName* Name = (FName*)(NameAddr);
         printf("Name: %i\n", Name->GetComparisonIndex().Value);
-        
-        FString Result = Utils::UKismetStringLibrary::Conv_NameToString(*Name);
-        printf("Result: %p\n", Result);
+		
 
         printf("Function Start: %p\n", FunctionStart);
         printf("UFunction: %p\n", LastAddress);
@@ -89,8 +87,8 @@ static bool IsOldObjectArray() {
 }
 
 void Dumper::Dump() {
-    //GetRealFunction_Test();
-    //return;
+    // GetRealFunction_Test();
+    // return;
     printf("Creating a whole dump now, this will take longer, if you don't need everything please change the settings.\n");
 
     bool bNewObjectArray = IsOldObjectArray();
@@ -126,17 +124,19 @@ void Dumper::Dump() {
 
 			        // Based on IterateToNext
 				
-                
+					// im brain dead rn, this is wrong, can u fix it Milxnor?
+                    for (auto Property = *(uint64_t*)((__int64)Object + 56); !IsBadReadPtr((void*)Property, 8); Property = *(uint64_t*)(Property + 0x20)) {
+                       // printf("Property: %p\n", Property);
+                      //  
+                        auto Type = *(uint64_t*)(Property + 0x8);
+                        auto Property_FName = *(uint64_t*)(Property + 0x28);
 
-                    for (UStruct* CurrentStruct = (UStruct*)Object->GetClass(); CurrentStruct; CurrentStruct = (UStruct*)CurrentStruct->GetSuperStruct()) {
-                        UObjectPropertyBase* Field = (UObjectPropertyBase*)CurrentStruct->GetChildren();
-					
-                        if (IsBadReadPtr(Field, 8)) continue;
-
-                        for (UObjectPropertyBase* CurrentField = (UObjectPropertyBase*)Field->GetNext(); CurrentField; CurrentField = (UObjectPropertyBase*)CurrentField->GetNext()) {
-                            printf("STr: %s\n", CurrentField->GetFName().ToString().c_str());
-                        }
+                        if (Property_FName == 0) continue;
+                        printf("Property_FName: %p\n", Property_FName);
+                       // wprintf(L"STr: %s\n", Utils::UKismetStringLibrary::Conv_NameToString((struct FName*)(Property + 0x28)).ToString().c_str());
+                        return;
                     }
+
 
                     // TODO: Get the superthing
                 }
