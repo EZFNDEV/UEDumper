@@ -5,10 +5,10 @@ uintptr_t* Utils::StaticFindObject(const wchar_t* ObjectName) {
 	return _StaticFindObject(nullptr, nullptr, ObjectName, false);
 }
 
-uintptr_t Utils::UKismetStringLibrary::Conv_NameToString(FName inName) {
+struct FString Utils::UKismetStringLibrary::Conv_NameToString(FName inName) {
 	struct {
 		FName inName;
-		uintptr_t ReturnValue;
+		struct FString ReturnValue;
 	} params;
 
 	params.inName = inName;

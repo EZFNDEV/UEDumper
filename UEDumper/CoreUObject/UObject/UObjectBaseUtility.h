@@ -2,6 +2,7 @@
 
 #include "UObjectBase.h"
 #include "Class.h"
+#include "../../Core/Containers/UnrealString.h"
 
 /**
  * Provides utility functions for UObject, this class should not be used directly
@@ -32,5 +33,15 @@ class UObjectBaseUtility : public UObjectBase
 			// UE_ASSUME(ThisClass);
 
 			return IsChildOfWorkaround(ThisClass, SomeBaseClass);
+		}
+
+		/**
+		 * Returns the name of this object (with no path information)
+		 *
+		 * @return Name of the object.
+		*/
+		FString GetName() const
+		{
+			return GetFName().ToString();
 		}
 };

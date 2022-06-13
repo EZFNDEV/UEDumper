@@ -1,4 +1,5 @@
 #pragma once
+#include "../../Core/UObject/NameTypes.h"
 
 /**
  * Low level implementation of UObject, should not be used directly in game code
@@ -28,8 +29,8 @@ class UObjectBase
 		}*/
 
 		/** Returns the logical name of this object */
-		/*FName GetFName() const
+		FName GetFName() const
 		{
-			return NamePrivate;
-		}*/
+			return *(FName*)((__int64)this + Offsets::UObjectBase::NamePrivate);
+		}
 };

@@ -68,36 +68,55 @@ uint16_t OffsetsFinder::FindUObjectBase_ClassPrivate() {
     return 0;
 }
 
+uint16_t OffsetsFinder::FindUObjectBase_NamePrivate() {
+	// NOTE: I think this is always right, we might do a check though...
+
+    return Offsets::UObjectBase::ClassPrivate + 0x8;
+}
+
 uint16_t OffsetsFinder::FindUStruct_SuperStruct() {
-    uintptr_t* Function = Utils::StaticFindObject(L"Engine.KismetSystemLibrary.GetActorListFromComponentList");
-    if (!Function) return 0;
-
-    uintptr_t RealFunction = OffsetsFinder::FindRealFunction(Function);
-    if (!RealFunction) return 0;
-
-    // This is really not good....
-    // bruh no, doesn't work at all, we need a different function...
-    printf("RealFunction: %p\n", RealFunction);
-
-	// Milxnor, maybe we should really just do -8
-    return Offsets::UClass::ChildProperties - 8;
-
-  
-
-    for (uint8_t i = 0; i < 255; i++) {
-        if (
-            *(uint8_t*)(RealFunction + i) == 0xFF &&
-            *(uint8_t*)(RealFunction + i + 1) == 0x90
-        ) {
-			// Skip the call qword ptr [rax+148h]
-			// mov rbp, [rsp+48h+arg_8]
-            return *(uint8_t*)(RealFunction + i + 10);
-        }
+    uintptr_t* Object = Utils::StaticFindObject(L"Engine.World");
+    while (!Object) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-	// Season 6.21 is VERY weird?
-	
+	/* New
+    UStruct* SuperStruct;
+    UField* Children;
+    FField* ChildProperties;*/
 
+    /* Old
+    UStruct* SuperStruct;
+    UField* Children;*/
+
+	// So, if World - 16 is null (bc the bytes before super struct are null)
+	// we know that its the old version
+
+	// I know it's tricky, but yea
+    // TODO: We are gonna check if its really the SuperStruct
+    if (*(__int64*)((__int64)Object + (Offsets::UClass::ChildProperties - 16)) == 0) {
+        printf("Old version\n");
+        return Offsets::UClass::ChildProperties - 8;
+    } else {
+        return Offsets::UClass::ChildProperties - 16;
+    }
+
+    // This was just testing to make sure all other patterns work
+
+	// Go down 8 in a loop, make sure its a pointer, then get the object name, if its right we know
+	// that we got the SuperStruct offsets :)
+
+    for (
+        uint16_t i = Offsets::UClass::ChildProperties;
+        i > Offsets::UObject::InternalIndex;
+        i -= 8
+    ) {
+	    // So, it will be SuperStruct, or Children...
+		uintptr_t* Object = (uintptr_t*)((__int64)Object + i);
+		
+        printf("Object: %p");
+    }
+    
     return 0;
 }
 
@@ -328,7 +347,10 @@ uintptr_t OffsetsFinder::FindProcessEvent() {
 }
 
 uintptr_t OffsetsFinder::FindStaticFindObject() {
-    uintptr_t StaticFindObjectAddr = (uintptr_t)Memory::FortKit::FindByString(L"Illegal call to StaticFindObject() while serializing object data!", { Memory::FortKit::ASM::LEA });
+    uintptr_t StaticFindObjectStrAddr = Memory::FortKit::FindPattern("49 00 6C 00 6C 00 65 00 67 00 61 00 6C 00 20 00 63 00 61 00 6C 00 6C 00 20 00 74 00 6F 00 20 00 53 00 74 00 61 00 74 00 69 00 63 00 46 00 69 00 6E 00 64 00 4F 00 62 00 6A 00 65 00 63 00 74 00 28 00 29 00 20 00 77 00 68 00 69 00 6C 00 65 00 20 00 73 00 65 00 72 00 69 00 61 00 6C 00 69 00 7A 00 69 00 6E 00 67 00 20 00 6F 00 62 00 6A 00 65 00 63 00 74 00 20 00 64 00 61 00 74 00 61 00 21");
+    uintptr_t StaticFindObjectAddr = (uintptr_t)Memory::FortKit::FindXREF(StaticFindObjectStrAddr);
+
+    printf("StaticFindObjectAddr: %p\n", StaticFindObjectAddr);
 
     if (StaticFindObjectAddr == 0) {
         // Find it by Temp
@@ -339,6 +361,7 @@ uintptr_t OffsetsFinder::FindStaticFindObject() {
 
     for (StaticFindObjectAddr; StaticFindObjectAddr > 0; StaticFindObjectAddr -= 1) {
         // if (GetBytes(StaticFindObjectAddr, 5).starts_with("48 89 5C 24 08")) // do something like this
+		// NOTE (Lupus): This might be slower...
         if (
             *(uint8_t*)StaticFindObjectAddr == 0x48 &&
             *(uint8_t*)(StaticFindObjectAddr + 1) == 0x89 &&

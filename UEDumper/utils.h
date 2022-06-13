@@ -32,7 +32,7 @@ namespace Utils {
 			);
 		}
 
-		extern inline uintptr_t Conv_NameToString(FName inName);
+		extern inline struct FString Conv_NameToString(FName inName);
 	}
 
 	namespace UKismetSystemLibrary {

@@ -23,11 +23,30 @@
  * - Use \uxxxx or \Uxxxxxxxx escape sequences rather than \x to specify Unicode code points.
  */
 
+class FString : private TArray<wchar_t>
+{
+    public:
+        FString() = default;
 
-class FString : private TArray<wchar_t>{ // TODO: um...
-	public:
-		FString() = default;
-		
-		// Non existing function but it makes things easier
-		std::string ToString();
+        FString(const wchar_t* other)
+        {
+            Max = Count = *other ? std::wcslen(other) + 1 : 0;
+
+            if (Count)
+            {
+                Data = const_cast<wchar_t*>(other);
+            }
+        };
+
+        inline bool IsValid() const
+        {
+            return Data != nullptr;
+        }
+
+        inline const wchar_t* c_str() const
+        {
+            return Data;
+        }
+
+        std::string ToString();
 };

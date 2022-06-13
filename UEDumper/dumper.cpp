@@ -61,7 +61,7 @@ static uintptr_t GetRealFunction_Test() {
         FName* Name = (FName*)(NameAddr);
         printf("Name: %i\n", Name->GetComparisonIndex().Value);
         
-        uintptr_t Result = Utils::UKismetStringLibrary::Conv_NameToString(*Name);
+        FString Result = Utils::UKismetStringLibrary::Conv_NameToString(*Name);
         printf("Result: %p\n", Result);
 
         printf("Function Start: %p\n", FunctionStart);
@@ -129,18 +129,13 @@ void Dumper::Dump() {
                 
 
                     for (UStruct* CurrentStruct = (UStruct*)Object->GetClass(); CurrentStruct; CurrentStruct = (UStruct*)CurrentStruct->GetSuperStruct()) {
-                        printf("CurrentStruct: %p\n", CurrentStruct);
-                        printf("Children: %p\n", CurrentStruct->GetChildren());
-
                         UObjectPropertyBase* Field = (UObjectPropertyBase*)CurrentStruct->GetChildren();
-                        printf("First field: %p\n", Field);
 					
                         if (IsBadReadPtr(Field, 8)) continue;
 
                         for (UObjectPropertyBase* CurrentField = (UObjectPropertyBase*)Field->GetNext(); CurrentField; CurrentField = (UObjectPropertyBase*)CurrentField->GetNext()) {
-                            printf("CurrentField: %p\n", CurrentField);
+                            printf("STr: %s\n", CurrentField->GetFName().ToString().c_str());
                         }
-                        return;
                     }
 
                     // TODO: Get the superthing

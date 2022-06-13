@@ -26,6 +26,7 @@ namespace Offsets {
 
 	namespace UObjectBase {
 		extern inline uint16_t ClassPrivate = 0;
+		extern inline uint16_t NamePrivate = 0;
 	}
 
 	namespace UClass {
@@ -74,6 +75,8 @@ namespace OffsetsFinder {
 
 	// UClass stuff
 	extern inline uint16_t FindUObjectBase_ClassPrivate();
+	extern inline uint16_t FindUObjectBase_NamePrivate();
+	
 	extern inline uint16_t FindUClass_ChildProperties();
 
 	// UStruct

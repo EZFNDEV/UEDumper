@@ -20,6 +20,7 @@
 
 #include "include/memory.h"
 #include "offsets.h"
+#include "utils.h"
 
 #include "CoreUObject/UObject/Class.h"
 

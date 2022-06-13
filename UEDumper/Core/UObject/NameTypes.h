@@ -1,4 +1,5 @@
 #pragma once
+#include "../Containers/UnrealString.h"
 
 /** Maximum size of name, including the null terminator. */
 enum { NAME_SIZE = 1024 };
@@ -35,17 +36,12 @@ class FName {
 			*(int32_t*)((__int64)this + Offsets::FName::Number) = NewNumber;
 		}
 
-		// TODO:
-		/** Get name without number part as a dynamically allocated string */
-		
 		/**
-		 * Converts an FName to a readable format, in place
+		 * Converts an FName to a readable format
 		 *
-		 * @param Out String to fill with the string representation of the name
-		 */
-		void ToString() { // TODO
-			
-		}
+		 * @return String representation of the name
+		*/
+		FString ToString() const;
 
 		/**
 		 * Buffer size required for any null-terminated FName string, i.e. [name] '_' [digits] '\0'

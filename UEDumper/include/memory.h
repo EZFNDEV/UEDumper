@@ -1,5 +1,6 @@
 #pragma once
 #include "../pch.h"
+#include <dbghelp.h>
 
 // Find string ref function by kem0x (and psychopast i think)
 
@@ -84,47 +85,65 @@ namespace Memory {
 			return nullptr;
 		}
 
-		static void* FindByString(const std::wstring& string, std::vector<int> opcodesToFind = {}, bool bRelative = false, uint32_t offset = 0, bool forward = false)
-		{
-			auto ref = FindStringRef(string);
+		// Only reason we use this is to make sure a string is 100% not included in the exe, so we
+		// can try the other method with a new string...
+		static uintptr_t FindXREF(uintptr_t address) {
+			uintptr_t base_address = reinterpret_cast<uintptr_t>(GetModuleHandle(nullptr));
 
-			if (ref)
+			const auto dosHeader = (PIMAGE_DOS_HEADER)base_address;
+			const auto ntHeaders = (PIMAGE_NT_HEADERS)((std::uint8_t*)base_address + dosHeader->e_lfanew);
+
+			IMAGE_SECTION_HEADER* textSection = nullptr;
+			IMAGE_SECTION_HEADER* rdataSection = nullptr;
+
+			auto sectionsSize = ntHeaders->FileHeader.NumberOfSections;
+			auto section = IMAGE_FIRST_SECTION(ntHeaders);
+
+			for (WORD i = 0; i < sectionsSize; section++)
 			{
-				//printf("Ref %ls %p\n", string.c_str(), ref);
+				auto secName = std::string((char*)section->Name);
 
-
-				const auto scanBytes = static_cast<std::uint8_t*>(ref);
-
-				//scan backwards till we hit a ret (and assume this is the function start)
-				for (auto i = 0; forward ? (i < 2048) : (i > -2048); forward ? i++ : i--)
+				if (secName == ".text")
 				{
-					if (opcodesToFind.size() == 0)
-					{
-						if (scanBytes[i] == ASM::INT3 || scanBytes[i] == ASM::RETN)
-						{
-							return &scanBytes[i + 1];
-						}
-					}
-					else
-					{
-						for (uint8_t byte : opcodesToFind)
-						{
-							if (scanBytes[i] == byte && byte != ASM::SKIP)
-							{
-								if (bRelative)
-								{
-									uintptr_t address = reinterpret_cast<uintptr_t>(&scanBytes[i]);
-									address = ((address + offset + 4) + *(int32_t*)(address + offset));
-									return (void*)address;
-								}
-								return &scanBytes[i];
-							}
-						}
-					}
+					textSection = section;
 				}
+				else if (secName == ".rdata")
+				{
+					rdataSection = section;
+				}
+
+				if (textSection && rdataSection)
+					break;
 			}
 
-			return nullptr;
+			auto textStart = base_address + textSection->VirtualAddress;
+
+			auto rdataStart = base_address + rdataSection->VirtualAddress;
+			auto rdataEnd = rdataStart + rdataSection->Misc.VirtualSize;
+			
+			// Find the mov
+			uintptr_t current = textStart;
+
+			printf("current: %p\n", current);
+
+			while (current < textStart + textSection->Misc.VirtualSize) {
+				if (
+					*(uint8_t*)(current) == 0x48 ||
+					*(uint8_t*)(current + 1) == 0x8B ||
+					*(uint8_t*)(current + 2) == 0x05
+				) {
+					uintptr_t strAddr = current + 7 + *(int32_t*)(current + 3);
+
+					if (strAddr != address) {
+						current += 7;
+						continue;
+					}
+
+					return current;
+				}
+
+				current++;
+			}
 		}
 
 		static uintptr_t FindPattern(const char* signature, bool bRelative = false, uint32_t offset = 0)
@@ -186,6 +205,52 @@ namespace Memory {
 
 			return NULL;
 		}
+
+		// Doesn't really work...
+		static void* FindByString(const std::wstring& string, std::vector<int> opcodesToFind = {}, bool bRelative = false, uint32_t offset = 0, bool forward = false)
+		{
+			auto ref = FindStringRef(string);
+
+			if (ref)
+			{
+				//printf("Ref %ls %p\n", string.c_str(), ref);
+
+
+				const auto scanBytes = static_cast<std::uint8_t*>(ref);
+
+				//scan backwards till we hit a ret (and assume this is the function start)
+				for (auto i = 0; forward ? (i < 2048) : (i > -2048); forward ? i++ : i--)
+				{
+					if (opcodesToFind.size() == 0)
+					{
+						if (scanBytes[i] == ASM::INT3 || scanBytes[i] == ASM::RETN)
+						{
+							return &scanBytes[i + 1];
+						}
+					}
+					else
+					{
+						for (uint8_t byte : opcodesToFind)
+						{
+							if (scanBytes[i] == byte && byte != ASM::SKIP)
+							{
+								if (bRelative)
+								{
+									uintptr_t address = reinterpret_cast<uintptr_t>(&scanBytes[i]);
+									address = ((address + offset + 4) + *(int32_t*)(address + offset));
+									return (void*)address;
+								}
+								return &scanBytes[i];
+							}
+						}
+					}
+				}
+			}
+
+			return nullptr;
+		}
+
+		
 	}
 
 	namespace Sexy {
