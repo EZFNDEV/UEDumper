@@ -3,6 +3,7 @@
 #include "UObjectBase.h"
 #include "Script.h"
 
+
 class UField : public UObjectBase
 {
 	public:
@@ -34,6 +35,12 @@ class UStruct : public UField
 
 		UField* GetChildren() {
 			return *(UField**)((__int64)this + Offsets::UStruct::Children);
+		}
+
+		struct FField* GetChildProperties() {
+			if (!Offsets::UStruct::ChildProperties) return 0;
+			
+			return 0;
 		}
 };
 

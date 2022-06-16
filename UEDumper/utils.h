@@ -16,6 +16,7 @@ namespace Utils {
 	namespace UKismetStringLibrary {
 		extern inline uintptr_t* KismetStringLibrary = 0;
 		extern inline uintptr_t* _Conv_NameToString = 0;
+		extern inline uintptr_t* _Conv_StringToName = 0;
 
 		extern inline bool Init() {
 			if (!KismetStringLibrary) {
@@ -26,13 +27,20 @@ namespace Utils {
 				_Conv_NameToString = StaticFindObject(L"Engine.KismetStringLibrary.Conv_NameToString");
 			}
 
+			if (!_Conv_StringToName) {
+				_Conv_StringToName = StaticFindObject(L"Engine.KismetStringLibrary.Conv_StringToName");
+			}
+
 			return (
 				KismetStringLibrary != 0 &&
-				_Conv_NameToString != 0
+				_Conv_NameToString != 0 &&
+				_Conv_StringToName != 0
 			);
 		}
 
 		extern inline struct FString Conv_NameToString(FName* inName);
+		extern inline struct FString Conv_NameToString(uint64_t inName);
+		extern inline FName Conv_StringToName(struct FString string);
 	}
 
 	namespace UKismetSystemLibrary {

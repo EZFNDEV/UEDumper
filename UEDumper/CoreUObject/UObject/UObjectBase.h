@@ -1,5 +1,4 @@
 #pragma once
-#include "../../Core/UObject/NameTypes.h"
 
 /**
  * Low level implementation of UObject, should not be used directly in game code
@@ -29,10 +28,8 @@ class UObjectBase
 		}*/
 
 		/** Returns the logical name of this object */
-		struct FName GetFName()
+		uint64_t GetFName() // NOTE: Yea, that's not 100% correct
 		{
-			printf("this: %p\n", this);
-			printf("this: %p\n", this);
-			return *(struct FName*)((__int64)this + 0x28);
+			return *(uint64_t*)((__int64)this + Offsets::UObjectBase::NamePrivate);
 		}
 };

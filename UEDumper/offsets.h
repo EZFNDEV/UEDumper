@@ -30,7 +30,11 @@ namespace Offsets {
 	}
 
 	namespace UClass {
-		extern inline uint16_t ChildProperties = 0;
+		
+	}
+
+	namespace FFieldClass {
+		extern inline uint16_t Name = 0; // I think this should even be right all the time
 	}
 
 	namespace FField {
@@ -47,6 +51,7 @@ namespace Offsets {
 	namespace UStruct {
 		extern inline uint16_t Children = 0;
 		extern inline uint16_t SuperStruct = 48;
+		extern inline uint16_t ChildProperties = 0;
 	}
 
 	namespace FName {
@@ -77,10 +82,9 @@ namespace OffsetsFinder {
 	extern inline uint16_t FindUObjectBase_ClassPrivate();
 	extern inline uint16_t FindUObjectBase_NamePrivate();
 	
-	extern inline uint16_t FindUClass_ChildProperties();
-
 	// UStruct
 	extern inline uint16_t FindUStruct_SuperStruct();		
+	extern inline uint16_t FindUStruct_ChildProperties();
 
 	// Util
 	extern uintptr_t FindRealFunction(uintptr_t* Function);

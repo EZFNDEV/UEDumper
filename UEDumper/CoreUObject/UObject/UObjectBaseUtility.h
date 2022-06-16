@@ -10,13 +10,13 @@
 class UObjectBaseUtility : public UObjectBase
 {
 	public:
-		static bool IsChildOfWorkaround(const UClass* ObjClass, const UClass* TestCls)
+		static bool IsChildOfWorkaround(UClass* ObjClass, class UClass* TestCls)
 		{
 			return ObjClass->IsChildOf(TestCls);
 		}
 
 		/**Returns true if this object is of the specified type.*/
-		bool IsA(UClass* SomeBaseClass) const
+		bool IsA(class UClass* SomeBaseClass) const
 		{
 			// We have a cyclic dependency between UObjectBaseUtility and UClass,
 			// so we use a template to allow inlining of something we haven't yet seen, because it delays compilation until the function is called.
@@ -26,7 +26,7 @@ class UObjectBaseUtility : public UObjectBase
 			// (void)SomeBaseClass;
 			// checkfSlow(SomeBaseClass, TEXT("IsA(NULL) cannot yield meaningful results"));
 
-			const UClass* ThisClass = GetClass();
+			class UClass* ThisClass = GetClass();
 
 			// Stop the compiler doing some unnecessary branching for nullptr checks
 			// UE_ASSUME(SomeBaseClass);
@@ -42,6 +42,6 @@ class UObjectBaseUtility : public UObjectBase
 		*/
 		FString GetName()
 		{
-			return GetFName().ToString();
+			return Utils::UKismetStringLibrary::Conv_NameToString(GetFName());
 		}
 };

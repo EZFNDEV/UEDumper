@@ -113,37 +113,26 @@ void Dumper::Dump() {
             auto Item = GUObjectArray.IndexToObject(i);
             if (Item) {
                 Object = (UObjectBaseUtility*)Item->Object;
-                //printf(Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Item->Object).ToString().c_str());
-			
                 if (Object->IsA(CoreUObjectFunction)) {
-                    // printf("This is a function\n");
-                    // printf(Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Item->Object).ToString().c_str());
+                    
                 }
                 else if (Object->IsA(CoreUObjectClass)) {
-                    // printf("This is a chlass\n");
-
-			        // Based on IterateToNext
-				
-					// im brain dead rn, this is wrong, can u fix it Milxnor?
-                    for (auto Property = *(uint64_t*)((__int64)Object + 56); !IsBadReadPtr((void*)Property, 8); Property = *(uint64_t*)(Property + 0x20)) {
-                       // printf("Property: %p\n", Property);
-                      //  
-                        auto Type = *(uint64_t*)(Property + 0x8);
-                        auto Property_FName = *(uint64_t*)(Property + 0x28);
-
-                        if (Property_FName == 0) continue;
-                        printf("Property_FName: %p\n", Property_FName);
-                       // wprintf(L"STr: %s\n", Utils::UKismetStringLibrary::Conv_NameToString((struct FName*)(Property + 0x28)).ToString().c_str());
-                        return;
+                    if (((UStruct*)Object)->GetChildren()) {
+                        for (UField* Property = (UField*)((UStruct*)Object)->GetChildren(); Property; Property = Property->GetNext()) {
+                            printf("Property: %p\n", Property);
+                            printf("Member: %s\n", Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString().c_str());
+                        }
                     }
 
-
-                    // TODO: Get the superthing
+                    if (((UStruct*)Object)->GetChildProperties()) {
+                        printf("THIS IS A NEWER THING\n");
+                    }
                 }
             }
         }
     #endif
-   
+
+		// Takes 2 seconds till now :kekw:
 }
 
 void Dumper::DumpObjectNames() {

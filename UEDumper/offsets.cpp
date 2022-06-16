@@ -71,6 +71,20 @@ uint16_t OffsetsFinder::FindUObjectBase_ClassPrivate() {
 uint16_t OffsetsFinder::FindUObjectBase_NamePrivate() {
 	// NOTE: I think this is always right, we might do a check though...
 
+    // Check idea :)
+
+	// We get Engine.Engine, after that we can get the children
+	// when we got the first Field, we get the name of TinyFont and then we
+	// can check the memory of Field, to find the name
+	// easy :)
+
+	// TinyFontName
+    uintptr_t* Engine = Utils::StaticFindObject(L"Engine.Engine");
+
+	
+
+    // printf("Name: %p\n", Utils::UKismetStringLibrary::Conv_StringToName(L"TinyFontName"));
+	
     return Offsets::UObjectBase::ClassPrivate + 0x8;
 }
 
@@ -94,11 +108,11 @@ uint16_t OffsetsFinder::FindUStruct_SuperStruct() {
 
 	// I know it's tricky, but yea
     // TODO: We are gonna check if its really the SuperStruct
-    if (*(__int64*)((__int64)Object + (Offsets::UClass::ChildProperties - 16)) == 0) {
+    if (*(__int64*)((__int64)Object + (Offsets::UStruct::ChildProperties - 16)) == 0) {
         printf("Old version\n");
-        return Offsets::UClass::ChildProperties - 8;
+        return Offsets::UStruct::ChildProperties - 8;
     } else {
-        return Offsets::UClass::ChildProperties - 16;
+        return Offsets::UStruct::ChildProperties - 16;
     }
 
     // This was just testing to make sure all other patterns work
@@ -107,7 +121,7 @@ uint16_t OffsetsFinder::FindUStruct_SuperStruct() {
 	// that we got the SuperStruct offsets :)
 
     for (
-        uint16_t i = Offsets::UClass::ChildProperties;
+        uint16_t i = Offsets::UStruct::ChildProperties;
         i > Offsets::UObject::InternalIndex;
         i -= 8
     ) {
@@ -120,7 +134,7 @@ uint16_t OffsetsFinder::FindUStruct_SuperStruct() {
     return 0;
 }
 
-uint16_t OffsetsFinder::FindUClass_ChildProperties() {
+uint16_t OffsetsFinder::FindUStruct_ChildProperties() {
     uintptr_t* Function = Utils::StaticFindObject(L"Engine.KismetSystemLibrary.SetBoolPropertyByName");
     if (!Function) return 0;
 	

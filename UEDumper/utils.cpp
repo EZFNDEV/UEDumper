@@ -11,12 +11,29 @@ struct FString Utils::UKismetStringLibrary::Conv_NameToString(FName* inName) {
 		struct FString ReturnValue;
 	} params { .inName = inName->GetComparisonIndex().Value };
 	
-	printf("inName: %p\n", inName);
+	Utils::_ProcessEvent(Utils::UKismetStringLibrary::KismetStringLibrary, Utils::UKismetStringLibrary::_Conv_NameToString, &params);
 
-	printf("FName: %i\n", inName->GetComparisonIndex().Value);
-	printf("DisplayIndex: %i\n", inName->GetDisplayIndex().Value);
+	return params.ReturnValue;
+}
+
+struct FString Utils::UKismetStringLibrary::Conv_NameToString(uint64_t inName) {
+	struct {
+		uint64_t inName;
+		struct FString ReturnValue;
+	} params{ .inName = inName };
 
 	Utils::_ProcessEvent(Utils::UKismetStringLibrary::KismetStringLibrary, Utils::UKismetStringLibrary::_Conv_NameToString, &params);
+
+	return params.ReturnValue;
+}
+
+FName Utils::UKismetStringLibrary::Conv_StringToName(struct FString string) {
+	struct {
+		struct FString string;
+		FName ReturnValue;
+	} params{ .string = string };
+
+	Utils::_ProcessEvent(Utils::UKismetStringLibrary::KismetStringLibrary, Utils::UKismetStringLibrary::_Conv_StringToName, &params);
 
 	return params.ReturnValue;
 }

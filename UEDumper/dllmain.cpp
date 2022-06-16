@@ -48,14 +48,19 @@ static void Main() {
         }
 
         Offsets::UObjectBase::ClassPrivate = OffsetsFinder::FindUObjectBase_ClassPrivate();
+        
 		
-        Offsets::UClass::ChildProperties = OffsetsFinder::FindUClass_ChildProperties();
+        Offsets::UStruct::ChildProperties = OffsetsFinder::FindUStruct_ChildProperties();
 		// TODO: Next...
 
         Offsets::UStruct::SuperStruct = OffsetsFinder::FindUStruct_SuperStruct();
 
         Offsets::UField::Next = 0x20; // TODO: Get this automatically (Easy)
        // return;
+
+		// This required ChildProperties and Children
+        Offsets::UObjectBase::NamePrivate = OffsetsFinder::FindUObjectBase_NamePrivate();
+
         Offsets::GObjects = OffsetsFinder::FindGObjects();
 		if (!Offsets::GObjects) {
 			printf("Failed to find GObjects\n");
@@ -70,7 +75,7 @@ static void Main() {
 
         // TODO: Take the check from Dump::Dump and put it into here (not possible bc then the array will be 0 in dump, fuck... Milxnor help)
 
-    Offsets::UStruct::Children = Offsets::UClass::ChildProperties;
+    Offsets::UStruct::Children = Offsets::UStruct::ChildProperties;
 
     #ifdef PRINT_OFFSETS
         printf("ProcessEvent: %p\n", Offsets::ProcessEvent);
@@ -84,13 +89,11 @@ static void Main() {
         printf("        InternalIndex: %p\n", Offsets::UObject::InternalIndex);
         printf("        ProcessEvent VTable Index: %p\n", Offsets::UObject::ProcessEvent);
 
-        printf("    UClass:\n");
-        printf("        ChildProperties: %p\n", Offsets::UClass::ChildProperties);
-
         printf("    UObjectBase:\n");
         printf("        ClassPrivate: %p\n", Offsets::UObjectBase::ClassPrivate);
 
         printf("    UStruct:\n");
+        printf("        ChildProperties: %p\n", Offsets::UStruct::ChildProperties);
         printf("        SuperStruct: %p\n", Offsets::UStruct::SuperStruct);
     #endif
 
