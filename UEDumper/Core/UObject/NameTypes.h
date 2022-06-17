@@ -47,4 +47,7 @@ class FName {
 		 * Buffer size required for any null-terminated FName string, i.e. [name] '_' [digits] '\0'
 		 */
 		static constexpr uint32_t StringBufferSize = NAME_SIZE + 1 + 10; // NAME_SIZE includes null-terminator
+
+		int pad1;
+		int pad2;
 };

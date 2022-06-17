@@ -4,19 +4,34 @@
 #include "../CoreUObject/UObject/UObjectBaseUtility.h"
 #include "../CoreUObject/UObject/UnrealTypePrivate.h"
 
-static char GetPrefix(UObjectBase* Object) // TODO: Move this to SDKFormatting;
+// Returns a string because if you do a char it breaks stuff
+static std::string GetPrefix(UObjectBase* Object) // TODO: Move this to SDKFormatting;
 {
 	static UClass* UClassClass = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Class");
 	static UClass* ActorClass = (UClass*)Utils::StaticFindObject(L"/Script/Engine.Actor");
 	static UClass* ObjectClass = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Object");
 
-	return '\0';
+	if (((UObjectBaseUtility*)Object)->IsA(UClassClass))
+	{
+		if (((UObjectBaseUtility*)Object)->IsA(ActorClass))
+		{
+			return "A";
+		}
+		else if (((UObjectBaseUtility*)Object)->IsA(ObjectClass))
+		{
+			return "U";
+		}
+	}
+
+	return "F";
 }
 
 std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) {
 
 	UClass* ClassPrivate = Property->GetClass();
 
+	// TODO: Use the struct and make the StaticClass return it.
+	
 	static UClass* DoubleProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.DoubleProperty");
 	static UClass* FloatProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.FloatProperty");
 	static UClass* IntProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.IntProperty");
@@ -30,8 +45,10 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 	static UClass* ByteProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.ByteProperty");
 	static UClass* MulticastDelegateProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.MulticastDelegateProperty");
 	static UClass* EnumProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.EnumProperty");
+	static UClass* StrProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.StrProperty");
+	static UClass* NameProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.NameProperty");
+	static UClass* UInt32Prop = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.UInt32Property");
 	
-
 	if (ClassPrivate == DoubleProp)
 		return "double";
 	else if (ClassPrivate == FloatProp)
@@ -40,17 +57,26 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 		return "int";
 	else if (ClassPrivate == Int16Prop)
 		return "int16_t";
+	else if (ClassPrivate == UInt32Prop)
+		return "uint32_t";
 	else if (ClassPrivate == StructProp)
-		return /* GetPrefix(Property) + */ Utils::UKismetStringLibrary::Conv_NameToString((*(UStruct**)(__int64(Property) + 0x70))->GetFName()).ToString(); // 0x70 = Struct
+	{
+		auto ActualStruct = *(UStruct**)(__int64(Property) + 0x70);
+		return GetPrefix(ActualStruct) + Utils::UKismetStringLibrary::Conv_NameToString(ActualStruct->GetFName()).ToString();
+
+	}
 	else if (ClassPrivate == ClassProp)
-		return /* GetPrefix(Property) + */ Utils::UKismetStringLibrary::Conv_NameToString((*(UStruct**)(__int64(Property) + 120))->GetFName()).ToString(); // 120 = MetaClass
+	{
+		auto MetaClass = *(UStruct**)(__int64(Property) + 120);
+		return GetPrefix(MetaClass) + Utils::UKismetStringLibrary::Conv_NameToString(MetaClass->GetFName()).ToString();
+	}
 	else if (ClassPrivate == BoolProp)
 	{
 		// todo: do some bitfield stuff kms
 		return "bool";
 	} else if (ClassPrivate == ByteProp)
 		return "char";
-		// return std::format("TEnumAsByte<{}>", Utils::UKismetStringLibrary::Conv_NameToString(Property->GetFName()).ToString());
+	// return std::format("TEnumAsByte<{}>", Utils::UKismetStringLibrary::Conv_NameToString(Property->GetFName()).ToString());
 	else if (ClassPrivate == ArrayProp)
 		return std::format("TArray<{}>", UPropertyTypeToString(*(UObjectPropertyBase**)(__int64(Property) + 0x70))); // 0x70 = Inner
 
@@ -95,22 +121,33 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 		}
 
 		return FullFunction;
-	} else if (ClassPrivate == ObjectProp) {
+	}
+
+	else if (ClassPrivate == NameProp)
+		return "FName";
+
+	else if (ClassPrivate == StrProp)
+		return "FString";
+
+	else if (ClassPrivate == ObjectProp)
+	{
 		auto PropertyClass = Property->GetPropertyClass();
 		auto ArrayDim = *(uint32_t*)(__int64(Property) + 0x30);
 
 		std::string browtf;
 
-		for (int i = 0; i < ArrayDim; i++)
+		for (uint32_t i = 0; i < ArrayDim; i++)
 		{
 			browtf += "*";
 		}
 
 		if (PropertyClass)
 		{
-			return /* GetPrefix(Property) + */ Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + browtf;
+			return GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + browtf;
 		}
-	} else if (ClassPrivate == MulticastDelegateProp) {
+	}
+	
+	else if (ClassPrivate == MulticastDelegateProp) {
 		// Get the UFunction
 		auto Delegate = (UMulticastDelegateProperty*)Property;
 		
@@ -127,17 +164,16 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 		
 		return Utils::UKismetStringLibrary::Conv_NameToString(Property->GetClass()->GetFName()).ToString();
 	}
+
 	else if (ClassPrivate == EnumProp) {
 		auto Enum = (UEnumProperty*)Property;
 		
 		return Utils::UKismetStringLibrary::Conv_NameToString(Enum->GetEnum()->GetFName()).ToString();
-	} else {
+	}
+	else
+	{
 		return Utils::UKismetStringLibrary::Conv_NameToString(Property->GetClass()->GetFName()).ToString();
 	}
-}
-
-static std::string idfk() {
-	return "";
 }
 
 std::string SDKFormatting::CreateClass(UStruct* Class) {
@@ -148,11 +184,14 @@ std::string SDKFormatting::CreateClass(UStruct* Class) {
 
 	std::string result = "";
 
-	UObjectBaseUtility* FUCKYOU = (UObjectBaseUtility*)Class;
-
 	Class4Writing classInfo;
 
-	classInfo.name = "\n\nclass " + FUCKYOU->GetName().ToString();
+	std::string Additional = "";
+
+	if (Class->GetSuperStruct())
+		Additional = " : public " + GetPrefix(Class->GetSuperStruct()) + ((UObjectBaseUtility*)Class->GetSuperStruct())->GetName().ToString();
+
+	classInfo.name = std::format("\n\nclass {}{}", GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString(), Additional);
 
 	auto super = Class->GetSuperStruct();
 	if (super && super != Class)
@@ -169,7 +208,7 @@ std::string SDKFormatting::CreateClass(UStruct* Class) {
 
 
 	if ((Class->GetChildren())) {
-		for (UField* Property = (UField*)(Class)->GetChildren(); Property; Property = Property->GetNext()) {
+		for (UField* Property = (UField*)Class->GetChildren(); Property; Property = Property->GetNext()) {
 			std::string pType = UPropertyTypeToString((UObjectPropertyBase*)Property);
 			std::string pName = Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString();
 			static UClass* FunctionProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Function");
@@ -177,16 +216,90 @@ std::string SDKFormatting::CreateClass(UStruct* Class) {
 
 			if (!bIsAFunction)
 			{
-				result += "		" + pType + " " + pName + ";\n";
+				result += "		" + pType + " " + pName + ";";
+				
+				if (Property->GetNext())
+					result += "\n";
 			}
 			else
 			{
-				result += "		" + pType + ");\n";
+				result += "		" + pType + ");";
+				if (Property->GetNext())
+					result += "\n";
 			}
 		}
 	}
 
 	result += "\n};";
+
+	return result;
+}
+
+std::string SDKFormatting::CreateStruct(UStruct* Struct) {
+	static UClass* CoreUObjectStruct = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Struct");
+	static UClass* CoreUObjectScriptStruct = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.ScriptStruct");
+	static UClass* CoreUObjectEnum = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Enum");
+
+	std::string result;
+
+	Class4Writing classInfo;
+
+	classInfo.name = "\n\nstruct " + ((UObjectBaseUtility*)Struct)->GetName().ToString();
+
+	// we are checking what it is twice, which is slow.
+
+	/* if (((UObjectBaseUtility*)Struct)->IsA(CoreUObjectEnum))
+	{
+		auto Enum = (UEnum*)Struct;
+		auto Names = (TArray<uint64_t>*)(__int64(Enum) + 0x40);
+		if (Names)
+		{
+			result += std::format("enum class {} : uint8_t", ((UObjectBaseUtility*)Enum)->GetName().ToString());
+
+			for (int i = 0; i < (*Names).Num(); i++)
+			{
+				// result += std::format("\n	{} = {}", Utils::UKismetStringLibrary::Conv_NameToString(Enum->GetNameByIndex(i)).ToString(), i);
+				auto Name = (uint64_t*)((*Names).Data + i * 16); // Most Definetly NOT skidded
+
+				if (false) // Name)
+				{
+					auto NameStr = Utils::UKismetStringLibrary::Conv_NameToString(*Name).ToString();
+
+					result += "		" + NameStr + ",\n";
+				}
+			}
+		}
+	} */
+
+	if (((UObjectBaseUtility*)Struct)->IsA(CoreUObjectStruct) || ((UObjectBaseUtility*)Struct)->IsA(CoreUObjectScriptStruct))
+	{
+		Class4Writing classInfo;
+		
+		std::string Additional = "";
+
+		if (Struct->GetSuperStruct())
+			Additional = " : public " + GetPrefix(Struct->GetSuperStruct()) + ((UObjectBaseUtility*)Struct->GetSuperStruct())->GetName().ToString();
+
+		classInfo.name = std::format("\n\nstruct {}{}", GetPrefix(Struct) + ((UObjectBaseUtility*)Struct)->GetName().ToString(), Additional);
+
+		result += classInfo.name + "\n{\n";
+
+		if ((Struct->GetChildren())) {
+			for (UField* Property = (UField*)Struct->GetChildren(); Property; Property = Property->GetNext()) {
+				std::string pType = UPropertyTypeToString((UObjectPropertyBase*)Property);
+				std::string pName = Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString();
+
+				result += "		" + pType + " " + pName + ";";
+				
+				if (Property->GetNext())
+					result += "\n";
+			}
+		}
+		else 
+			return ""; // no members, no point of dumping
+
+		result += "\n};";
+	}
 
 	return result;
 }

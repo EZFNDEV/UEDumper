@@ -110,9 +110,12 @@ void Dumper::Dump() {
 
     UObjectBaseUtility* Object = (UObjectBaseUtility*)GUObjectArray.IndexToObject(0)->Object;
 	
-    UClass* CoreUObjectFunction = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Function");
-    UClass* CoreUObjectClass = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Class");
-    UClass* CoreUObjectPackage = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Package");
+    static UClass* CoreUObjectFunction = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Function");
+    static UClass* CoreUObjectClass = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Class");
+    static UClass* CoreUObjectStruct = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Struct");
+    static UClass* CoreUObjectScriptStruct = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.ScriptStruct");
+    static UClass* CoreUObjectPackage = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Package");
+    static UClass* CoreUObjectEnum = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Enum");
 
     struct FreakingPackage {
         std::ofstream Classes;
@@ -122,16 +125,18 @@ void Dumper::Dump() {
     };
 
     std::unordered_map<__int64, FreakingPackage*> packages;
+    auto Start = std::chrono::high_resolution_clock::now();
 
     #ifdef DUMP_JSON
-        for (uintptr_t i = 0; i < 1000; i++) {
+        for (uintptr_t i = 0; i < GUObjectArray.Num(); i++) {
             auto Item = GUObjectArray.IndexToObject(i);
             if (Item) {
                 Object = (UObjectBaseUtility*)Item->Object;
-                if (Object->IsA(CoreUObjectFunction)) {
-                    
-                }
-                else if (Object->IsA(CoreUObjectClass)) {
+				
+                if (!Object)
+                    continue;
+
+                if (Object->IsA(CoreUObjectClass)) {
                     std::ofstream Classes;
                     std::ofstream Functions;
                     std::ofstream Structs;
@@ -147,34 +152,47 @@ void Dumper::Dump() {
                     }
 
                     if (!FEAKIGNPACKAGE) {
-                        printf("We hgaven't bruh");
+                        // printf("We hgaven't bruh");
                         continue;
                     }
 
                     FEAKIGNPACKAGE->Classes << SDKFormatting::CreateClass((UStruct*)Object);
+                }
+				
+                else if (Object->IsA(CoreUObjectEnum) || Object->IsA(CoreUObjectScriptStruct) || Object->IsA(CoreUObjectStruct)) {
+                    std::ofstream Classes;
+                    std::ofstream Functions;
+                    std::ofstream Structs;
 
-                    if (((UStruct*)Object)->GetChildren()) {
-                        for (UField* Property = (UField*)((UStruct*)Object)->GetChildren(); Property; Property = Property->GetNext()) {
-                        //    printf("Property: %p\n", Property);
-                         //   printf("Member: %s\n", Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString().c_str());
+                    FreakingPackage* FEAKIGNPACKAGE = 0;
+
+                    for (auto const& [key, val] : packages)
+                    {
+                        if (key == (__int64)Object->GetOuter()) {
+                            FEAKIGNPACKAGE = val;
+                            break;
                         }
                     }
 
-                    if (((UStruct*)Object)->GetChildProperties()) {
-                      //  printf("THIS IS A NEWER THING\n");
+                    if (!FEAKIGNPACKAGE) {
+                        // printf("We hgaven't bruh");
+                        continue;
                     }
+					
+                    FEAKIGNPACKAGE->Structs << SDKFormatting::CreateStruct((UStruct*)Object);
                 }
+				
                 else if (Object->IsA(CoreUObjectPackage)) {
                     std::string name = Utils::UKismetSystemLibrary::GetObjectName((uintptr_t*)Object).ToString();
 
                     name = name.substr(name.find_last_of("/") + 1, name.length());
 
-                    printf(name.c_str());
+                    // printf(name.c_str());
 
                     FreakingPackage* pkgs = new FreakingPackage {
-                        .Classes = std::ofstream(("packages/" + name + "_classes.hpp")),
-                        .Functions = std::ofstream(("packages/" + name + "_functions.cpp")),
-                        .Structs = std::ofstream(("packages/" + name + "_structs.hpp"))
+                        .Classes = std::ofstream(("SDK/Packages/" + name + "_classes.hpp")),
+                        .Functions = std::ofstream(("SDK/Packages/" + name + "_functions.cpp")),
+                        .Structs = std::ofstream(("SDK/Packages/" + name + "_structs.hpp"))
                     };
 
                     packages.emplace((__int64)Object, pkgs);
@@ -182,9 +200,9 @@ void Dumper::Dump() {
                     pkgs->Classes << "#pragma once\n\n";
                     pkgs->Structs << "#pragma once\n\n";
 
-                    pkgs->Classes << "#include \"Core.hpp\"\n\n";
-					pkgs->Functions << "#include \"Core.hpp\"\n\n";
-					pkgs->Structs << "#include \"Core.hpp\"\n\n";
+                    pkgs->Classes << "#include \"Core.hpp\"\n";
+					pkgs->Functions << "#include \"Core.hpp\"\n";
+					pkgs->Structs << "#include \"Core.hpp\"\n";
                 }
             }
         }
@@ -196,6 +214,10 @@ void Dumper::Dump() {
         val->Structs.close();
         val->Functions.close();
     }
+	
+    auto End = std::chrono::steady_clock::now();
+
+    printf("Generated SDK in %.02f ms\n", (End - Start).count() / 1000000.);
 }
 
 void Dumper::DumpObjectNames() {
@@ -205,7 +227,7 @@ void Dumper::DumpObjectNames() {
     // Calcuate time from starting and ending using std::chrono
     auto Start = std::chrono::high_resolution_clock::now();
 
-    std::ofstream ObjectsDump("ObjectsDump.txt");
+    std::ofstream ObjectsDump("SDK/ObjectsDump.txt");
 
     for (uintptr_t i = 0; i < GUObjectArray.Num(); i++) {
         auto Item = GUObjectArray.IndexToObject(i);

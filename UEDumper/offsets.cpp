@@ -109,7 +109,7 @@ uint16_t OffsetsFinder::FindUStruct_SuperStruct() {
 	// I know it's tricky, but yea
     // TODO: We are gonna check if its really the SuperStruct
     if (*(__int64*)((__int64)Object + (Offsets::UStruct::ChildProperties - 16)) == 0) {
-        printf("Old version\n");
+        // printf("Old version\n");
         return Offsets::UStruct::ChildProperties - 8;
     } else {
         return Offsets::UStruct::ChildProperties - 16;
@@ -128,7 +128,7 @@ uint16_t OffsetsFinder::FindUStruct_SuperStruct() {
 	    // So, it will be SuperStruct, or Children...
 		uintptr_t* Object = (uintptr_t*)((__int64)Object + i);
 		
-        printf("Object: %p");
+        // printf("Object: %p");
     }
     
     return 0;
@@ -158,18 +158,18 @@ uint16_t OffsetsFinder::FindUStruct_ChildProperties() {
 
     if (SizeOfFunction < 100) { // Small = its called FindField/FindFProperty
 		// It's using FindField/FindFProperty, so we nee to find the (first) E8
-        uintptr_t FindPropery = 0;
+        uintptr_t FindProperty = 0;
         for (uint8_t i = 0; i < 255; i++) {
             if (*(uint8_t*)(RealFunction + i) == 0xE8) {
-                FindPropery = ((RealFunction + i + 1 + 4) + *(int32_t*)(RealFunction + i + 1));
-                printf("FindPropery: %p\n", FindPropery);
+                FindProperty = ((RealFunction + i + 1 + 4) + *(int32_t*)(RealFunction + i + 1));
+                // printf("FindProperty: %p\n", FindProperty);
                 break;
             }
         }
 
-        if (FindPropery == 0) return 0;
+        if (FindProperty == 0) return 0;
 
-        StartPoint = FindPropery;
+        StartPoint = FindProperty;
     }
 
     for (uint8_t i = 0; i < 255; i++) {
@@ -260,7 +260,7 @@ uint16_t OffsetsFinder::FindUField_Next() {
 
     if (!Object) return 0;
 
-    printf("WE got the engine: %p\n", Object);
+    // printf("WE got the engine: %p\n", Object);
 
 	// I hate life
 
@@ -277,7 +277,7 @@ uint16_t OffsetsFinder::FindUField_Next() {
             if (
 				*(uint64_t*)((__int64)Property + Offsets::UObjectBase::NamePrivate) == TinyFontName
             ) {
-                printf("Well um yea sorry milxnor: %i\n", i);
+                // printf("Well um yea sorry milxnor: %i\n", i);
                 return i;
             }
         }
@@ -410,7 +410,7 @@ uintptr_t OffsetsFinder::FindProcessEvent() {
     
     uintptr_t ProcessEvent = FindPE_1();
 
-    printf("PE1 works: %p\n", ProcessEvent);
+    // printf("PE1 works: %p\n", ProcessEvent);
 
     if (!ProcessEvent)
     {
@@ -428,7 +428,7 @@ uintptr_t OffsetsFinder::FindStaticFindObject() {
     uintptr_t StaticFindObjectStrAddr = Memory::FortKit::FindPattern("49 00 6C 00 6C 00 65 00 67 00 61 00 6C 00 20 00 63 00 61 00 6C 00 6C 00 20 00 74 00 6F 00 20 00 53 00 74 00 61 00 74 00 69 00 63 00 46 00 69 00 6E 00 64 00 4F 00 62 00 6A 00 65 00 63 00 74 00 28 00 29 00 20 00 77 00 68 00 69 00 6C 00 65 00 20 00 73 00 65 00 72 00 69 00 61 00 6C 00 69 00 7A 00 69 00 6E 00 67 00 20 00 6F 00 62 00 6A 00 65 00 63 00 74 00 20 00 64 00 61 00 74 00 61 00 21");
     uintptr_t StaticFindObjectAddr = (uintptr_t)Memory::FortKit::FindXREF(StaticFindObjectStrAddr);
 
-    printf("StaticFindObjectAddr: %p\n", StaticFindObjectAddr);
+    // printf("StaticFindObjectAddr: %p\n", StaticFindObjectAddr);
 
     if (StaticFindObjectAddr == 0) {
         // Find it by Temp
