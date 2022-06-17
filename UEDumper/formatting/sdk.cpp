@@ -4,6 +4,22 @@
 #include "../CoreUObject/UObject/UObjectBaseUtility.h"
 #include "../CoreUObject/UObject/UnrealTypePrivate.h"
 
+std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) {
+	
+	
+	UClass* Name = Property->GetClass();
+
+	/*if (Name == IntProperty) {
+		return "int";
+	}
+	*/
+	return "";
+}
+
+static std::string idfk() {
+	return "";
+}
+
 std::string SDKFormatting::CreateClass(UStruct* Class) {
 	/*
 	// BlueprintGeneratedClass _WaterMeshBlueprintMaster._WaterMeshBlueprintMaster_C
@@ -28,21 +44,18 @@ std::string SDKFormatting::CreateClass(UStruct* Class) {
 		classInfo.name = "UObject";
 	}
 
-	result += classInfo.name + " {\n";
+	result += classInfo.name + " {\n	public:\n";
 
 
-	// loop all members
 	if ((Class->GetChildren())) {
 		for (UField* Property = (UField*)(Class)->GetChildren(); Property; Property = Property->GetNext()) {
-			result += Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString() + "\n";
-			//    printf("Property: %p\n", Property);
-			 //   printf("Member: %s\n", Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString().c_str());
+			std::string pType = UPropertyTypeToString((UObjectPropertyBase*)Property);
+			std::string pName = Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString();
+
+			result += "		" + pType + " " + pName + ";\n";
 		}
 	}
-
 	
-
-	// end
 	result += "\n};";
 	
 	return result;
