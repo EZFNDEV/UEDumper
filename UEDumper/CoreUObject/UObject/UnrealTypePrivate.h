@@ -25,7 +25,7 @@ class UProperty : public UField
 
 		// In memory variables (generated during Link()).
 		int32_t GetOffset_Internal() {
-			return 0;
+			return *(int32_t*)((__int64)this + Offsets::UProperty::Offset_Internal);
 		}
 
 		bool HasAnyPropertyFlags(uint64_t FlagsToCheck) const
@@ -203,7 +203,7 @@ class USetProperty : public UProperty {
 class UStructProperty : public UProperty {
 	public:
 		class UScriptStruct* GetStruct() {
-			return 0;
+			return *(UScriptStruct**)((__int64)this + Offsets::UStructProperty::Struct);
 		}
 };
 

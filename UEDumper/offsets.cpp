@@ -242,6 +242,7 @@ uint16_t OffsetsFinder::FindUFunctionOffset_Func() {
     return 0;
 }
 
+
 uint16_t OffsetsFinder::FindUField_Next() {
 	// We are smart
 
@@ -303,6 +304,27 @@ uint16_t OffsetsFinder::FindUObjectPropertyBase_PropertyClass() {
         }
     }
 	
+    return 0;
+}
+
+uint16_t OffsetsFinder::FindUProperty_OffsetInternal() {
+    // NOTE: THIS IS EVEN MORE WORSE, BUT IT WORKS FOR THE VERSIONS I TESTED
+
+    uintptr_t* Function = Utils::StaticFindObject(L"Engine.KismetSystemLibrary.SetVectorPropertyByName");
+    if (!Function) return 0;
+
+    uintptr_t RealFunction = OffsetsFinder::FindRealFunction(Function);
+    if (!RealFunction) return 0;
+
+    for (uint16_t i = 0; i < 0x100; i++) {
+        if (
+            *(uint8_t*)(RealFunction + i) == 0x75 &&
+            *(uint8_t*)(RealFunction + i + 1) == 0x14
+        ) {
+            return *(uint8_t*)(RealFunction + i + 5);
+        }
+    }
+
     return 0;
 }
 

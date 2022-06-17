@@ -85,8 +85,10 @@ static void Main() {
 
     Offsets::UMulticastDelegateProperty::SignatureFunction = Offsets::UObjectPropertyBase::PropertyClass;
     Offsets::UDelegateProperty::SignatureFunction = Offsets::UMulticastDelegateProperty::SignatureFunction;
+	
+	Offsets::UStructProperty::Struct = Offsets::UObjectPropertyBase::PropertyClass;
         
-        Offsets::UStruct::ChildProperties = OffsetsFinder::FindUStruct_ChildProperties();
+     Offsets::UStruct::ChildProperties = OffsetsFinder::FindUStruct_ChildProperties();
 
     Offsets::UStruct::SuperStruct = OffsetsFinder::FindUStruct_SuperStruct();
 
@@ -112,6 +114,8 @@ static void Main() {
 
     Offsets::UField::Next = OffsetsFinder::FindUField_Next();
 
+    Offsets::UProperty::Offset_Internal = OffsetsFinder::FindUProperty_OffsetInternal();
+	
     Offsets::UObjectPropertyBase::PropertyClass = OffsetsFinder::FindUObjectPropertyBase_PropertyClass();
 
     #else
@@ -146,6 +150,9 @@ static void Main() {
 
     printf("    UObjectPropertyBase:\n");
     printf("        PropertyClass: %p\n", Offsets::UObjectPropertyBase::PropertyClass);
+
+    printf("    UProperty:\n");
+    printf("        Offset_Internal: %p\n", Offsets::UProperty::Offset_Internal);
     #endif
 
 	// Note: Just temp, you can remove this if you dont inject on startup

@@ -8,23 +8,208 @@
 static std::string GetPrefix(UObjectBase* Object) // TODO: Move this to SDKFormatting;
 {
 	static UClass* UClassClass = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Class");
-	static UClass* ActorClass = (UClass*)Utils::StaticFindObject(L"/Script/Engine.Actor");
-	static UClass* ObjectClass = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Object");
 
 	if (((UObjectBaseUtility*)Object)->IsA(UClassClass))
 	{
-		if (((UObjectBaseUtility*)Object)->IsA(ActorClass))
-		{
-			return "A";
-		}
-		else if (((UObjectBaseUtility*)Object)->IsA(ObjectClass))
-		{
-			return "U";
-		}
+		return ((UClass*)Object)->GetPrefixCPP();
 	}
 
 	return "F";
 }
+
+/*
+
+ // https://github.com/EpicGames/UnrealEngine/blob/46544fa5e0aa9e6740c19b44b0628b72e7bbd5ce/Engine/Source/Programs/UnrealHeaderTool/Private/HeaderParser.cpp#L2892
+public static List<string> GetUPropertySpecifiers(UInt64 Flags)
+{
+	List<string> result = new List<string>();
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_Edit) != 0)
+	{
+		result.Add("EditAnywhere");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_Edit & (UInt64)EPropertyFlags.CPF_DisableEditOnTemplate) != 0)
+	{
+		result.Add("EditInstanceOnly");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_Edit & (UInt64)EPropertyFlags.CPF_DisableEditOnInstance) != 0)
+	{
+		result.Add("EditDefaultsOnly");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_Edit & (UInt64)EPropertyFlags.CPF_EditConst) != 0)
+	{
+		result.Add("VisibleAnywhere");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_Edit & (UInt64)EPropertyFlags.CPF_EditConst & (UInt64)EPropertyFlags.CPF_DisableEditOnTemplate) != 0)
+	{
+		result.Add("VisibleInstanceOnly");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_Edit & (UInt64)EPropertyFlags.CPF_EditConst & (UInt64)EPropertyFlags.CPF_DisableEditOnInstance) != 0)
+	{
+		result.Add("VisibleDefaultsOnly");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_BlueprintVisible) != 0)
+	{
+		if ((Flags & (UInt64)EPropertyFlags.CPF_BlueprintReadOnly) != 0)
+		{
+			result.Add("BlueprintReadOnly");
+		} else {
+			result.Add("BlueprintReadWrite");
+		}
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_Config) != 0)
+	{
+		if ((Flags & (UInt64)EPropertyFlags.CPF_GlobalConfig) != 0)
+		{
+			result.Add("GlobalConfig");
+		}
+		else
+		{
+			result.Add("Config");
+		}
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_Transient) != 0)
+	{
+		result.Add("Transient");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_DuplicateTransient) != 0)
+	{
+		result.Add("DuplicateTransient");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_TextExportTransient) != 0)
+	{
+		result.Add("TextExportTransient");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_NonPIEDuplicateTransient) != 0)
+	{
+		result.Add("NonPIETransient");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_NonPIEDuplicateTransient) != 0)
+	{
+		result.Add("NonPIEDuplicateTransient");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_ExportObject) != 0)
+	{
+		result.Add("Export");
+	}
+
+	//  EditInline -> deprecated
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_NoClear) != 0)
+	{
+		result.Add("NoClear");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_EditFixedSize) != 0)
+	{
+		result.Add("EditFixedSize");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_Net) != 0)
+	{
+		result.Add("Replicated");
+
+		if ((Flags & (UInt64)EPropertyFlags.CPF_RepNotify) != 0)
+		{
+			result.Add("ReplicatedUsing");
+		}
+	}
+
+	// RepRetry -> deprecated
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_Edit & (UInt64)EPropertyFlags.CPF_BlueprintVisible & (UInt64)EPropertyFlags.CPF_Interp) != 0)
+	{
+		result.Add("Interp");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_NonTransactional) != 0)
+	{
+		result.Add("NonTransactional");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_PersistentInstance & (UInt64)EPropertyFlags.CPF_ExportObject & (UInt64)EPropertyFlags.CPF_InstancedReference) != 0)
+	{
+		result.Add("Instanced");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_BlueprintAssignable) != 0)
+	{
+		result.Add("BlueprintAssignable");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_BlueprintCallable) != 0)
+	{
+		result.Add("BlueprintCallable");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_BlueprintAuthorityOnly) != 0)
+	{
+		result.Add("BlueprintAuthorityOnly");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_AssetRegistrySearchable) != 0)
+	{
+		result.Add("AssetRegistrySearchable");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_SimpleDisplay) != 0)
+	{
+		result.Add("SimpleDisplay");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_AdvancedDisplay) != 0)
+	{
+		result.Add("AdvancedDisplay");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_SaveGame) != 0)
+	{
+		result.Add("SaveGame");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_SkipSerialization) != 0)
+	{
+		result.Add("SkipSerialization");
+	}
+
+	// if (VariableCategory != EVariableCategory::Member)
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_ConstParm) != 0)
+	{
+		result.Add("Const");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_OutParm & (UInt64)EPropertyFlags.CPF_ReferenceParm) != 0)
+	{
+		result.Add("Ref");
+	}
+
+	if ((Flags & (UInt64)EPropertyFlags.CPF_RepSkip) != 0)
+	{
+		result.Add("NotReplicated");
+		result.Add("ReplicatedParameter");
+	}
+
+	// TODO: Add some more stuff, but ig this is fine for now
+
+	return result;
+}
+
+*/
+
 
 std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) {
 
@@ -49,6 +234,8 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 	static UClass* NameProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.NameProperty");
 	static UClass* UInt32Prop = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.UInt32Property");
 	
+	// "Easy" props first
+
 	if (ClassPrivate == DoubleProp)
 		return "double";
 	else if (ClassPrivate == FloatProp)
@@ -59,14 +246,18 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 		return "int16_t";
 	else if (ClassPrivate == UInt32Prop)
 		return "uint32_t";
-	else if (ClassPrivate == StructProp)
+	else if (ClassPrivate == NameProp)
+		return "FName";
+	else if (ClassPrivate == StrProp)
+		return "FString";
+	
+	
+	if (ClassPrivate == StructProp)
 	{
-		auto ActualStruct = *(UStruct**)(__int64(Property) + 0x70);
-		return GetPrefix(ActualStruct) + Utils::UKismetStringLibrary::Conv_NameToString(ActualStruct->GetFName()).ToString();
+		UStructProperty* StructProperty = (UStructProperty*)Property;
 
-	}
-	else if (ClassPrivate == ClassProp)
-	{
+		return GetPrefix(StructProperty) + Utils::UKismetStringLibrary::Conv_NameToString(StructProperty->GetStruct()->GetFName()).ToString();
+	} else if (ClassPrivate == ClassProp) {
 		auto MetaClass = *(UStruct**)(__int64(Property) + 120);
 		return GetPrefix(MetaClass) + Utils::UKismetStringLibrary::Conv_NameToString(MetaClass->GetFName()).ToString();
 	}
@@ -122,13 +313,6 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 
 		return FullFunction;
 	}
-
-	else if (ClassPrivate == NameProp)
-		return "FName";
-
-	else if (ClassPrivate == StrProp)
-		return "FString";
-
 	else if (ClassPrivate == ObjectProp)
 	{
 		auto PropertyClass = Property->GetPropertyClass();

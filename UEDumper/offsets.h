@@ -77,8 +77,13 @@ namespace Offsets {
 		extern inline uint16_t SignatureFunction = 0;
 	}
 
+	namespace UStructProperty {
+		extern inline uint16_t Struct = 0;
+	}
+
 	namespace UProperty {
 		extern inline uint16_t PropertyFlags = 0;
+		extern inline uint16_t Offset_Internal = 0;
 	}
 }
 
@@ -108,6 +113,9 @@ namespace OffsetsFinder {
 
 	// UObjectPropertyBase
 	extern inline uint16_t FindUObjectPropertyBase_PropertyClass();
+
+	// UProperty
+	extern inline uint16_t FindUProperty_OffsetInternal();
 
 	// Util
 	extern uintptr_t FindRealFunction(uintptr_t* Function);

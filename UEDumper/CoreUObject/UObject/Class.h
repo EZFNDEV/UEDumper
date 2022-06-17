@@ -26,9 +26,6 @@ class UEnum : public UField {
 			EnumClass
 		};
 
-
-
-
 		/** List of pairs of all enum names and values. */
 		//TArray</*TPair<*/FName, int64_t/*>*/> GetNames() {
 
@@ -122,9 +119,30 @@ class UStruct : public UField
 		}
 };
 
+/**
+ * Reflection data for a standalone structure declared in a header or as a user defined struct
+ */
+class UScriptStruct : public UStruct
+{
+
+};
+
 class UClass : public UStruct
 {
-	
+	public:
+		/**
+		 * Returns the struct/ class prefix used for the C++ declaration of this struct/ class.
+		 * Classes deriving from AActor have an 'A' prefix and other UObject classes an 'U' prefix.
+		 *
+		 * @return Prefix character used for C++ declaration of this struct/ class.
+		*/
+		std::string GetPrefixCPP();
+
+		/** Returns parent class, the parent of a Class is always another class */
+		UClass* GetSuperClass()
+		{
+			return (UClass*)GetSuperStruct();
+		}
 };
 
 //
