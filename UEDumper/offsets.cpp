@@ -265,18 +265,21 @@ uint16_t OffsetsFinder::FindUField_Next() {
 	// I hate life
 
     if (((UStruct*)Object)->GetChildren()) {
-        UField* Property = (UField*)((UStruct*)Object)->GetChildren();
-        printf("Property: %p\n", Property);
+        UField* FirstProperty = (UField*)((UStruct*)Object)->GetChildren();
 
         uint64_t TinyFontName = Utils::UKismetStringLibrary::Conv_StringToName_G(L"TinyFontName");
         
-        // i hate life
-        for (uint16_t i = 0; i < 0x100; i += 8) {
-            uintptr_t* Property = (uintptr_t*)((__int64)Object + i);
-            
-            if (IsBadReadPtr(Property, 8)) continue;
+        for (uint16_t i = Offsets::UObjectBase::NamePrivate; i < 0xFF; i += 8) { // bruh FF and uint16, im so smart
+            uintptr_t Property = *(uintptr_t*)((__int64)FirstProperty + i);
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
+            if (IsBadReadPtr((void*)Property, 8)) continue;
+
+            if (
+				*(uint64_t*)((__int64)Property + Offsets::UObjectBase::NamePrivate) == TinyFontName
+            ) {
+                printf("Well um yea sorry milxnor: %i\n", i);
+                return i;
+            }
         }
     }
 }
