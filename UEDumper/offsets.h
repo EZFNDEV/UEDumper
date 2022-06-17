@@ -64,6 +64,19 @@ namespace Offsets {
 		extern inline uint16_t PropertyClass = 0x70;
 	}
 
+	namespace UEnumProperty {
+		extern inline uint16_t UnderlyingProp = 0x70;
+		extern inline uint16_t Enum = 0;
+	}
+
+	namespace UMulticastDelegateProperty {
+		extern inline uint16_t SignatureFunction = 0;
+	}
+	
+	namespace UDelegateProperty {
+		extern inline uint16_t SignatureFunction = 0;
+	}
+
 	namespace UProperty {
 		extern inline uint16_t PropertyFlags = 0;
 	}

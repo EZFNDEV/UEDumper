@@ -76,8 +76,16 @@ static void Main() {
 		
         Offsets::UField::Next = OffsetsFinder::FindUField_Next();
 
+		// TOOD: Idk, but we use this for everything, because its the first after UProperty, so we can calucate everything
+		// else with it, it if we should
+		// SOAHDSAIHDISABDVASDVASIUDVFASBFSAHIFG
 		Offsets::UObjectPropertyBase::PropertyClass = OffsetsFinder::FindUObjectPropertyBase_PropertyClass();
 
+        Offsets::UEnumProperty::UnderlyingProp = Offsets::UObjectPropertyBase::PropertyClass;
+        Offsets::UEnumProperty::Enum = Offsets::UEnumProperty::UnderlyingProp + 8;
+
+        Offsets::UMulticastDelegateProperty::SignatureFunction = Offsets::UObjectPropertyBase::PropertyClass;
+        Offsets::UDelegateProperty::SignatureFunction = Offsets::UMulticastDelegateProperty::SignatureFunction;
     #else
 	    // Set your offsets here
         Offsets::ProcessEvent = 0;

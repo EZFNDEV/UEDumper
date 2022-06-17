@@ -28,6 +28,9 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 	static UClass* ClassProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.ClassProperty");
 	static UClass* ArrayProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.ArrayProperty");
 	static UClass* ByteProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.ByteProperty");
+	static UClass* MulticastDelegateProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.MulticastDelegateProperty");
+	static UClass* EnumProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.EnumProperty");
+	
 
 	if (ClassPrivate == DoubleProp)
 		return "double";
@@ -45,15 +48,13 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 	{
 		// todo: do some bitfield stuff kms
 		return "bool";
-	}
-	else if (ClassPrivate == ByteProp)
+	} else if (ClassPrivate == ByteProp)
 		return "char";
 		// return std::format("TEnumAsByte<{}>", Utils::UKismetStringLibrary::Conv_NameToString(Property->GetFName()).ToString());
 	else if (ClassPrivate == ArrayProp)
 		return std::format("TArray<{}>", UPropertyTypeToString(*(UObjectPropertyBase**)(__int64(Property) + 0x70))); // 0x70 = Inner
 
-	else if (ClassPrivate == FunctionProp)
-	{
+	else if (ClassPrivate == FunctionProp) {
 		std::string ReturnValueType;
 		auto Func = (UStruct*)Property;
 
@@ -94,9 +95,7 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 		}
 
 		return FullFunction;
-	}
-	else if (ClassPrivate == ObjectProp)
-	{
+	} else if (ClassPrivate == ObjectProp) {
 		auto PropertyClass = Property->GetPropertyClass();
 		auto ArrayDim = *(uint32_t*)(__int64(Property) + 0x30);
 
@@ -111,9 +110,28 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 		{
 			return /* GetPrefix(Property) + */ Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + browtf;
 		}
+	} else if (ClassPrivate == MulticastDelegateProp) {
+		// Get the UFunction
+		auto Delegate = (UMulticastDelegateProperty*)Property;
+		
+		UFunction* Function = Delegate->GetSignatureFunction();
+
+		//printf(Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Function).ToString().c_str());
+
+		//printf("Function: %p\n", Function);
+		//printf("Func: %p\n", Function->GetFunc());
+		// TODO: Take a deeper look into it...
+		
+		UDelegateProperty* DelegateProperty = (UDelegateProperty*)Function;
+		//printf("DOES THAT WORK: %p\n", DelegateProperty->GetSignatureFunction());
+		
+		return Utils::UKismetStringLibrary::Conv_NameToString(Property->GetClass()->GetFName()).ToString();
 	}
-	else
-	{
+	else if (ClassPrivate == EnumProp) {
+		auto Enum = (UEnumProperty*)Property;
+		
+		return Utils::UKismetStringLibrary::Conv_NameToString(Enum->GetEnum()->GetFName()).ToString();
+	} else {
 		return Utils::UKismetStringLibrary::Conv_NameToString(Property->GetClass()->GetFName()).ToString();
 	}
 }

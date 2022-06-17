@@ -212,7 +212,7 @@ class UDelegateProperty : public UProperty {
 	public:
 		/** Points to the source delegate function (the function declared with the delegate keyword) used in the declaration of this delegate property. */
 		UFunction* GetSignatureFunction() {
-			return 0;
+			return *(UFunction**)((__int64)this + Offsets::UDelegateProperty::SignatureFunction);
 		}
 };
 
@@ -220,7 +220,7 @@ class UMulticastDelegateProperty : public UProperty {
 	public:
 		/** Points to the source delegate function (the function declared with the delegate keyword) used in the declaration of this delegate property. */
 		UFunction* GetSignatureFunction() {
-			return 0;
+			return *(UFunction**)((__int64)this + Offsets::UMulticastDelegateProperty::SignatureFunction);
 		}
 };
 
@@ -236,13 +236,13 @@ class UEnumProperty : public UProperty {
 	public:
 		// The property which represents the underlying type of the enum
 		UNumericProperty* GetUnderlyingProp() {
-			
+			return *(UNumericProperty**)((__int64)this + Offsets::UEnumProperty::UnderlyingProp);
 		}
 		
 		// The enum represented by this property
-		/*UEnum* GetEnum() {
-			
-		}*/
+		class UEnum* GetEnum() {
+			return *(UEnum**)((__int64)this + Offsets::UEnumProperty::Enum);
+		}
 };
 
 class UTextProperty : public UProperty {
