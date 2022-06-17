@@ -1,9 +1,14 @@
 #include "pch.h"
+
+#include <map>
+
 #include "utils.h"
 #include "dumper.h"
 #include "CoreUObject/UObject/UObjectHash.h"
 #include "CoreUObject/UObject/UObjectBaseUtility.h"
 #include "CoreUObject/UObject/UnrealTypePrivate.h"
+#include <unordered_map>
+#include "formatting/sdk.h"
 
 static uintptr_t GetRealFunction_Test() {
     // Let's find all UFunctions
@@ -107,9 +112,19 @@ void Dumper::Dump() {
 	
     UClass* CoreUObjectFunction = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Function");
     UClass* CoreUObjectClass = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Class");
+    UClass* CoreUObjectPackage = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Package");
+
+    struct FreakingPackage {
+        std::ofstream Classes;
+        std::ofstream Functions;
+        std::ofstream Structs;
+        // std::ofstream Parameters;
+    };
+
+    std::unordered_map<__int64, FreakingPackage*> packages;
 
     #ifdef DUMP_JSON
-        for (uintptr_t i = 0; i < GUObjectArray.Num(); i++) {
+        for (uintptr_t i = 0; i < 1000; i++) {
             auto Item = GUObjectArray.IndexToObject(i);
             if (Item) {
                 Object = (UObjectBaseUtility*)Item->Object;
@@ -117,36 +132,94 @@ void Dumper::Dump() {
                     
                 }
                 else if (Object->IsA(CoreUObjectClass)) {
+                    std::ofstream Classes;
+                    std::ofstream Functions;
+                    std::ofstream Structs;
+
+                    FreakingPackage* FEAKIGNPACKAGE = 0;
+					
+                    for (auto const& [key, val] : packages)
+                    {
+                        if (key == (__int64)Object->GetOuter()) {
+                            FEAKIGNPACKAGE = val;
+                            break;
+                        }
+                    }
+
+                    if (!FEAKIGNPACKAGE) {
+                        printf("We hgaven't bruh");
+                        continue;
+                    }
+
+                    FEAKIGNPACKAGE->Classes << SDKFormatting::CreateClass((UStruct*)Object);
+
                     if (((UStruct*)Object)->GetChildren()) {
                         for (UField* Property = (UField*)((UStruct*)Object)->GetChildren(); Property; Property = Property->GetNext()) {
-                            printf("Property: %p\n", Property);
-                            printf("Member: %s\n", Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString().c_str());
+                        //    printf("Property: %p\n", Property);
+                         //   printf("Member: %s\n", Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString().c_str());
                         }
                     }
 
                     if (((UStruct*)Object)->GetChildProperties()) {
-                        printf("THIS IS A NEWER THING\n");
+                      //  printf("THIS IS A NEWER THING\n");
                     }
+                }
+                else if (Object->IsA(CoreUObjectPackage)) {
+                    std::string name = Utils::UKismetSystemLibrary::GetObjectName((uintptr_t*)Object).ToString();
+
+                    name = name.substr(name.find_last_of("/") + 1, name.length());
+
+                    printf(name.c_str());
+
+                    FreakingPackage* pkgs = new FreakingPackage {
+                        .Classes = std::ofstream(("packages/" + name + "_classes.hpp")),
+                        .Functions = std::ofstream(("packages/" + name + "_functions.cpp")),
+                        .Structs = std::ofstream(("packages/" + name + "_structs.hpp"))
+                    };
+
+                    packages.emplace((__int64)Object, pkgs);
+
+                    pkgs->Classes << "#pragma once\n\n";
+                    pkgs->Structs << "#pragma once\n\n";
+
+                    pkgs->Classes << "#include \"Core.hpp\"\n\n";
+					pkgs->Functions << "#include \"Core.hpp\"\n\n";
+					pkgs->Structs << "#include \"Core.hpp\"\n\n";
                 }
             }
         }
     #endif
 
-		// Takes 2 seconds till now :kekw:
+    for (auto const& [key, val] : packages)
+    {
+        val->Classes.close();
+        val->Structs.close();
+        val->Functions.close();
+    }
 }
 
 void Dumper::DumpObjectNames() {
-    GUObjectArray = *new FUObjectArray();
-    // TODO: Figure out if its a new object or old
-    GUObjectArray.useNewObjectArray = true;
-    GUObjectArray.ObjObjectsNew = (FChunkedFixedUObjectArray*)Offsets::GObjects;
-	
-    for (uintptr_t i = 0; i < GUObjectArray.ObjObjectsNew->Num(); i++) {
+    bool bNewObjectArray = IsOldObjectArray();
+    GUObjectArray = *new FUObjectArray(Offsets::GObjects, !bNewObjectArray);
+
+    // Calcuate time from starting and ending using std::chrono
+    auto Start = std::chrono::high_resolution_clock::now();
+
+    std::ofstream ObjectsDump("ObjectsDump.txt");
+
+    for (uintptr_t i = 0; i < GUObjectArray.Num(); i++) {
         auto Item = GUObjectArray.IndexToObject(i);
         //printf("Item: %p\n", Item);
         if (Item) {
             auto Object = (uintptr_t*)Item->Object;
-            printf("Object: %p\n", Object);
+            // printf("Object: %p\n", Object);
+
+            ObjectsDump << std::format("[{}] {}\n", i, Utils::UKismetSystemLibrary::GetPathName(Object).ToString());
         }
     }
+
+    auto End = std::chrono::steady_clock::now();
+
+    ObjectsDump.close();
+    printf("Dumped %d objects in %.02f ms\n", GUObjectArray.Num(), (End - Start).count() / 1000000.);
 }

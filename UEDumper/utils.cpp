@@ -54,3 +54,20 @@ FString Utils::UKismetSystemLibrary::GetPathName(uintptr_t* Object) {
 
 	return params.ReturnValue;
 }
+
+FString Utils::UKismetSystemLibrary::GetObjectName(uintptr_t* Object) {
+	struct {
+		uintptr_t* Object;
+		struct FString ReturnValue;
+	} params;
+
+	params.Object = Object;
+
+	Utils::_ProcessEvent(
+		Utils::UKismetSystemLibrary::KismetSystemLibrary,
+		Utils::UKismetSystemLibrary::_GetObjectName,
+		&params
+	);
+
+	return params.ReturnValue;
+}

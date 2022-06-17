@@ -22,10 +22,10 @@ class UObjectBase
 		}
 
 		/** Returns the UObject this object resides in */
-		/*UObject* GetOuter() const
+		struct UObject* GetOuter() const
 		{
-			return OuterPrivate;
-		}*/
+			return *(struct UObject**)((__int64)this + 0x20); // GAY
+		}
 
 		/** Returns the logical name of this object */
 		uint64_t GetFName() // NOTE: Yea, that's not 100% correct

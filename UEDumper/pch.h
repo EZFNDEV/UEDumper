@@ -17,6 +17,9 @@
 #include <vector>
 #include <locale>
 #include <string>
+#include <chrono>
+#include <fstream>
+#include <format>
 
 #include "include/memory.h"
 #include "offsets.h"

@@ -113,23 +113,6 @@ static void Main() {
 
         Dumper::Dump();
     #endif
-
-	/*
-        UObjectBaseUtility* (__fastcall * _StaticFindObject) (uintptr_t * ObjectClass, uintptr_t * InObjectPackage, const wchar_t* OrigInName, bool ExactClass);
-    _StaticFindObject = decltype(_StaticFindObject)(Offsets::StaticFindObject);
-
-    UObjectBaseUtility* Engine = _StaticFindObject(0, 0, L"Transient.FortEngine_0_1", false);
-
-    std::cout << "Engine " << Engine << '\n';
-
-	UClass* PlayerControllerClass = (UClass*)_StaticFindObject(0, 0, L"FortniteGame.FortPlayerControllerAthena", false);
-
-    std::cout << "PlayercontrollerClass: " << PlayerControllerClass << '\n';
-
-    std::cout << "IsA: " << Engine->IsA(PlayerControllerClass) << '\n';
-    */
-
-    // TODO: Add UObject because we need it for Dump()
 }
 
 BOOL APIENTRY DllMain( HMODULE hModule,

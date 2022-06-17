@@ -46,6 +46,12 @@
     <Filter Include="Header Files\CoreUObject\UObject">
       <UniqueIdentifier>{b947d5c6-1390-4fb4-8ede-8034859f48d5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\formatting">
+      <UniqueIdentifier>{752a5386-1e2d-4327-8b5d-20149e1fb60d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\formatting">
+      <UniqueIdentifier>{fcdd3a2b-dbdb-44f8-b68d-77cdbb5be532}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -108,6 +114,9 @@
     <ClInclude Include="CoreUObject\UObject\Field.h">
       <Filter>Header Files\CoreUObject\UObject</Filter>
     </ClInclude>
+    <ClInclude Include="formatting\sdk.h">
+      <Filter>Header Files\formatting</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -163,6 +172,9 @@
     </ClCompile>
     <ClCompile Include="CoreUObject\UObject\Field.cpp">
       <Filter>Source Files\CoreUObject\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="formatting\sdk.cpp">
+      <Filter>Source Files\formatting</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -54,9 +54,9 @@ namespace Utils {
 				printf("KismetSystemLibrary: %p\n", KismetSystemLibrary);
 			}
 
-			/*if (!_GetObjectName) {
+			if (!_GetObjectName) {
 				_GetObjectName = StaticFindObject(L"Engine.KismetSystemLibrary.GetObjectName");
-			}*/
+			}
 
 			if (!_GetPathName) {
 				_GetPathName = StaticFindObject(L"Engine.KismetSystemLibrary.GetPathName");
