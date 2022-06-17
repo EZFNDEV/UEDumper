@@ -60,6 +60,10 @@ namespace Offsets {
 		extern inline uint16_t Number = 0x04;
 	}
 
+	namespace UObjectPropertyBase {
+		extern inline uint16_t PropertyClass = 0x70;
+	}
+
 	namespace UProperty {
 		extern inline uint16_t PropertyFlags = 0;
 	}
@@ -88,6 +92,9 @@ namespace OffsetsFinder {
 
 	// UField
 	extern inline uint16_t FindUField_Next();
+
+	// UObjectPropertyBase
+	extern inline uint16_t FindUObjectPropertyBase_PropertyClass();
 
 	// Util
 	extern uintptr_t FindRealFunction(uintptr_t* Function);

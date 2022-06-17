@@ -167,6 +167,7 @@
     <ClInclude Include="CoreUObject\UObject\UObjectBaseUtility.h" />
     <ClInclude Include="CoreUObject\UObject\UObjectHash.h" />
     <ClInclude Include="Core\Containers\Array.h" />
+    <ClInclude Include="Core\Containers\Set.h" />
     <ClInclude Include="Core\Containers\UnrealString.h" />
     <ClInclude Include="Core\UObject\NameTypes.h" />
     <ClInclude Include="dumper.h" />
@@ -189,6 +190,7 @@
     <ClCompile Include="CoreUObject\UObject\UObjectBaseUtility.cpp" />
     <ClCompile Include="CoreUObject\UObject\UObjectHash.cpp" />
     <ClCompile Include="Core\Containers\Array.cpp" />
+    <ClCompile Include="Core\Containers\Set.cpp" />
     <ClCompile Include="Core\Containers\UnrealString.cpp" />
     <ClCompile Include="Core\UObject\NameTypes.cpp" />
     <ClCompile Include="dllmain.cpp" />

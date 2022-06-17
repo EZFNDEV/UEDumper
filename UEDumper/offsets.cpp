@@ -284,6 +284,28 @@ uint16_t OffsetsFinder::FindUField_Next() {
     }
 }
 
+uint16_t OffsetsFinder::FindUObjectPropertyBase_PropertyClass() {
+	// NOTE: THIS IS WORSE, BUT IT WORKS FOR THE VERSIONS I TESTED
+	
+    uintptr_t* Function = Utils::StaticFindObject(L"Engine.KismetSystemLibrary.SetObjectPropertyByName");
+    if (!Function) return 0;
+
+    uintptr_t RealFunction = OffsetsFinder::FindRealFunction(Function);
+    if (!RealFunction) return 0;
+
+    for (uint16_t i = 0; i < 0x100; i++) {
+        if (
+			*(uint8_t*)(RealFunction + i) == 0x8B &&
+            *(uint8_t*)(RealFunction + i + 4) == 0x8B &&
+            *(uint8_t*)(RealFunction + i + 7) == 0x49
+        ) {
+            return *(uint8_t*)(RealFunction + i + 2);
+        }
+    }
+	
+    return 0;
+}
+
 // Note: This is one more of the stupid things, but as said, it only takes a few milliseconds and makes it more readable
 uint16_t OffsetsFinder::FindUObject_PEVTableIndex() {
     // Find any UObject class

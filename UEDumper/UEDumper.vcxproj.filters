@@ -117,6 +117,9 @@
     <ClInclude Include="formatting\sdk.h">
       <Filter>Header Files\formatting</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Containers\Set.h">
+      <Filter>Header Files\Core\Containers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -175,6 +178,9 @@
     </ClCompile>
     <ClCompile Include="formatting\sdk.cpp">
       <Filter>Source Files\formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Containers\Set.cpp">
+      <Filter>Source Files\Core\Containers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

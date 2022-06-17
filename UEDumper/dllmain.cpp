@@ -75,11 +75,16 @@ static void Main() {
         }
 		
         Offsets::UField::Next = OffsetsFinder::FindUField_Next();
+
+		Offsets::UObjectPropertyBase::PropertyClass = OffsetsFinder::FindUObjectPropertyBase_PropertyClass();
+
     #else
 	    // Set your offsets here
         Offsets::ProcessEvent = 0;
     #endif
 
+        
+	
     // A few checks to make sure ChildProperties doesn't exist
 
         // TODO: Take the check from Dump::Dump and put it into here (not possible bc then the array will be 0 in dump, fuck... Milxnor help)
@@ -104,6 +109,9 @@ static void Main() {
         printf("    UStruct:\n");
         printf("        ChildProperties: %p\n", Offsets::UStruct::ChildProperties);
         printf("        SuperStruct: %p\n", Offsets::UStruct::SuperStruct);
+		
+        printf("    UObjectPropertyBase:\n");
+        printf("        PropertyClass: %p\n", Offsets::UObjectPropertyBase::PropertyClass);
     #endif
 
 	// Note: Just temp, you can remove this if you dont inject on startup

@@ -50,7 +50,7 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 	}
 	else if (ClassPrivate == ObjectProp)
 	{
-		auto PropertyClass = *(UObjectBaseUtility**)(__int64(Property) + 0x70);
+		auto PropertyClass = Property->GetPropertyClass();
 		auto ArrayDim = *(uint32_t*)(__int64(Property) + 0x30);
 
 		std::string browtf;
@@ -100,7 +100,6 @@ std::string SDKFormatting::CreateClass(UStruct* Class) {
 	}
 
 	result += classInfo.name + " {\n	public:\n";
-
 
 	if ((Class->GetChildren())) {
 		for (UField* Property = (UField*)(Class)->GetChildren(); Property; Property = Property->GetNext()) {
