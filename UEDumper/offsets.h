@@ -86,6 +86,9 @@ namespace OffsetsFinder {
 	extern inline uint16_t FindUStruct_SuperStruct();		
 	extern inline uint16_t FindUStruct_ChildProperties();
 
+	// UField
+	extern inline uint16_t FindUField_Next();
+
 	// Util
 	extern uintptr_t FindRealFunction(uintptr_t* Function);
 }

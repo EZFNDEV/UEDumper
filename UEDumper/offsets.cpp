@@ -242,6 +242,45 @@ uint16_t OffsetsFinder::FindUFunctionOffset_Func() {
     return 0;
 }
 
+uint16_t OffsetsFinder::FindUField_Next() {
+	// We are smart
+
+    uintptr_t* (__fastcall * _StaticFindObject) (uintptr_t * ObjectClass, uintptr_t * InObjectPackage, const wchar_t* OrigInName, bool ExactClass);
+    _StaticFindObject = decltype(_StaticFindObject)(Offsets::StaticFindObject);
+
+    // We need to wait until this is found, and it will be found for UE4.0+
+    uintptr_t* Object = 0;
+    uint16_t tries = 0;
+    while (Object == 0 && tries < 0x100) {
+        Object = _StaticFindObject(0, 0, L"Engine.Engine", false);
+        tries += 1;
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    if (!Object) return 0;
+
+    printf("WE got the engine: %p\n", Object);
+
+	// I hate life
+
+    if (((UStruct*)Object)->GetChildren()) {
+        UField* Property = (UField*)((UStruct*)Object)->GetChildren();
+        printf("Property: %p\n", Property);
+
+        uint64_t TinyFontName = Utils::UKismetStringLibrary::Conv_StringToName_G(L"TinyFontName");
+        
+        // i hate life
+        for (uint16_t i = 0; i < 0x100; i += 8) {
+            uintptr_t* Property = (uintptr_t*)((__int64)Object + i);
+            
+            if (IsBadReadPtr(Property, 8)) continue;
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
+        }
+    }
+}
+
 // Note: This is one more of the stupid things, but as said, it only takes a few milliseconds and makes it more readable
 uint16_t OffsetsFinder::FindUObject_PEVTableIndex() {
     // Find any UObject class

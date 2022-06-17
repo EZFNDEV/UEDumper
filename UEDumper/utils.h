@@ -41,6 +41,7 @@ namespace Utils {
 		extern inline struct FString Conv_NameToString(FName* inName);
 		extern inline struct FString Conv_NameToString(uint64_t inName);
 		extern inline FName Conv_StringToName(struct FString string);
+		extern inline uint64_t Conv_StringToName_G(struct FString string);
 	}
 
 	namespace UKismetSystemLibrary {

@@ -38,6 +38,17 @@ FName Utils::UKismetStringLibrary::Conv_StringToName(struct FString string) {
 	return params.ReturnValue;
 }
 
+uint64_t Utils::UKismetStringLibrary::Conv_StringToName_G(struct FString string) {
+	struct {
+		struct FString string;
+		uint64_t ReturnValue;
+	} params{ .string = string };
+
+	Utils::_ProcessEvent(Utils::UKismetStringLibrary::KismetStringLibrary, Utils::UKismetStringLibrary::_Conv_StringToName, &params);
+
+	return params.ReturnValue;
+}
+
 FString Utils::UKismetSystemLibrary::GetPathName(uintptr_t* Object) {
 	struct {
 		uintptr_t* Object;

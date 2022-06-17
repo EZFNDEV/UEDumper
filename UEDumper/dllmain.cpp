@@ -51,13 +51,9 @@ static void Main() {
         
 		
         Offsets::UStruct::ChildProperties = OffsetsFinder::FindUStruct_ChildProperties();
-		// TODO: Next...
-
+		
         Offsets::UStruct::SuperStruct = OffsetsFinder::FindUStruct_SuperStruct();
-
-        Offsets::UField::Next = 0x20; // TODO: Get this automatically (Easy)
-       // return;
-
+		
 		// This required ChildProperties and Children
         Offsets::UObjectBase::NamePrivate = OffsetsFinder::FindUObjectBase_NamePrivate();
 
@@ -66,6 +62,19 @@ static void Main() {
 			printf("Failed to find GObjects\n");
 			return;
 		}
+
+        Offsets::UStruct::Children = Offsets::UStruct::ChildProperties;
+
+        // For the next offsets we need some more stuff
+        while (!Utils::UKismetStringLibrary::Init()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+}
+
+        while (!Utils::UKismetSystemLibrary::Init()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+		
+        Offsets::UField::Next = OffsetsFinder::FindUField_Next();
     #else
 	    // Set your offsets here
         Offsets::ProcessEvent = 0;
@@ -75,7 +84,7 @@ static void Main() {
 
         // TODO: Take the check from Dump::Dump and put it into here (not possible bc then the array will be 0 in dump, fuck... Milxnor help)
 
-    Offsets::UStruct::Children = Offsets::UStruct::ChildProperties;
+   
 
     #ifdef PRINT_OFFSETS
         printf("ProcessEvent: %p\n", Offsets::ProcessEvent);
@@ -103,13 +112,7 @@ static void Main() {
     #ifdef DUMP
         
 
-        while (!Utils::UKismetStringLibrary::Init()) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
-
-        while (!Utils::UKismetSystemLibrary::Init()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
+        
 
         Dumper::Dump();
     #endif
