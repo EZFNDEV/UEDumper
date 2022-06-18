@@ -2,7 +2,8 @@
 
 #include "UObjectBase.h"
 #include "Script.h"
-
+#include "../../Core/Containers/Map.h"
+#include "../../Core/UObject/NameTypes.h"
 
 class UField : public UObjectBase
 {
@@ -25,12 +26,6 @@ class UEnum : public UField {
 			Namespaced,
 			EnumClass
 		};
-
-		/** List of pairs of all enum names and values. */
-		//TArray</*TPair<*/FName, int64_t/*>*/> GetNames() {
-
-	//	}
-
 		/** How the enum was originally defined. */
 		ECppForm GetCppForm() {
 
@@ -44,14 +39,15 @@ class UEnum : public UField {
 
 		/** global list of all value names used by all enums in memory, used for property text import */
 		//static TMap<FName, UEnum*> AllEnumNames;
-		
-		
 
-		
+		FString GetCppType() {
+			return *(FString*)(__int64(this) + 0x30); // useless
+		}
 
-
-		/** This will be the true type of the enum as a string, e.g. "ENamespacedEnum::InnerType" or "ERegularEnum" or "EEnumClass" */
-		FString CppType;
+		/** List of pairs of all enum names and values. */
+		TArray<TPair<uint64_t, __int64>> GetNames() {
+			return *(TArray<TPair<uint64_t, __int64>>*)(__int64(this) + Offsets::UEnum::Names); // temporary
+		}
 
 		// Index is the internal index into the Enum array, and is not useful outside of the Enum system
 		// Value is the value set in the Enum Class in C++ or Blueprint

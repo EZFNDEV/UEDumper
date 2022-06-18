@@ -44,6 +44,10 @@ namespace Offsets {
 		extern inline uint16_t FlagsPrivate = 0;
 	}
 
+	namespace UEnum {
+		extern inline uint16_t Names = 0x40;
+	}
+
 	namespace UField {
 		extern inline uint16_t Next = 0x20;
 	};

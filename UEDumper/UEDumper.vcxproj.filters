@@ -52,6 +52,9 @@
     <Filter Include="Header Files\formatting">
       <UniqueIdentifier>{fcdd3a2b-dbdb-44f8-b68d-77cdbb5be532}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Core\Templates">
+      <UniqueIdentifier>{2fa29675-9313-4be4-8cd9-17e606da04f9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -119,6 +122,12 @@
     </ClInclude>
     <ClInclude Include="Core\Containers\Set.h">
       <Filter>Header Files\Core\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Containers\Map.h">
+      <Filter>Header Files\Core\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Templates\Tuple.h">
+      <Filter>Header Files\Core\Templates</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

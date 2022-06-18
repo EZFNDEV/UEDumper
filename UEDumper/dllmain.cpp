@@ -161,7 +161,8 @@ static void Main() {
     if (!MakeDirectories())
     {
         printf("Failed to create directories!\n");
-        return;
+        FreeLibraryAndExitThread(GetModuleHandleW(0), 0);
+        // return;
     }
 
     #ifdef DUMP

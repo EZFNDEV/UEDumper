@@ -1,8 +1,9 @@
 #pragma once
 
 #define SEARCH_OFFSETS
- #define PRINT_OFFSETS
+#define PRINT_OFFSETS
 #define DUMP
+#define SHORTNAME "FN"
 
 #define DUMP_JSON
 

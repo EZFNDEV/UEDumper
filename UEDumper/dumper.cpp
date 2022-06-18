@@ -190,9 +190,9 @@ void Dumper::Dump() {
                     // printf(name.c_str());
 
                     FreakingPackage* pkgs = new FreakingPackage {
-                        .Classes = std::ofstream(("SDK/Packages/" + name + "_classes.hpp")),
-                        .Functions = std::ofstream(("SDK/Packages/" + name + "_functions.cpp")),
-                        .Structs = std::ofstream(("SDK/Packages/" + name + "_structs.hpp"))
+                        .Classes = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp")),
+                        .Functions = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp")),
+                        .Structs = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"))
                     };
 
                     packages.emplace((__int64)Object, pkgs);
