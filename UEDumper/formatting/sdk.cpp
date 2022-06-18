@@ -234,7 +234,11 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 	static UClass* StrProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.StrProperty");
 	static UClass* NameProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.NameProperty");
 	static UClass* UInt32Prop = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.UInt32Property");
-	
+	static UClass* UInt64Prop = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.UInt64Property");
+	static UClass* Int64Prop = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Int64Property");
+	static UClass* Int8Prop = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Int8Property");
+	static UClass* TextProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.TextProperty");
+
 	// "Easy" props first
 
 	if (ClassPrivate == DoubleProp)
@@ -251,9 +255,16 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 		return "FName";
 	else if (ClassPrivate == StrProp)
 		return "FString";
+	else if (ClassPrivate == UInt64Prop)
+		return "uint64_t";
+	else if (ClassPrivate == Int64Prop)
+		return "int64_t";
+	else if (ClassPrivate == Int8Prop)
+		return "int8_t";
+	else if (ClassPrivate == TextProp)
+		return "FText";
 	
-	
-	if (ClassPrivate == StructProp)
+	else if (ClassPrivate == StructProp)
 	{
 		UStructProperty* StructProperty = (UStructProperty*)Property;
 		auto ArrayDim = *(uint32_t*)(__int64(Property) + 0x30);
@@ -284,12 +295,17 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 		// todo: do some bitfield stuff kms
 		return "bool";
 	} else if (ClassPrivate == ByteProp)
-		return "char";
-	// return std::format("TEnumAsByte<{}>", Utils::UKismetStringLibrary::Conv_NameToString(Property->GetFName()).ToString());
+		return "char";	// return std::format("TEnumAsByte<{}>", Utils::UKismetStringLibrary::Conv_NameToString(Property->GetFName()).ToString());
+
 	else if (ClassPrivate == ArrayProp)
 		return std::format("TArray<{}>", UPropertyTypeToString(*(UObjectPropertyBase**)(__int64(Property) + 0x70))); // 0x70 = Inner
 
-	else if (ClassPrivate == FunctionProp) {
+	// else if (ClassPrivate == SoftObjectProp)
+	{
+		// return std::format("TSoftObjectPtr<{}>", UPropertyTypeToString(*(UObjectPropertyBase**)(__int64(Property) + 0x70))); // 0x70 = PropertyClass
+	}
+
+	if (ClassPrivate == FunctionProp) {
 		std::string ReturnValueType;
 		auto Func = (UFunction*)Property;
 
@@ -374,8 +390,131 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 	}
 	else
 	{
-		return Utils::UKismetStringLibrary::Conv_NameToString(Property->GetClass()->GetFName()).ToString();
+		return "__int64" + std::string("/*") + Utils::UKismetStringLibrary::Conv_NameToString(Property->GetClass()->GetFName()).ToString() + "*/";
 	}
+}
+
+
+std::string SDKFormatting::CreateFunctions(UStruct* Class)
+{
+	std::string result = "";
+
+	static UClass* FunctionProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Function");
+	
+	if ((Class->GetChildren()))
+	{
+		for (UField* Property = (UField*)Class->GetChildren(); Property; Property = Property->GetNext()) {
+			std::string pType = UPropertyTypeToString((UObjectPropertyBase*)Property);
+			std::string pName = Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString();
+			bool bIsAFunction = (Property->GetClass() == FunctionProp);
+
+			for (UField* Property = (UField*)Class->GetChildren(); Property; Property = Property->GetNext()) {
+				bool bIsAFunction = (Property->GetClass() == FunctionProp);
+
+				if (bIsAFunction)
+				{
+					auto Function = (UFunction*)Property;
+
+					std::string ReturnValueType;
+					auto Func = (UFunction*)Property;
+
+					auto FunctionFlags = *(uint32_t*)(__int64(Func) + 0x88);
+
+					std::string ReturnType = "";
+					std::vector<std::pair<std::string, std::string>> Params; // Param Type, Param Name
+
+					for (UProperty* Parameter = (UProperty*)Func->GetChildren(); Parameter; Parameter = (UProperty*)Parameter->GetNext())
+					{
+						auto PropertyFlags = *(uint64_t*)(__int64(Parameter) + 0x38);
+						auto ArrayDim = *(uint32_t*)(__int64(Parameter) + 0x30);
+						auto ParamType = UPropertyTypeToString((UObjectPropertyBase*)Parameter);
+
+						if (PropertyFlags & 0x400)
+						{
+							ReturnType = ParamType;
+						}
+						else if (PropertyFlags & 0x80) // Param Flag
+						{
+							Params.push_back({
+								ParamType,
+								Utils::UKismetStringLibrary::Conv_NameToString(Parameter->GetFName()).ToString()
+								});
+						}
+					}
+
+					if (ReturnType == "")
+						ReturnType = "void";
+
+					auto FullFunction = std::format("{}(", Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString());
+					std::string ParamsCombined = "";
+
+					for (int i = 0; i < Params.size(); i++)
+					{
+						auto& Param = Params[i];
+						ParamsCombined += Param.first + ' ' + Param.second;
+						if (i != Params.size() - 1)
+							ParamsCombined += ", ";
+					}
+
+					FullFunction += ParamsCombined;
+
+					auto nameDef = ReturnType + ' ' + GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString() + "::" + ((FunctionFlags & 0x2000) ? "static " + FullFunction : FullFunction); // 0x2000 = STATIC
+
+					result += nameDef + R"()
+{)";
+					if (Params.size() > 0 || ReturnType != "void")
+					{
+						result += R"(
+	struct {
+)";
+						if (Params.size() > 0)
+						{
+							for (int i = 0; i < Params.size(); i++)
+							{
+								auto& Param = Params[i];
+								result += "        " + Param.first + ' ' + Param.second + ";";
+								if (i != (((Params.size() + ((ReturnType == "void") ? 0 : 1))) - 1))
+									result += "\n";
+							}
+						}
+
+						if (ReturnType != "void")
+							result += "        " + ReturnType + ' ' + "ReturnValue;";
+
+		result += R"(
+	} params{ )";
+						if (Params.size() > 0)
+						{
+							for (int i = 0; i < Params.size(); i++)
+							{
+								auto& Param = Params[i];
+								result += Param.second;
+								if (i < Params.size() - 1)
+									result += ",";
+								result += " ";
+							}
+						}
+
+						result += "};\n";
+					}
+					
+					result += "\n    static auto fn = UObject::FindObject<UFunction>(\"" + Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Function).ToString() + "\");\n";
+					result += "    ProcessEvent(this, fn, " + std::string(((Params.size() > 0) ? "&params" : "nullptr")) + ");";
+
+					if (ReturnType != "void")
+						result += "\n\n    return params.ReturnValue; ";
+					
+					// END
+					
+					result += R"(
+}
+)" + std::string("\n");
+				}
+			}
+		}
+	}
+
+	return result;
 }
 
 std::string SDKFormatting::CreateClass(UStruct* Class) {
@@ -386,14 +525,12 @@ std::string SDKFormatting::CreateClass(UStruct* Class) {
 
 	std::string result = "";
 
-	Class4Writing classInfo;
-
 	std::string Additional = "";
 
 	if (Class->GetSuperStruct())
 		Additional = " : public " + GetPrefix(Class->GetSuperStruct()) + ((UObjectBaseUtility*)Class->GetSuperStruct())->GetName().ToString();
 
-	classInfo.name = std::format("\n\nclass {}{}", GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString(), Additional);
+	auto name = std::format("\n\nclass {}{}", GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString(), Additional);
 
 	auto super = Class->GetSuperStruct();
 	if (super && super != Class)
@@ -403,10 +540,10 @@ std::string SDKFormatting::CreateClass(UStruct* Class) {
 		//c.NameCppFull += " : public " + MakeValidName(super.GetNameCPP());
 	}
 	else {
-		classInfo.name = "UObject";
+		name = "class UObject";
 	}
 
-	result += classInfo.name + "\n{\npublic:\n";
+	result += name + "\n{\npublic:\n";
 
 
 	if ((Class->GetChildren())) { // MESSY ASF
@@ -418,6 +555,13 @@ std::string SDKFormatting::CreateClass(UStruct* Class) {
 		std::pair<int, int> OldProp; // Offset_Internal, Size
 		int padNum = 1;
 		static UClass* FunctionProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Function");
+		static UClass* SoftObjectProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SoftObjectProperty");
+		static UClass* SoftClassProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SoftClassProperty");
+		static UClass* DelegateFuncProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.DelegateFunction");
+		static UClass* WeakObjProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.WeakObjectProperty");
+		static UClass* MulticastDelegateProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.MulticastDelegateProperty");
+		static UClass* SetProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SetProperty");
+		static UClass* DelegateProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.DelegateProperty");
 
 		bool bIsFirstAFunction = (Class->GetChildren()->GetClass() == FunctionProp);
 		int OffsetDifference = 0;
@@ -441,6 +585,19 @@ std::string SDKFormatting::CreateClass(UStruct* Class) {
 			if (!bIsAFunction)
 			{
 				auto thisElementSize = *(int32_t*)(__int64(Property) + 0x34);
+				bool bUnhandledType = false;
+
+				if (Property->GetClass() == SoftObjectProp || // Properties we do not have implemented
+					Property->GetClass() == SoftClassProp || 
+					Property->GetClass() == WeakObjProp ||
+					// Property->GetClass() == DelegateFuncProp ||
+					Property->GetClass() == DelegateProp ||
+					Property->GetClass() == MulticastDelegateProp)
+				{
+					result += std::format("    char UnknownData{}[0x{:x}]; // UNHANDLED {}\n", padNum, thisElementSize, pType + " " + pName);
+					padNum++;
+					bUnhandledType = true;
+				}
 
 				if (OldProp.first && OldProp.second)
 				{
@@ -455,7 +612,8 @@ std::string SDKFormatting::CreateClass(UStruct* Class) {
 				OldProp.first = ((UProperty*)Property)->GetOffset_Internal();
 				OldProp.second = thisElementSize;
 
-				result += std::format("    {} {}; // 0x{:x}", pType, pName, ((UProperty*)Property)->GetOffset_Internal());
+				if (!bUnhandledType)
+					result += std::format("    {} {}; // 0x{:x}", pType, pName, ((UProperty*)Property)->GetOffset_Internal());
 				
 				if (Property->GetNext())
 					result += "\n";
@@ -487,12 +645,14 @@ std::string SDKFormatting::CreateStruct(UStruct* Struct) {
 	static UClass* CoreUObjectStruct = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Struct");
 	static UClass* CoreUObjectScriptStruct = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.ScriptStruct");
 	static UClass* CoreUObjectEnum = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Enum");
-
+	static UClass* SoftObjectProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SoftObjectProperty");
+	static UClass* SoftClassProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SoftClassProperty");
+	static UClass* DelegateFuncProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.DelegateFunction");
+	static UClass* WeakObjProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.WeakObjectProperty");
+	static UClass* MulticastDelegateProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.MulticastDelegateProperty");
+	static UClass* DelegateProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.DelegateProperty");
+	
 	std::string result;
-
-	Class4Writing classInfo;
-
-	classInfo.name = "\n\nstruct " + ((UObjectBaseUtility*)Struct)->GetName().ToString();
 
 	// we are checking what it is twice, which is slow.
 
@@ -532,17 +692,15 @@ std::string SDKFormatting::CreateStruct(UStruct* Struct) {
 	}
 
 	if (/* ((UObjectBaseUtility*)Struct)->IsA(CoreUObjectStruct) || */ ((UObjectBaseUtility*)Struct)->IsA(CoreUObjectScriptStruct))
-	{
-		Class4Writing classInfo;
-		
+	{		
 		std::string Additional = "";
 
 		if (Struct->GetSuperStruct())
 			Additional = " : public " + GetPrefix(Struct->GetSuperStruct()) + ((UObjectBaseUtility*)Struct->GetSuperStruct())->GetName().ToString();
 
-		classInfo.name = std::format("\n\nstruct {}{}", GetPrefix(Struct) + ((UObjectBaseUtility*)Struct)->GetName().ToString(), Additional);
+		auto name = std::format("\n\nstruct {}{}", GetPrefix(Struct) + ((UObjectBaseUtility*)Struct)->GetName().ToString(), Additional);
 
-		result += classInfo.name + "\n{\n";
+		result += name + "\n{\n";
 
 		if ((Struct->GetChildren())) {
 			int SuperStructSize = 0;
@@ -571,6 +729,19 @@ std::string SDKFormatting::CreateStruct(UStruct* Struct) {
 				std::string pName = Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString();
 
 				auto thisElementSize = *(int32_t*)(__int64(Property) + 0x34);
+				bool bUnhandledType = false;
+
+				if (Property->GetClass() == SoftObjectProp ||
+					Property->GetClass() == SoftClassProp ||
+					Property->GetClass() == WeakObjProp ||
+					// Property->GetClass() == DelegateFuncProp ||
+					Property->GetClass() == DelegateProp ||
+					Property->GetClass() == MulticastDelegateProp)
+				{
+					result += std::format("    char UnknownData{}[0x{:x}]; // UNHANDLED {}\n", padNum, thisElementSize, pType + " " + pName);
+					padNum++;
+					bUnhandledType = true;
+				}
 
 				if (OldProp.first && OldProp.second)
 				{
@@ -585,7 +756,8 @@ std::string SDKFormatting::CreateStruct(UStruct* Struct) {
 				OldProp.first = ((UProperty*)Property)->GetOffset_Internal();
 				OldProp.second = thisElementSize;
 
-				result += std::format("    {} {}; // 0x{:x}", pType, pName, ((UProperty*)Property)->GetOffset_Internal());
+				if (!bUnhandledType)
+					result += std::format("    {} {}; // 0x{:x}", pType, pName, ((UProperty*)Property)->GetOffset_Internal());
 
 				if (Property->GetNext())
 					result += "\n";

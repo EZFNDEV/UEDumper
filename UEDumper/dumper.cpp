@@ -156,7 +156,10 @@ void Dumper::Dump() {
                         continue;
                     }
 
-                    FEAKIGNPACKAGE->Classes << SDKFormatting::CreateClass((UStruct*)Object);
+                    UStruct* Class = (UStruct*)Object;
+
+                    FEAKIGNPACKAGE->Classes << SDKFormatting::CreateClass(Class);
+                    FEAKIGNPACKAGE->Functions << SDKFormatting::CreateFunctions(Class);
                 }
 				
                 else if (Object->IsA(CoreUObjectEnum) || Object->IsA(CoreUObjectScriptStruct) || Object->IsA(CoreUObjectStruct)) {
