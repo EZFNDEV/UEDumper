@@ -129,6 +129,15 @@
     <ClInclude Include="Core\Templates\Tuple.h">
       <Filter>Header Files\Core\Templates</Filter>
     </ClInclude>
+    <ClInclude Include="CoreUObject\UObject\PersistentObjectPtr.h">
+      <Filter>Header Files\CoreUObject\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="CoreUObject\UObject\WeakObjectPtr.h">
+      <Filter>Header Files\CoreUObject\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="CoreUObject\UObject\FastReferenceCollectorOptions.h">
+      <Filter>Header Files\CoreUObject\UObject</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -190,6 +199,15 @@
     </ClCompile>
     <ClCompile Include="Core\Containers\Set.cpp">
       <Filter>Source Files\Core\Containers</Filter>
+    </ClCompile>
+    <ClCompile Include="CoreUObject\UObject\PersistentObjectPtr.cpp">
+      <Filter>Source Files\CoreUObject\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="CoreUObject\UObject\WeakObjectPtr.cpp">
+      <Filter>Source Files\CoreUObject\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="CoreUObject\UObject\FastReferenceCollectorOptions.cpp">
+      <Filter>Source Files\CoreUObject\UObject</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

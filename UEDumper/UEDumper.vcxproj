@@ -157,15 +157,18 @@
   <ItemGroup>
     <ClInclude Include="buildSettings.h" />
     <ClInclude Include="CoreUObject\UObject\Class.h" />
+    <ClInclude Include="CoreUObject\UObject\FastReferenceCollectorOptions.h" />
     <ClInclude Include="CoreUObject\UObject\Field.h" />
     <ClInclude Include="CoreUObject\UObject\Object.h" />
     <ClInclude Include="CoreUObject\UObject\ObjectMacros.h" />
+    <ClInclude Include="CoreUObject\UObject\PersistentObjectPtr.h" />
     <ClInclude Include="CoreUObject\UObject\Script.h" />
     <ClInclude Include="CoreUObject\UObject\UnrealTypePrivate.h" />
     <ClInclude Include="CoreUObject\UObject\UObjectArray.h" />
     <ClInclude Include="CoreUObject\UObject\UObjectBase.h" />
     <ClInclude Include="CoreUObject\UObject\UObjectBaseUtility.h" />
     <ClInclude Include="CoreUObject\UObject\UObjectHash.h" />
+    <ClInclude Include="CoreUObject\UObject\WeakObjectPtr.h" />
     <ClInclude Include="Core\Containers\Array.h" />
     <ClInclude Include="Core\Containers\Map.h" />
     <ClInclude Include="Core\Containers\Set.h" />
@@ -182,15 +185,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CoreUObject\UObject\Class.cpp" />
+    <ClCompile Include="CoreUObject\UObject\FastReferenceCollectorOptions.cpp" />
     <ClCompile Include="CoreUObject\UObject\Field.cpp" />
     <ClCompile Include="CoreUObject\UObject\Object.cpp" />
     <ClCompile Include="CoreUObject\UObject\ObjectMacros.cpp" />
+    <ClCompile Include="CoreUObject\UObject\PersistentObjectPtr.cpp" />
     <ClCompile Include="CoreUObject\UObject\Script.cpp" />
     <ClCompile Include="CoreUObject\UObject\UnrealTypePrivate.cpp" />
     <ClCompile Include="CoreUObject\UObject\UObjectArray.cpp" />
     <ClCompile Include="CoreUObject\UObject\UObjectBase.cpp" />
     <ClCompile Include="CoreUObject\UObject\UObjectBaseUtility.cpp" />
     <ClCompile Include="CoreUObject\UObject\UObjectHash.cpp" />
+    <ClCompile Include="CoreUObject\UObject\WeakObjectPtr.cpp" />
     <ClCompile Include="Core\Containers\Array.cpp" />
     <ClCompile Include="Core\Containers\Set.cpp" />
     <ClCompile Include="Core\Containers\UnrealString.cpp" />
