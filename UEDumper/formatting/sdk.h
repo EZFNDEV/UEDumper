@@ -4,7 +4,7 @@
 
 namespace SDKFormatting {
 
-	std::string UPropertyTypeToString(UObjectPropertyBase* Property);
+	std::string UPropertyTypeToString(UProperty* Property);
 	std::string CreateStruct(UStruct* Struct);
 
 	// Faster

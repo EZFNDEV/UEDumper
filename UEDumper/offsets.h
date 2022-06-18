@@ -85,7 +85,12 @@ namespace Offsets {
 		extern inline uint16_t Struct = 0;
 	}
 
+	namespace UArrayProperty {
+		extern inline uint16_t Inner = 0;
+	}
+
 	namespace UProperty {
+		extern inline uint16_t ArrayDim = 0;
 		extern inline uint16_t PropertyFlags = 0;
 		extern inline uint16_t Offset_Internal = 0;
 	}

@@ -8,7 +8,7 @@ class UProperty : public UField
 {
 	public:
 		int32_t GetArrayDim() {
-			return 0;
+			return *(int32_t*)((__int64)this + Offsets::UProperty::ArrayDim);
 		}
 
 		int32_t GetElementSize() {
@@ -167,7 +167,7 @@ class UStrProperty : public UProperty {
 class UArrayProperty : public UProperty {
 	public:
 		UProperty* GetInner() {
-			return 0;
+			return *(UProperty**)((__int64)this + Offsets::UArrayProperty::Inner);
 		}
 };
 

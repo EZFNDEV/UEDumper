@@ -82,6 +82,7 @@ static void Main() {
     // SOAHDSAIHDISABDVASDVASIUDVFASBFSAHIFG
     Offsets::UObjectPropertyBase::PropertyClass = OffsetsFinder::FindUObjectPropertyBase_PropertyClass();
 
+	Offsets::UArrayProperty::Inner = Offsets::UObjectPropertyBase::PropertyClass;
     Offsets::UEnumProperty::UnderlyingProp = Offsets::UObjectPropertyBase::PropertyClass;
     Offsets::UEnumProperty::Enum = Offsets::UEnumProperty::UnderlyingProp + 8;
 
@@ -164,6 +165,7 @@ static void Main() {
 	// Milxnor hardcoded these in the sdk.cpp
 	// we still need to automatically find these
      Offsets::UProperty::PropertyFlags = 0x38;
+     Offsets::UProperty::ArrayDim = 0x30;
 
     if (!MakeDirectories())
     {

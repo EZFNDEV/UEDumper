@@ -205,12 +205,7 @@ static std::string GetUPropertySpecifiers(EPropertyFlags Flags) {
 	return result + ");";
 }
 
-std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) {
-
-	UClass* ClassPrivate = Property->GetClass();
-
-	// TODO: Use the struct and make the StaticClass return it.
-	
+std::string SDKFormatting::UPropertyTypeToString(UProperty* Property) {
 	static UClass* DoubleProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.DoubleProperty");
 	static UClass* FloatProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.FloatProperty");
 	static UClass* IntProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.IntProperty");
@@ -231,6 +226,12 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 	static UClass* Int64Prop = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Int64Property");
 	static UClass* Int8Prop = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Int8Property");
 	static UClass* TextProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.TextProperty");
+
+	UClass* ClassPrivate = Property->GetClass();
+
+	// TODO: Use the struct and make the StaticClass return it.
+	
+	
 
 	// "Easy" props first
 
@@ -256,20 +257,26 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 		return "int8_t";
 	else if (ClassPrivate == TextProp)
 		return "FText";
+
+	else if (ClassPrivate == ArrayProp) {
+		UArrayProperty* ArrayProperty = (UArrayProperty*)Property;
+
+		return std::format("TArray<{}>", UPropertyTypeToString(ArrayProperty->GetInner()));
+	} else if (ClassPrivate == EnumProp) {
+		UEnumProperty* Enum = (UEnumProperty*)Property;
+
+		return Utils::UKismetStringLibrary::Conv_NameToString(Enum->GetEnum()->GetFName()).ToString();
+	}
 	
 	else if (ClassPrivate == StructProp)
 	{
 		UStructProperty* StructProperty = (UStructProperty*)Property;
-		auto ArrayDim = *(uint32_t*)(__int64(Property) + 0x30);
 
-		std::string browtf;
+		std::string pointers;
+		for (uint32_t i = 0; i < Property->GetArrayDim(); i++)
+			pointers += "*";
 
-		for (uint32_t i = 0; i < ArrayDim; i++)
-		{
-			browtf += "*";
-		}
-
-		return GetPrefix(StructProperty) + Utils::UKismetStringLibrary::Conv_NameToString(StructProperty->GetStruct()->GetFName()).ToString() + browtf;
+		return GetPrefix(StructProperty) + Utils::UKismetStringLibrary::Conv_NameToString(StructProperty->GetStruct()->GetFName()).ToString() + pointers;
 	} else if (ClassPrivate == ClassProp) {
 		auto MetaClass = *(UStruct**)(__int64(Property) + 120);
 		auto ArrayDim = *(uint32_t*)(__int64(Property) + 0x30);
@@ -290,8 +297,9 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 	} else if (ClassPrivate == ByteProp)
 		return "char";	// return std::format("TEnumAsByte<{}>", Utils::UKismetStringLibrary::Conv_NameToString(Property->GetFName()).ToString());
 
-	else if (ClassPrivate == ArrayProp)
-		return std::format("TArray<{}>", UPropertyTypeToString(*(UObjectPropertyBase**)(__int64(Property) + 0x70))); // 0x70 = Inner
+	
+
+		
 
 	// else if (ClassPrivate == SoftObjectProp)
 	{
@@ -342,27 +350,29 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 	}
 	else if (ClassPrivate == ObjectProp)
 	{
-		auto PropertyClass = Property->GetPropertyClass();
-		auto ArrayDim = *(uint32_t*)(__int64(Property) + 0x30);
-
-		std::string browtf;
-
-		for (uint32_t i = 0; i < ArrayDim; i++)
-		{
-			browtf += "*";
-		}
-
-		if (PropertyClass)
-		{
-			return GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + browtf;
-		}
-	}
-	
-	else if (ClassPrivate == MulticastDelegateProp) {
-		// Get the UFunction
-		auto Delegate = (UMulticastDelegateProperty*)Property;
+		UObjectPropertyBase* ObjectProperty = (UObjectPropertyBase*)Property;
 		
+		auto PropertyClass = ObjectProperty->GetPropertyClass();
+		if (PropertyClass) {
+			std::string pointers;
+			for (uint32_t i = 0; i < Property->GetArrayDim(); i++)
+				pointers += "*";
+
+			return GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + pointers;
+		} else {
+			return "MILXNOR?";
+		}
+	} else if (ClassPrivate == MulticastDelegateProp) {
+		// Get the UFunction
+		UMulticastDelegateProperty* Delegate = (UMulticastDelegateProperty*)Property;
 		UFunction* Function = Delegate->GetSignatureFunction();
+
+		if (Function) {
+			// Well, now this is tricky...
+			void* Func = Function->GetFunc();
+			
+			// We need to reverse engineere Func to figure out what we need to do with this
+		}
 
 		//printf(Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Function).ToString().c_str());
 
@@ -374,15 +384,7 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 		//printf("DOES THAT WORK: %p\n", DelegateProperty->GetSignatureFunction());
 		
 		return Utils::UKismetStringLibrary::Conv_NameToString(Property->GetClass()->GetFName()).ToString();
-	}
-
-	else if (ClassPrivate == EnumProp) {
-		auto Enum = (UEnumProperty*)Property;
-		
-		return Utils::UKismetStringLibrary::Conv_NameToString(Enum->GetEnum()->GetFName()).ToString();
-	}
-	else
-	{
+	} else {
 		return "__int64" + std::string("/*") + Utils::UKismetStringLibrary::Conv_NameToString(Property->GetClass()->GetFName()).ToString() + "*/";
 	}
 }
@@ -497,7 +499,7 @@ void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
 					for (UProperty* Parameter = (UProperty*)Function->GetChildren(); Parameter; Parameter = (UProperty*)Parameter->GetNext())
 					{
 						auto PropertyFlags = Parameter->GetPropertyFlags();
-						auto ArrayDim = *(uint32_t*)(__int64(Parameter) + 0x30);
+						auto ArrayDim = Parameter->GetArrayDim();
 						auto ParamType = UPropertyTypeToString((UObjectPropertyBase*)Parameter);
 
 						if (PropertyFlags & 0x400)
@@ -529,7 +531,7 @@ void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
 
 					FullFunction += ParamsCombined;
 
-					auto nameDef = ReturnType + ' ' + GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString() + "::" + ((FunctionFlags & EFunctionFlags::FUNC_Static) ? "static " + FullFunction : FullFunction); // 0x2000 = STATIC
+					auto nameDef = ((FunctionFlags & EFunctionFlags::FUNC_Static) ? "static " + FullFunction : FullFunction) + ReturnType + ' ' + GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString() + "::";
 
 					funcResult += nameDef + R"()
 {)";
