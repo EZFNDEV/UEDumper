@@ -23,7 +23,7 @@ static std::string GetUPropertySpecifiers(EPropertyFlags Flags) {
 #elif
 	std::string result = "// UPROPERTY(";
 #endif
-
+	// result += (Flags & EPropertyFlags::CPF_Edit) ? "EditAnywhere, " : ""; // TODO: Format like this
 	if (Flags & EPropertyFlags::CPF_Edit) {
 		result += "EditAnywhere, ";
 	}
@@ -202,6 +202,11 @@ static std::string GetUPropertySpecifiers(EPropertyFlags Flags) {
 		result += "ReplicatedParameter, ";
 	}
 
+	auto idx = result.find_last_of(", ");
+
+	if (idx != std::string::npos)
+		result = result.erase(idx - 1, idx);
+
 	return result + ");";
 }
 
@@ -272,23 +277,14 @@ std::string SDKFormatting::UPropertyTypeToString(UProperty* Property) {
 	{
 		UStructProperty* StructProperty = (UStructProperty*)Property;
 
-		std::string pointers;
-		for (uint32_t i = 0; i < Property->GetArrayDim(); i++)
-			pointers += "*";
+		auto ArrayDim = *(uint32_t*)(__int64(Property) + 0x30);
 
-		return GetPrefix(StructProperty) + Utils::UKismetStringLibrary::Conv_NameToString(StructProperty->GetStruct()->GetFName()).ToString() + pointers;
+		return GetPrefix(StructProperty) + Utils::UKismetStringLibrary::Conv_NameToString(StructProperty->GetStruct()->GetFName()).ToString() + ((ArrayDim) ? "*" : "");
 	} else if (ClassPrivate == ClassProp) {
 		auto MetaClass = *(UStruct**)(__int64(Property) + 120);
 		auto ArrayDim = *(uint32_t*)(__int64(Property) + 0x30);
 
-		std::string browtf;
-
-		for (uint32_t i = 0; i < ArrayDim; i++)
-		{
-			browtf += "*";
-		}
-
-		return GetPrefix(MetaClass) + Utils::UKismetStringLibrary::Conv_NameToString(MetaClass->GetFName()).ToString() + browtf;
+		return GetPrefix(MetaClass) + Utils::UKismetStringLibrary::Conv_NameToString(MetaClass->GetFName()).ToString() + ((ArrayDim) ? "*" : "");
 	}
 	else if (ClassPrivate == BoolProp)
 	{
@@ -353,12 +349,9 @@ std::string SDKFormatting::UPropertyTypeToString(UProperty* Property) {
 		UObjectPropertyBase* ObjectProperty = (UObjectPropertyBase*)Property;
 		
 		auto PropertyClass = ObjectProperty->GetPropertyClass();
-		if (PropertyClass) {
-			std::string pointers;
-			for (uint32_t i = 0; i < Property->GetArrayDim(); i++)
-				pointers += "*";
-
-			return GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + pointers;
+		if (PropertyClass) { // couldn't we just call this function again?
+			auto ArrayDim = *(uint32_t*)(__int64(Property) + 0x30);
+			return GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + ((ArrayDim) ? "*" : "");
 		} else {
 			return "MILXNOR?";
 		}
@@ -387,6 +380,11 @@ std::string SDKFormatting::UPropertyTypeToString(UProperty* Property) {
 	} else {
 		return "__int64" + std::string("/*") + Utils::UKismetStringLibrary::Conv_NameToString(Property->GetClass()->GetFName()).ToString() + "*/";
 	}
+}
+
+std::string GetFullCPPName() // TODO: Do this
+{
+	
 }
 
 void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
@@ -474,9 +472,16 @@ void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
 				OldProp.first = ((UProperty*)Property)->GetOffset_Internal();
 				OldProp.second = thisElementSize;
 
+				auto ArrayDim = ((UProperty*)Property)->GetArrayDim();
+				
 				if (!bUnhandledType)
+				{
 					result += "    " + GetUPropertySpecifiers(((UProperty*)Property)->GetPropertyFlags()) + "\n";
+					
+					pName += (ArrayDim > 1) ? std::format("[0x{:x}]", ArrayDim) : ""; // do like CharacterParts[0x8];
+
 					result += std::format("    {} {}; // 0x{:x}\n", pType, pName, ((UProperty*)Property)->GetOffset_Internal());
+				}
 
 				if (Property->GetNext())
 					result += "\n";
@@ -531,11 +536,14 @@ void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
 
 					FullFunction += ParamsCombined;
 
-					auto nameDef = ((FunctionFlags & EFunctionFlags::FUNC_Static) ? "static " + FullFunction : FullFunction) + ReturnType + ' ' + GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString() + "::";
+					auto oldRet = ReturnType; // ReturnType without static
+					ReturnType = ((FunctionFlags & EFunctionFlags::FUNC_Static) ? "static " : "") + ReturnType;
 
+					auto nameDef = ReturnType + ' ' + GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString() + "::" + FullFunction; // 0x2000 = STATIC
+					
 					funcResult += nameDef + R"()
 {)";
-					if (Params.size() > 0 || ReturnType != "void")
+					if (Params.size() > 0 || oldRet != "void")
 					{
 						funcResult += R"(
 	struct {
@@ -545,14 +553,14 @@ void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
 							for (int i = 0; i < Params.size(); i++)
 							{
 								auto& Param = Params[i];
-								funcResult += "        " + Param.first + ' ' + Param.second + ";";
-								if (i != (((Params.size() + ((ReturnType == "void") ? 0 : 1))) - 1))
+								funcResult += "            " + Param.first + ' ' + Param.second + ";";
+								if (i != (((Params.size() + ((oldRet == "void") ? 0 : 1))) - 1))
 									funcResult += "\n";
 							}
 						}
 
 						if (ReturnType != "void")
-							funcResult += "        " + ReturnType + ' ' + "ReturnValue;";
+							funcResult += "            " + oldRet + ' ' + "ReturnValue;";
 
 						funcResult += R"(
 	} params{ )";
@@ -646,7 +654,7 @@ std::string SDKFormatting::CreateStruct(UStruct* Struct) {
 				auto NameStr = Utils::UKismetStringLibrary::Conv_NameToString(Name).ToString();
 
 				auto pos = NameStr.find_last_of(':');
-				if (pos != std::string::npos)
+				if (pos != std::string::npos) // theres probably a more modern c++ way of doing this
 				{
 					NameStr = NameStr.substr(pos + 1);
 				}
@@ -661,7 +669,7 @@ std::string SDKFormatting::CreateStruct(UStruct* Struct) {
 		}
 	}
 
-	if (/* ((UObjectBaseUtility*)Struct)->IsA(CoreUObjectStruct) || */ ((UObjectBaseUtility*)Struct)->IsA(CoreUObjectScriptStruct))
+	else if (/* ((UObjectBaseUtility*)Struct)->IsA(CoreUObjectStruct) || */ ((UObjectBaseUtility*)Struct)->IsA(CoreUObjectScriptStruct))
 	{		
 		std::string Additional = "";
 
@@ -673,65 +681,7 @@ std::string SDKFormatting::CreateStruct(UStruct* Struct) {
 		result += name + "\n{\n";
 
 		if ((Struct->GetChildren())) {
-			int SuperStructSize = 0;
-
-			if (Struct->GetSuperStruct())
-				SuperStructSize = *(uint32_t*)(__int64(Struct->GetSuperStruct()) + 0x40);
-			
-			int OffsetDifference = 0;
-			int padNum = 1;
-
-			std::pair<int, int> OldProp; // Offset_Internal, Size
-
-			if (SuperStructSize) // make sure it inherits something
-			{
-				OffsetDifference = ((UProperty*)Struct->GetChildren())->GetOffset_Internal() - SuperStructSize; // Get the first child's offset and subtract the two
-
-				if (OffsetDifference > 0)
-				{
-					result += std::format("    char UnknownData{}[0x{:x}];\n", padNum, OffsetDifference);
-					padNum++;
-				}
-			}
-
-			for (UField* Property = (UField*)Struct->GetChildren(); Property; Property = Property->GetNext()) {
-				std::string pType = UPropertyTypeToString((UObjectPropertyBase*)Property);
-				std::string pName = Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString();
-
-				auto thisElementSize = *(int32_t*)(__int64(Property) + 0x34);
-				bool bUnhandledType = false;
-
-				if (Property->GetClass() == SoftObjectProp ||
-					Property->GetClass() == SoftClassProp ||
-					Property->GetClass() == WeakObjProp ||
-					// Property->GetClass() == DelegateFuncProp ||
-					Property->GetClass() == DelegateProp ||
-					Property->GetClass() == MulticastDelegateProp)
-				{
-					result += std::format("    char UnknownData{}[0x{:x}]; // UNHANDLED {}\n", padNum, thisElementSize, pType + " " + pName);
-					padNum++;
-					bUnhandledType = true;
-				}
-
-				if (OldProp.first && OldProp.second)
-				{
-					OffsetDifference = ((UProperty*)Property)->GetOffset_Internal() - (OldProp.first + OldProp.second);
-					if (OffsetDifference > 0)
-					{
-						result += std::format("    char UnknownData{}[0x{:x}];\n", padNum, OffsetDifference);
-						padNum++;
-					}
-				}
-
-				OldProp.first = ((UProperty*)Property)->GetOffset_Internal();
-				OldProp.second = thisElementSize;
-
-				if (!bUnhandledType)
-					result += std::format("    {} {}; // 0x{:x}", pType, pName, ((UProperty*)Property)->GetOffset_Internal());
-
-				if (Property->GetNext())
-					result += "\n";
-			}
+			// TODO: basically copy this whole thing from CreateClass when we are done with CreateClass.
 		}
 		result += "\n};";
 	}
