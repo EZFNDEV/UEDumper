@@ -53,6 +53,8 @@ static void Main() {
     Utils::_StaticFindObject = decltype(Utils::_StaticFindObject)(Offsets::StaticFindObject);
 
     Offsets::UFunction::Func = OffsetsFinder::FindUFunctionOffset_Func();
+    // TODO: FIND!
+    Offsets::UFunction::FunctionFlags = Offsets::UFunction::Func - 0x28;
 
     Offsets::ProcessEvent = OffsetsFinder::FindProcessEvent();
     if (!Offsets::ProcessEvent) {
@@ -158,6 +160,11 @@ static void Main() {
 	// Note: Just temp, you can remove this if you dont inject on startup
     // std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
 		
+
+	// Milxnor hardcoded these in the sdk.cpp
+	// we still need to automatically find these
+     Offsets::UProperty::PropertyFlags = 0x38;
+
     if (!MakeDirectories())
     {
         printf("Failed to create directories!\n");

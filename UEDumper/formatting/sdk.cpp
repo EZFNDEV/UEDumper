@@ -17,200 +17,193 @@ static std::string GetPrefix(UObjectBase* Object) // TODO: Move this to SDKForma
 
 	return "F";
 }
+static std::string GetUPropertySpecifiers(EPropertyFlags Flags) {
+#ifdef INCLUDE_IN_UE
+	std::string result = "UPROPERTY(";
+#elif
+	std::string result = "// UPROPERTY(";
+#endif
 
-/*
-
- // https://github.com/EpicGames/UnrealEngine/blob/46544fa5e0aa9e6740c19b44b0628b72e7bbd5ce/Engine/Source/Programs/UnrealHeaderTool/Private/HeaderParser.cpp#L2892
-public static List<string> GetUPropertySpecifiers(UInt64 Flags)
-{
-	List<string> result = new List<string>();
-
-	if ((Flags & (UInt64)EPropertyFlags.CPF_Edit) != 0)
-	{
-		result.Add("EditAnywhere");
+	if (Flags & EPropertyFlags::CPF_Edit) {
+		result += "EditAnywhere, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_Edit & (UInt64)EPropertyFlags.CPF_DisableEditOnTemplate) != 0)
-	{
-		result.Add("EditInstanceOnly");
+	if (Flags & EPropertyFlags::CPF_Edit & EPropertyFlags::CPF_DisableEditOnTemplate) {
+		result += "EditInstanceOnly, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_Edit & (UInt64)EPropertyFlags.CPF_DisableEditOnInstance) != 0)
+	if ((Flags & EPropertyFlags::CPF_Edit & EPropertyFlags::CPF_DisableEditOnInstance) != 0)
 	{
-		result.Add("EditDefaultsOnly");
+		result += "EditDefaultsOnly, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_Edit & (UInt64)EPropertyFlags.CPF_EditConst) != 0)
+	if ((Flags & EPropertyFlags::CPF_Edit & EPropertyFlags::CPF_EditConst) != 0)
 	{
-		result.Add("VisibleAnywhere");
+		result += "VisibleAnywhere, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_Edit & (UInt64)EPropertyFlags.CPF_EditConst & (UInt64)EPropertyFlags.CPF_DisableEditOnTemplate) != 0)
+	if ((Flags & EPropertyFlags::CPF_Edit & EPropertyFlags::CPF_EditConst & EPropertyFlags::CPF_DisableEditOnTemplate) != 0)
 	{
-		result.Add("VisibleInstanceOnly");
+		result += "VisibleInstanceOnly, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_Edit & (UInt64)EPropertyFlags.CPF_EditConst & (UInt64)EPropertyFlags.CPF_DisableEditOnInstance) != 0)
+	if ((Flags & EPropertyFlags::CPF_Edit & EPropertyFlags::CPF_EditConst & EPropertyFlags::CPF_DisableEditOnInstance) != 0)
 	{
-		result.Add("VisibleDefaultsOnly");
+		result += "VisibleDefaultsOnly, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_BlueprintVisible) != 0)
+	if ((Flags & EPropertyFlags::CPF_BlueprintVisible) != 0)
 	{
-		if ((Flags & (UInt64)EPropertyFlags.CPF_BlueprintReadOnly) != 0)
+		if ((Flags & EPropertyFlags::CPF_BlueprintReadOnly) != 0)
 		{
-			result.Add("BlueprintReadOnly");
-		} else {
-			result.Add("BlueprintReadWrite");
+			result += "BlueprintReadOnly, ";
+		}
+		else {
+			result += "BlueprintReadWrite, ";
 		}
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_Config) != 0)
+	if ((Flags & EPropertyFlags::CPF_Config) != 0)
 	{
-		if ((Flags & (UInt64)EPropertyFlags.CPF_GlobalConfig) != 0)
+		if ((Flags & EPropertyFlags::CPF_GlobalConfig) != 0)
 		{
-			result.Add("GlobalConfig");
+			result += "GlobalConfig, ";
 		}
 		else
 		{
-			result.Add("Config");
+			result += "Config, ";
 		}
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_Transient) != 0)
+	if ((Flags & EPropertyFlags::CPF_Transient) != 0)
 	{
-		result.Add("Transient");
+		result += "Transient, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_DuplicateTransient) != 0)
+	if ((Flags & EPropertyFlags::CPF_DuplicateTransient) != 0)
 	{
-		result.Add("DuplicateTransient");
+		result += "DuplicateTransient, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_TextExportTransient) != 0)
+	if ((Flags & EPropertyFlags::CPF_TextExportTransient) != 0)
 	{
-		result.Add("TextExportTransient");
+		result += "TextExportTransient, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_NonPIEDuplicateTransient) != 0)
+	if ((Flags & EPropertyFlags::CPF_NonPIEDuplicateTransient) != 0)
 	{
-		result.Add("NonPIETransient");
+		result += "NonPIETransient, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_NonPIEDuplicateTransient) != 0)
+	if ((Flags & EPropertyFlags::CPF_NonPIEDuplicateTransient) != 0)
 	{
-		result.Add("NonPIEDuplicateTransient");
+		result += "NonPIEDuplicateTransient, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_ExportObject) != 0)
+	if ((Flags & EPropertyFlags::CPF_ExportObject) != 0)
 	{
-		result.Add("Export");
+		result += "Export, ";
 	}
 
 	//  EditInline -> deprecated
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_NoClear) != 0)
+	if ((Flags & EPropertyFlags::CPF_NoClear) != 0)
 	{
-		result.Add("NoClear");
+		result += "NoClear, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_EditFixedSize) != 0)
+	if ((Flags & EPropertyFlags::CPF_EditFixedSize) != 0)
 	{
-		result.Add("EditFixedSize");
+		result += "EditFixedSize, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_Net) != 0)
+	if ((Flags & EPropertyFlags::CPF_Net) != 0)
 	{
-		result.Add("Replicated");
+		result += "Replicated, ";
 
-		if ((Flags & (UInt64)EPropertyFlags.CPF_RepNotify) != 0)
+		if ((Flags & EPropertyFlags::CPF_RepNotify) != 0)
 		{
-			result.Add("ReplicatedUsing");
+			result += "ReplicatedUsing, ";
 		}
 	}
 
 	// RepRetry -> deprecated
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_Edit & (UInt64)EPropertyFlags.CPF_BlueprintVisible & (UInt64)EPropertyFlags.CPF_Interp) != 0)
+	if ((Flags & EPropertyFlags::CPF_Edit & EPropertyFlags::CPF_BlueprintVisible & EPropertyFlags::CPF_Interp) != 0)
 	{
-		result.Add("Interp");
+		result += "Interp, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_NonTransactional) != 0)
+	if ((Flags & EPropertyFlags::CPF_NonTransactional) != 0)
 	{
-		result.Add("NonTransactional");
+		result += "NonTransactional, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_PersistentInstance & (UInt64)EPropertyFlags.CPF_ExportObject & (UInt64)EPropertyFlags.CPF_InstancedReference) != 0)
+	if ((Flags & EPropertyFlags::CPF_PersistentInstance & EPropertyFlags::CPF_ExportObject & EPropertyFlags::CPF_InstancedReference) != 0)
 	{
-		result.Add("Instanced");
+		result += "Instanced, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_BlueprintAssignable) != 0)
+	if ((Flags & EPropertyFlags::CPF_BlueprintAssignable) != 0)
 	{
-		result.Add("BlueprintAssignable");
+		result += "BlueprintAssignable, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_BlueprintCallable) != 0)
+	if ((Flags & EPropertyFlags::CPF_BlueprintCallable) != 0)
 	{
-		result.Add("BlueprintCallable");
+		result += "BlueprintCallable, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_BlueprintAuthorityOnly) != 0)
+	if ((Flags & EPropertyFlags::CPF_BlueprintAuthorityOnly) != 0)
 	{
-		result.Add("BlueprintAuthorityOnly");
+		result += "BlueprintAuthorityOnly, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_AssetRegistrySearchable) != 0)
+	if ((Flags & EPropertyFlags::CPF_AssetRegistrySearchable) != 0)
 	{
-		result.Add("AssetRegistrySearchable");
+		result += "AssetRegistrySearchable, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_SimpleDisplay) != 0)
+	if ((Flags & EPropertyFlags::CPF_SimpleDisplay) != 0)
 	{
-		result.Add("SimpleDisplay");
+		result += "SimpleDisplay, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_AdvancedDisplay) != 0)
+	if ((Flags & EPropertyFlags::CPF_AdvancedDisplay) != 0)
 	{
-		result.Add("AdvancedDisplay");
+		result += "AdvancedDisplay, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_SaveGame) != 0)
+	if ((Flags & EPropertyFlags::CPF_SaveGame) != 0)
 	{
-		result.Add("SaveGame");
+		result += "SaveGame, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_SkipSerialization) != 0)
+	if ((Flags & EPropertyFlags::CPF_SkipSerialization) != 0)
 	{
-		result.Add("SkipSerialization");
+		result += "SkipSerialization, ";
 	}
 
 	// if (VariableCategory != EVariableCategory::Member)
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_ConstParm) != 0)
+	if ((Flags & EPropertyFlags::CPF_ConstParm) != 0)
 	{
-		result.Add("Const");
+		result += "Const, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_OutParm & (UInt64)EPropertyFlags.CPF_ReferenceParm) != 0)
+	if ((Flags & EPropertyFlags::CPF_OutParm & EPropertyFlags::CPF_ReferenceParm) != 0)
 	{
-		result.Add("Ref");
+		result += "Ref, ";
 	}
 
-	if ((Flags & (UInt64)EPropertyFlags.CPF_RepSkip) != 0)
+	if ((Flags & EPropertyFlags::CPF_RepSkip) != 0)
 	{
-		result.Add("NotReplicated");
-		result.Add("ReplicatedParameter");
+		result += "NotReplicated, ";
+		result += "ReplicatedParameter, ";
 	}
 
-	// TODO: Add some more stuff, but ig this is fine for now
-
-	return result;
+	return result + ");";
 }
-
-*/
-
 
 std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) {
 
@@ -307,14 +300,14 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 
 	if (ClassPrivate == FunctionProp) {
 		std::string ReturnValueType;
-		auto Func = (UFunction*)Property;
+		UFunction* Function = (UFunction*)Property;
 
-		auto FunctionFlags = *(uint32_t*)(__int64(Func) + 0x88);
+		EFunctionFlags FunctionFlags = Function->GetFunctionFlags();
 
 		std::string ReturnType = "";
 		std::vector<std::pair<std::string, std::string>> Params; // Param Type, Param Name
 
-		for (UProperty* Parameter = (UProperty*)Func->GetChildren(); Parameter; Parameter = (UProperty*)Parameter->GetNext())
+		for (UProperty* Parameter = (UProperty*)Function->GetChildren(); Parameter; Parameter = (UProperty*)Parameter->GetNext())
 		{
 			auto PropertyFlags = *(uint64_t*)(__int64(Parameter) + 0x38);
 			auto ArrayDim = *(uint32_t*)(__int64(Parameter) + 0x30);
@@ -329,7 +322,7 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 				Params.push_back({
 					ParamType,
 					Utils::UKismetStringLibrary::Conv_NameToString(Parameter->GetFName()).ToString()
-					});
+				});
 			}
 		}
 
@@ -345,7 +338,7 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 				FullFunction += ", ";
 		}
 
-		return (FunctionFlags & 0x2000) ? "static " + FullFunction : FullFunction; // 0x2000 = STATIC
+		return (FunctionFlags & EFunctionFlags::FUNC_Static) ? "static " + FullFunction : FullFunction;
 	}
 	else if (ClassPrivate == ObjectProp)
 	{
@@ -394,174 +387,41 @@ std::string SDKFormatting::UPropertyTypeToString(UObjectPropertyBase* Property) 
 	}
 }
 
-
-std::string SDKFormatting::CreateFunctions(UStruct* Class)
-{
-	std::string result = "";
-
+void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
 	static UClass* FunctionProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Function");
-	
-	if ((Class->GetChildren()))
-	{
-		for (UField* Property = (UField*)Class->GetChildren(); Property; Property = Property->GetNext()) {
-			std::string pType = UPropertyTypeToString((UObjectPropertyBase*)Property);
-			std::string pName = Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString();
-			bool bIsAFunction = (Property->GetClass() == FunctionProp);
-
-			for (UField* Property = (UField*)Class->GetChildren(); Property; Property = Property->GetNext()) {
-				bool bIsAFunction = (Property->GetClass() == FunctionProp);
-
-				if (bIsAFunction)
-				{
-					auto Function = (UFunction*)Property;
-
-					std::string ReturnValueType;
-					auto Func = (UFunction*)Property;
-
-					auto FunctionFlags = *(uint32_t*)(__int64(Func) + 0x88);
-
-					std::string ReturnType = "";
-					std::vector<std::pair<std::string, std::string>> Params; // Param Type, Param Name
-
-					for (UProperty* Parameter = (UProperty*)Func->GetChildren(); Parameter; Parameter = (UProperty*)Parameter->GetNext())
-					{
-						auto PropertyFlags = *(uint64_t*)(__int64(Parameter) + 0x38);
-						auto ArrayDim = *(uint32_t*)(__int64(Parameter) + 0x30);
-						auto ParamType = UPropertyTypeToString((UObjectPropertyBase*)Parameter);
-
-						if (PropertyFlags & 0x400)
-						{
-							ReturnType = ParamType;
-						}
-						else if (PropertyFlags & 0x80) // Param Flag
-						{
-							Params.push_back({
-								ParamType,
-								Utils::UKismetStringLibrary::Conv_NameToString(Parameter->GetFName()).ToString()
-								});
-						}
-					}
-
-					if (ReturnType == "")
-						ReturnType = "void";
-
-					auto FullFunction = std::format("{}(", Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString());
-					std::string ParamsCombined = "";
-
-					for (int i = 0; i < Params.size(); i++)
-					{
-						auto& Param = Params[i];
-						ParamsCombined += Param.first + ' ' + Param.second;
-						if (i != Params.size() - 1)
-							ParamsCombined += ", ";
-					}
-
-					FullFunction += ParamsCombined;
-
-					auto nameDef = ReturnType + ' ' + GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString() + "::" + ((FunctionFlags & 0x2000) ? "static " + FullFunction : FullFunction); // 0x2000 = STATIC
-
-					result += nameDef + R"()
-{)";
-					if (Params.size() > 0 || ReturnType != "void")
-					{
-						result += R"(
-	struct {
-)";
-						if (Params.size() > 0)
-						{
-							for (int i = 0; i < Params.size(); i++)
-							{
-								auto& Param = Params[i];
-								result += "        " + Param.first + ' ' + Param.second + ";";
-								if (i != (((Params.size() + ((ReturnType == "void") ? 0 : 1))) - 1))
-									result += "\n";
-							}
-						}
-
-						if (ReturnType != "void")
-							result += "        " + ReturnType + ' ' + "ReturnValue;";
-
-		result += R"(
-	} params{ )";
-						if (Params.size() > 0)
-						{
-							for (int i = 0; i < Params.size(); i++)
-							{
-								auto& Param = Params[i];
-								result += Param.second;
-								if (i < Params.size() - 1)
-									result += ",";
-								result += " ";
-							}
-						}
-
-						result += "};\n";
-					}
-					
-					result += "\n    static auto fn = UObject::FindObject<UFunction>(\"" + Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Function).ToString() + "\");\n";
-					result += "    ProcessEvent(this, fn, " + std::string(((Params.size() > 0) ? "&params" : "nullptr")) + ");";
-
-					if (ReturnType != "void")
-						result += "\n\n    return params.ReturnValue; ";
-					
-					// END
-					
-					result += R"(
-}
-)" + std::string("\n");
-				}
-			}
-		}
-	}
-
-	return result;
-}
-
-std::string SDKFormatting::CreateClass(UStruct* Class) {
-	/*
-	// BlueprintGeneratedClass _WaterMeshBlueprintMaster._WaterMeshBlueprintMaster_C
-	// 0x00C3 (0x03DB - 0x0318)
-	*/
+	static UClass* SoftObjectProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SoftObjectProperty");
+	static UClass* SoftClassProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SoftClassProperty");
+	static UClass* DelegateFuncProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.DelegateFunction");
+	static UClass* WeakObjProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.WeakObjectProperty");
+	static UClass* MulticastDelegateProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.MulticastDelegateProperty");
+	static UClass* SetProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SetProperty");
+	static UClass* DelegateProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.DelegateProperty");
 
 	std::string result = "";
+	std::string funcResult = "";
 
 	std::string Additional = "";
 
-	if (Class->GetSuperStruct())
+	UStruct* SuperStruct = Class->GetSuperStruct();
+
+	if (SuperStruct)
 		Additional = " : public " + GetPrefix(Class->GetSuperStruct()) + ((UObjectBaseUtility*)Class->GetSuperStruct())->GetName().ToString();
+	else
+		Additional = " : public UObject";
 
 	auto name = std::format("\n\nclass {}{}", GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString(), Additional);
 
-	auto super = Class->GetSuperStruct();
-	if (super && super != Class)
-	{
-		//c.InheritedSize = offset = super.GetPropertySize();
-
-		//c.NameCppFull += " : public " + MakeValidName(super.GetNameCPP());
-	}
-	else {
-		name = "class UObject";
-	}
-
 	result += name + "\n{\npublic:\n";
 
-
-	if ((Class->GetChildren())) { // MESSY ASF
+	if ((Class->GetChildren())) {
 		int SuperStructSize = 0;
 
-		if (Class->GetSuperStruct())
-			SuperStructSize = *(uint32_t*)(__int64(Class->GetSuperStruct()) + 0x40);
+		if (SuperStruct)
+			SuperStructSize = *(uint32_t*)((__int64)SuperStruct + 0x40);
 
 		std::pair<int, int> OldProp; // Offset_Internal, Size
 		int padNum = 1;
-		static UClass* FunctionProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Function");
-		static UClass* SoftObjectProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SoftObjectProperty");
-		static UClass* SoftClassProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SoftClassProperty");
-		static UClass* DelegateFuncProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.DelegateFunction");
-		static UClass* WeakObjProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.WeakObjectProperty");
-		static UClass* MulticastDelegateProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.MulticastDelegateProperty");
-		static UClass* SetProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SetProperty");
-		static UClass* DelegateProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.DelegateProperty");
+		
 
 		bool bIsFirstAFunction = (Class->GetChildren()->GetClass() == FunctionProp);
 		int OffsetDifference = 0;
@@ -588,7 +448,7 @@ std::string SDKFormatting::CreateClass(UStruct* Class) {
 				bool bUnhandledType = false;
 
 				if (Property->GetClass() == SoftObjectProp || // Properties we do not have implemented
-					Property->GetClass() == SoftClassProp || 
+					Property->GetClass() == SoftClassProp ||
 					Property->GetClass() == WeakObjProp ||
 					// Property->GetClass() == DelegateFuncProp ||
 					Property->GetClass() == DelegateProp ||
@@ -613,15 +473,122 @@ std::string SDKFormatting::CreateClass(UStruct* Class) {
 				OldProp.second = thisElementSize;
 
 				if (!bUnhandledType)
-					result += std::format("    {} {}; // 0x{:x}", pType, pName, ((UProperty*)Property)->GetOffset_Internal());
-				
+					result += "    " + GetUPropertySpecifiers(((UProperty*)Property)->GetPropertyFlags()) + "\n";
+					result += std::format("    {} {}; // 0x{:x}\n", pType, pName, ((UProperty*)Property)->GetOffset_Internal());
+
 				if (Property->GetNext())
 					result += "\n";
 			}
 			else
 			{
+				bool bIsAFunction = (Property->GetClass() == FunctionProp);
+
+				if (bIsAFunction)
+				{
+					UFunction* Function = (UFunction*)Property;
+
+					std::string ReturnValueType;
+
+					EFunctionFlags FunctionFlags = Function->GetFunctionFlags();
+
+					std::string ReturnType = "";
+					std::vector<std::pair<std::string, std::string>> Params; // Param Type, Param Name
+
+					for (UProperty* Parameter = (UProperty*)Function->GetChildren(); Parameter; Parameter = (UProperty*)Parameter->GetNext())
+					{
+						auto PropertyFlags = Parameter->GetPropertyFlags();
+						auto ArrayDim = *(uint32_t*)(__int64(Parameter) + 0x30);
+						auto ParamType = UPropertyTypeToString((UObjectPropertyBase*)Parameter);
+
+						if (PropertyFlags & 0x400)
+						{
+							ReturnType = ParamType;
+						}
+						else if (PropertyFlags & 0x80) // Param Flag
+						{
+							Params.push_back({
+								ParamType,
+								Utils::UKismetStringLibrary::Conv_NameToString(Parameter->GetFName()).ToString()
+							});
+						}
+					}
+
+					if (ReturnType == "")
+						ReturnType = "void";
+
+					auto FullFunction = std::format("{}(", Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString());
+					std::string ParamsCombined = "";
+
+					for (int i = 0; i < Params.size(); i++)
+					{
+						auto& Param = Params[i];
+						ParamsCombined += Param.first + ' ' + Param.second;
+						if (i != Params.size() - 1)
+							ParamsCombined += ", ";
+					}
+
+					FullFunction += ParamsCombined;
+
+					auto nameDef = ReturnType + ' ' + GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString() + "::" + ((FunctionFlags & EFunctionFlags::FUNC_Static) ? "static " + FullFunction : FullFunction); // 0x2000 = STATIC
+
+					funcResult += nameDef + R"()
+{)";
+					if (Params.size() > 0 || ReturnType != "void")
+					{
+						funcResult += R"(
+	struct {
+)";
+						if (Params.size() > 0)
+						{
+							for (int i = 0; i < Params.size(); i++)
+							{
+								auto& Param = Params[i];
+								funcResult += "        " + Param.first + ' ' + Param.second + ";";
+								if (i != (((Params.size() + ((ReturnType == "void") ? 0 : 1))) - 1))
+									funcResult += "\n";
+							}
+						}
+
+						if (ReturnType != "void")
+							funcResult += "        " + ReturnType + ' ' + "ReturnValue;";
+
+						funcResult += R"(
+	} params{ )";
+						if (Params.size() > 0)
+						{
+							for (int i = 0; i < Params.size(); i++)
+							{
+								auto& Param = Params[i];
+								funcResult += Param.second;
+								if (i < Params.size() - 1)
+									funcResult += ",";
+								funcResult += " ";
+							}
+						}
+
+						funcResult += "};\n";
+					}
+
+					// TODO: VTable
+					funcResult += "\n    static auto fn = UObject::FindObject<UFunction>(this::StaticClass(), \"" + pName + "\");\n";
+					funcResult += "    ProcessEvent(this, fn, " + std::string(((Params.size() > 0) ? "&params" : "nullptr")) + ");";
+
+					if (ReturnType != "void")
+						funcResult += "\n\n    return params.ReturnValue; ";
+
+					// END
+
+					funcResult += R"(
+}
+)" + std::string("\n");
+				}
+
+
+
+
+
 				result += "    " + pType + ");";
-				
+
 				if (Property->GetNext())
 					result += "\n";
 			}
@@ -635,10 +602,11 @@ std::string SDKFormatting::CreateClass(UStruct* Class) {
 		return ptr;
 	}
 )"); // i don't know why but format doesnt work
-	
+
 	result += "\n};";
 
-	return result;
+	streams->Classes << result;
+	streams->Functions << funcResult;
 }
 
 std::string SDKFormatting::CreateStruct(UStruct* Struct) {

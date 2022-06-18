@@ -21,6 +21,13 @@
 #include <fstream>
 #include <format>
 
+struct Ofstreams {
+    std::ofstream Classes;
+    std::ofstream Functions;
+    std::ofstream Structs;
+    // std::ofstream Parameters;
+};
+
 #include "include/memory.h"
 #include "offsets.h"
 #include "utils.h"

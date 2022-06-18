@@ -117,14 +117,7 @@ void Dumper::Dump() {
     static UClass* CoreUObjectPackage = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Package");
     static UClass* CoreUObjectEnum = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Enum");
 
-    struct FreakingPackage {
-        std::ofstream Classes;
-        std::ofstream Functions;
-        std::ofstream Structs;
-        // std::ofstream Parameters;
-    };
-
-    std::unordered_map<__int64, FreakingPackage*> packages;
+    std::unordered_map<__int64, Ofstreams*> packages;
     auto Start = std::chrono::high_resolution_clock::now();
 
     #ifdef DUMP_JSON
@@ -141,71 +134,55 @@ void Dumper::Dump() {
                     std::ofstream Functions;
                     std::ofstream Structs;
 
-                    FreakingPackage* FEAKIGNPACKAGE = 0;
+                    Ofstreams* streams = 0;
 					
                     for (auto const& [key, val] : packages)
                     {
                         if (key == (__int64)Object->GetOuter()) {
-                            FEAKIGNPACKAGE = val;
+                            streams = val;
                             break;
                         }
                     }
 
-                    if (!FEAKIGNPACKAGE) {
-                        // printf("We hgaven't bruh");
-                        continue;
-                    }
-
-                    UStruct* Class = (UStruct*)Object;
-
-                    FEAKIGNPACKAGE->Classes << SDKFormatting::CreateClass(Class);
-                    FEAKIGNPACKAGE->Functions << SDKFormatting::CreateFunctions(Class);
-                }
-				
-                else if (Object->IsA(CoreUObjectEnum) || Object->IsA(CoreUObjectScriptStruct) || Object->IsA(CoreUObjectStruct)) {
+                    if (!streams) continue;
+                    
+                    SDKFormatting::FormatUClass((UClass*)Object, streams);
+                } else if (Object->IsA(CoreUObjectEnum) || Object->IsA(CoreUObjectScriptStruct) || Object->IsA(CoreUObjectStruct)) {
                     std::ofstream Classes;
                     std::ofstream Functions;
                     std::ofstream Structs;
 
-                    FreakingPackage* FEAKIGNPACKAGE = 0;
+                    Ofstreams* streams = 0;
 
                     for (auto const& [key, val] : packages)
                     {
                         if (key == (__int64)Object->GetOuter()) {
-                            FEAKIGNPACKAGE = val;
+                            streams = val;
                             break;
                         }
                     }
 
-                    if (!FEAKIGNPACKAGE) {
-                        // printf("We hgaven't bruh");
-                        continue;
-                    }
+                    if (!streams) continue;
 					
-                    FEAKIGNPACKAGE->Structs << SDKFormatting::CreateStruct((UStruct*)Object);
-                }
-				
-                else if (Object->IsA(CoreUObjectPackage)) {
-                    std::string name = Utils::UKismetSystemLibrary::GetObjectName((uintptr_t*)Object).ToString();
-
+                    streams->Structs << SDKFormatting::CreateStruct((UStruct*)Object);
+                } else if (Object->IsA(CoreUObjectPackage)) {
+                    std::string name = Object->GetName().ToString();
                     name = name.substr(name.find_last_of("/") + 1, name.length());
 
-                    // printf(name.c_str());
-
-                    FreakingPackage* pkgs = new FreakingPackage {
+                    Ofstreams* streams = new Ofstreams{
                         .Classes = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp")),
                         .Functions = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp")),
                         .Structs = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"))
                     };
 
-                    packages.emplace((__int64)Object, pkgs);
+                    packages.emplace((__int64)Object, streams);
 
-                    pkgs->Classes << "#pragma once\n\n";
-                    pkgs->Structs << "#pragma once\n\n";
+                    streams->Classes << "#pragma once\n\n";
+                    streams->Structs << "#pragma once\n\n";
 
-                    pkgs->Classes << "#include \"Core.hpp\"\n";
-					pkgs->Functions << "#include \"Core.hpp\"\n";
-					pkgs->Structs << "#include \"Core.hpp\"\n";
+                    streams->Classes << "#include \"Core.hpp\"\n";
+                    streams->Functions << "#include \"Core.hpp\"\n";
+                    streams->Structs << "#include \"Core.hpp\"\n";
                 }
             }
         }
