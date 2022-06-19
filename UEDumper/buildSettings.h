@@ -8,3 +8,5 @@
 #define DUMP_JSON
 
 #define INCLUDE_IN_UE
+
+// #define XOR

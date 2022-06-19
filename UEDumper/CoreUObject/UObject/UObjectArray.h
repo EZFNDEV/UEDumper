@@ -157,84 +157,7 @@ struct FChunkedFixedUObjectArray
 	/** Number of chunks we currently have **/
 	int32_t NumChunks;
 
-
-	/**
-	* Allocates new chunk for the array
-	**/
-	/*void ExpandChunksToIndex(int32 Index)
-	{
-		check(Index >= 0 && Index < MaxElements);
-		int32 ChunkIndex = Index / NumElementsPerChunk;
-		while (ChunkIndex >= NumChunks)
-		{
-			// add a chunk, and make sure nobody else tries
-			FUObjectItem** Chunk = &Objects[NumChunks];
-			FUObjectItem* NewChunk = new FUObjectItem[NumElementsPerChunk];
-			if (FPlatformAtomics::InterlockedCompareExchangePointer((void**)Chunk, NewChunk, nullptr))
-			{
-				// someone else beat us to the add, we don't support multiple concurrent adds
-				check(0)
-			}
-			else
-			{
-				NumChunks++;
-				check(NumChunks <= MaxChunks);
-			}
-		}
-		check(ChunkIndex < NumChunks&& Objects[ChunkIndex]); // should have a valid pointer now
-	}*/
-
 public:
-
-	/** Constructor : Probably not thread safe **/
-	/*FChunkedFixedUObjectArray() TSAN_SAFE
-		: Objects(nullptr)
-		, PreAllocatedObjects(nullptr)
-		, MaxElements(0)
-		, NumElements(0)
-		, MaxChunks(0)
-		, NumChunks(0)
-	{
-	}
-
-	~FChunkedFixedUObjectArray()
-	{
-		if (!PreAllocatedObjects)
-		{
-			for (int32 ChunkIndex = 0; ChunkIndex < MaxChunks; ++ChunkIndex)
-			{
-				delete[] Objects[ChunkIndex];
-			}
-		}
-		else
-		{
-			delete[] PreAllocatedObjects;
-		}
-		delete[] Objects;
-	}*/
-
-	/**
-	* Expands the array so that Element[Index] is allocated. New pointers are all zero.
-	* @param Index The Index of an element we want to be sure is allocated
-	**/
-	/*void PreAllocate(int32 InMaxElements, bool bPreAllocateChunks) TSAN_SAFE
-	{
-		check(!Objects);
-		MaxChunks = InMaxElements / NumElementsPerChunk + 1;
-		MaxElements = MaxChunks * NumElementsPerChunk;
-		Objects = new FUObjectItem * [MaxChunks];
-		FMemory::Memzero(Objects, sizeof(FUObjectItem*) * MaxChunks);
-		if (bPreAllocateChunks)
-		{
-			// Fully allocate all chunks as contiguous memory
-			PreAllocatedObjects = new FUObjectItem[MaxElements];
-			for (int32 ChunkIndex = 0; ChunkIndex < MaxChunks; ++ChunkIndex)
-			{
-				Objects[ChunkIndex] = PreAllocatedObjects + ChunkIndex * NumElementsPerChunk;
-			}
-			NumChunks = MaxChunks;
-		}
-	}*/
 
 	/**
 	* Return the number of elements in the array
@@ -301,20 +224,6 @@ public:
 		// check(ItemPtr);
 		return *ItemPtr;
 	}
-
-	/*int32 AddRange(int32 NumToAdd) TSAN_SAFE
-	{
-		int32 Result = NumElements;
-		checkf(Result + NumToAdd <= MaxElements, TEXT("Maximum number of UObjects (%d) exceeded, make sure you update MaxObjectsInGame/MaxObjectsInEditor in project settings."), MaxElements);
-		ExpandChunksToIndex(Result + NumToAdd - 1);
-		NumElements += NumToAdd;
-		return Result;
-	}
-
-	int32 AddSingle() TSAN_SAFE
-	{
-		return AddRange(1);
-	}*/
 };
 
 /**

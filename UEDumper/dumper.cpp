@@ -91,6 +91,101 @@ static bool IsOldObjectArray() {
     }
 }
 
+std::string GenerateNameStruct()
+{
+    std::string FName = R"(
+struct FName // https://github.com/EpicGames/UnrealEngine/blob/c3caf7b6bf12ae4c8e09b606f10a09776b4d1f38/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L403
+{
+	uint32_t ComparisonIndex;
+	uint32_t Number;
+};
+)";
+
+    return FName;
+}
+
+std::string GenerateObjectItem()
+{
+    std::string FUObjectItem = R"(
+struct FUObjectItem // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/CoreUObject/Public/UObject/UObjectArray.h#L26
+{
+	UObject* Object;
+	int32_t Flags;
+	int32_t ClusterRootIndex;
+	int32_t SerialNumber;
+	// int pad_01;
+};
+)";
+
+    return FUObjectItem;
+}
+
+std::string GenerateObjectStruct() // We could calcuate where each thing goes or padding
+{
+    std::string UObject = R"(
+
+struct UObject // https://github.com/EpicGames/UnrealEngine/blob/c3caf7b6bf12ae4c8e09b606f10a09776b4d1f38/Engine/Source/Runtime/CoreUObject/Public/UObject/UObjectBase.h#L20
+{
+	void** VFTable;
+	int32_t ObjectFlags;
+	int32_t InternalIndex;
+	UObject* ClassPrivate;
+	FName NamePrivate;
+	UObject* OuterPrivate;
+})";
+
+    return UObject;
+}
+
+std::string GenerateOffsets()
+{
+    auto Base = (uintptr_t)GetModuleHandleW(0);
+    std::string Offsets = std::format("static const int ObjObjectsOffset = 0x{:x};\n", (Offsets::GObjects - Base));
+	Offsets += std::format("static const int ProcessEventOffset = 0x{:x};\n", (Offsets::ProcessEvent - Base));
+    Offsets += std::format("static const int StaticFindObjectOffset = 0x{:x};\n", (Offsets::StaticFindObject - Base));
+	
+    return Offsets;
+}
+
+std::string GenerateInitialization()
+{
+    std::string Initialization = R"(
+void Initialize()
+{
+    auto Base = (uintptr_t)GetModuleHandleW(0);
+    ObjObjects = decltype(ObjObjects)(Base + ObjObjectsOffset);
+    ProcessEventO = decltype(ProcessEventO)(Base + ProcessEventOffset);
+    _StaticFindObject = decltype(_StaticFindObject)(Base + StaticFindObjectOffset);
+}
+)";
+
+    return Initialization;
+}
+
+void GenerateCore()
+{
+    std::ofstream CoreStream("SDK/" + std::string(SHORTNAME) + "_Core.hpp");
+
+    std::string Pre = R"(
+#pragma once
+
+#include <Windows.h>
+#include <string>
+#include <locale>
+#include <format>
+#include <iostream>
+
+static inline void* (*ProcessEventO)(void*, void*, void*); // Original ProcessEvent
+static inline uintptr_t* (__fastcall* _StaticFindObject) (uintptr_t* ObjectClass, uintptr_t* InObjectPackage, const wchar_t* OrigInName, bool ExactClass) = 0;
+)";
+
+    CoreStream << Pre;
+    CoreStream << GenerateOffsets() << '\n';
+    CoreStream << GenerateNameStruct();
+    CoreStream << GenerateObjectStruct() << "\n";
+    CoreStream << GenerateInitialization();
+}
+
 void Dumper::Dump() {
     // GetRealFunction_Test();
     // return;
@@ -180,9 +275,11 @@ void Dumper::Dump() {
                     streams->Classes << "#pragma once\n\n";
                     streams->Structs << "#pragma once\n\n";
 
-                    streams->Classes << "#include \"Core.hpp\"\n";
-                    streams->Functions << "#include \"Core.hpp\"\n";
-                    streams->Structs << "#include \"Core.hpp\"\n";
+                    std::string include = std::format("#include ../\"{}\"\n", std::string(SHORTNAME) + "_Core.hpp");
+
+                    streams->Classes << include;
+                    streams->Functions << include;
+                    streams->Structs << include;
                 }
             }
         }
@@ -195,6 +292,8 @@ void Dumper::Dump() {
         val->Functions.close();
     }
 	
+    GenerateCore();
+
     auto End = std::chrono::steady_clock::now();
 
     printf("Generated SDK in %.02f ms\n", (End - Start).count() / 1000000.);
