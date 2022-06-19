@@ -283,7 +283,7 @@ void Dumper::Dump() {
                             streams->Functions << include;
                             streams->Structs << include;
                         }
-                    #elif
+                    #else
                         Ofstreams* streams = new Ofstreams{
                             .Classes = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp")),
                             .Functions = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp")),
