@@ -9,4 +9,6 @@
 
 #define INCLUDE_IN_UE
 
+#define UE_FILTER_CLASS "FortniteGame"
+
 // #define XOR

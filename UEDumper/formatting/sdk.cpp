@@ -408,21 +408,36 @@ std::string SDKFormatting::UPropertyTypeToString(UProperty* Property) {
 		UMulticastDelegateProperty* Delegate = (UMulticastDelegateProperty*)Property;
 		UFunction* Function = Delegate->GetSignatureFunction();
 
-		if (Function) {
-			// Well, now this is tricky...
-			void* Func = Function->GetFunc();
+		if (Function) { 
+			// Note: "Function" won't be in the SDK dump? (Maybe a bug when filtering out?)
+			// for now lets just add them manually
+
+			// Probably, bc SuperStuct is null?
 			
-			// We need to reverse engineere Func to figure out what we need to do with this
+			printf("Function: %p\n", Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Function).ToString().c_str());
+			
+			// if (Function->GetClass() == Delegate) {
+				
+				//printf(Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Function).ToString().c_str());
+
+				//printf("Function: %p\n", Function);
+				//printf("Func: %p\n", Function->GetFunc());
+				// TODO: Take a deeper look into it...
+
+				UDelegateProperty* DelegateProperty = (UDelegateProperty*)Function;
+
+
+				printf("DelegateProperty: %p\n", DelegateProperty);
+				
+
+				printf("Func: %p\n", DelegateProperty->GetSignatureFunction());
+				printf("Outer: %s\n", Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)DelegateProperty->GetOuter()).ToString().c_str());
+			// }
+
+			
 		}
 
-		//printf(Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Function).ToString().c_str());
-
-		//printf("Function: %p\n", Function);
-		//printf("Func: %p\n", Function->GetFunc());
-		// TODO: Take a deeper look into it...
 		
-		UDelegateProperty* DelegateProperty = (UDelegateProperty*)Function;
-		//printf("DOES THAT WORK: %p\n", DelegateProperty->GetSignatureFunction());
 		
 		return Utils::UKismetStringLibrary::Conv_NameToString(Property->GetClass()->GetFName()).ToString();
 	}
@@ -451,6 +466,8 @@ void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
 
 	std::string Additional = "";
 
+	
+
 	UStruct* SuperStruct = Class->GetSuperStruct();
 
 	if (SuperStruct)
@@ -458,7 +475,11 @@ void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
 	else
 		Additional = " : public UObject";
 
-	auto name = std::format("\n\nclass {}{}", GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString(), Additional);
+	auto name = std::format("class {}{}", GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString(), Additional);
+
+	#ifdef INCLUDE_IN_UE
+	result += "\n\nUCLASS(BlueprintType)\n";
+	#endif
 
 	result += name + "\n{\npublic:\n";
 
@@ -649,14 +670,17 @@ void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
 		}
 	}
 
-	result += "\n" + std::string(R"(
-	static UClass* StaticClass()
-	{
-		static UClass* ptr = UObject::FindObject<UClass>(")" + Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Class).ToString() + R"(");
-		return ptr;
-	}
-)"); // i don't know why but format doesnt work
+	#ifndef INCLUDE_IN_UE
 
+		result += "\n" + std::string(R"(
+		static UClass* StaticClass()
+		{
+			static UClass* ptr = UObject::FindObject<UClass>(")" + Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Class).ToString() + R"(");
+			return ptr;
+		}
+	)"); // i don't know why but format doesnt work
+	#endif
+		
 	result += "\n};";
 
 	streams->Classes << result;

@@ -44,6 +44,9 @@ static void Main() {
 
     printf("Searching for offsets\n");
 
+	// Small delay since it crashes sometimes
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
     Offsets::StaticFindObject = OffsetsFinder::FindStaticFindObject();
     if (!Offsets::StaticFindObject) {
         printf("Failed to find StaticFindObject\n");
@@ -132,6 +135,8 @@ static void Main() {
 
         // TODO: Take the check from Dump::Dump and put it into here (not possible bc then the array will be 0 in dump, fuck... Milxnor help)
 
+    printf("Memory base: %p\n", GetModuleHandle(0));
+
     #ifdef PRINT_OFFSETS
     printf("ProcessEvent: %p\n", Offsets::ProcessEvent);
     printf("StaticFindObject: %p\n", Offsets::StaticFindObject);
@@ -159,8 +164,7 @@ static void Main() {
     #endif
 
 	// Note: Just temp, you can remove this if you dont inject on startup
-    // std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
-		
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
 
 	// Milxnor hardcoded these in the sdk.cpp
 	// we still need to automatically find these

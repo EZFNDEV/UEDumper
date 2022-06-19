@@ -264,22 +264,45 @@ void Dumper::Dump() {
                     std::string name = Object->GetName().ToString();
                     name = name.substr(name.find_last_of("/") + 1, name.length());
 
-                    Ofstreams* streams = new Ofstreams{
-                        .Classes = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp")),
-                        .Functions = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp")),
-                        .Structs = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"))
-                    };
+                    #ifdef UE_FILTER_CLASS
+                        if (name == UE_FILTER_CLASS) {
+                            Ofstreams* streams = new Ofstreams{
+                                    .Classes = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp")),
+                                    .Functions = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp")),
+                                    .Structs = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"))
+                            };
 
-                    packages.emplace((__int64)Object, streams);
+                            packages.emplace((__int64)Object, streams);
 
-                    streams->Classes << "#pragma once\n\n";
-                    streams->Structs << "#pragma once\n\n";
+                            streams->Classes << "#pragma once\n\n";
+                            streams->Structs << "#pragma once\n\n";
 
-                    std::string include = std::format("#include ../\"{}\"\n", std::string(SHORTNAME) + "_Core.hpp");
+                            std::string include = std::format("#include ../\"{}\"\n", std::string(SHORTNAME) + "_Core.hpp");
 
-                    streams->Classes << include;
-                    streams->Functions << include;
-                    streams->Structs << include;
+                            streams->Classes << include;
+                            streams->Functions << include;
+                            streams->Structs << include;
+                        }
+                    #elif
+                        Ofstreams* streams = new Ofstreams{
+                            .Classes = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp")),
+                            .Functions = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp")),
+                            .Structs = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"))
+                        };
+
+                        packages.emplace((__int64)Object, streams);
+
+                        streams->Classes << "#pragma once\n\n";
+                        streams->Structs << "#pragma once\n\n";
+
+                        std::string include = std::format("#include ../\"{}\"\n", std::string(SHORTNAME) + "_Core.hpp");
+
+                        streams->Classes << include;
+                        streams->Functions << include;
+                        streams->Structs << include;
+                    #endif
+
+                    
                 }
             }
         }
