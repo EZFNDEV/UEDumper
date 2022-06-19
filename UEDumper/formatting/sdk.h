@@ -4,7 +4,7 @@
 
 namespace SDKFormatting {
 
-	std::string UPropertyTypeToString(UProperty* Property);
+	std::string UPropertyTypeToString(UProperty* Property, const std::string& PropName);
 	std::string CreateStruct(UStruct* Struct);
 	std::string CreateEnum(UEnum* Enum);
 
