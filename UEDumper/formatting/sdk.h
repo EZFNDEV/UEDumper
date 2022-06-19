@@ -6,6 +6,7 @@ namespace SDKFormatting {
 
 	std::string UPropertyTypeToString(UProperty* Property);
 	std::string CreateStruct(UStruct* Struct);
+	std::string CreateEnum(UEnum* Enum);
 
 	// Faster
 	void FormatUClass(UClass* Struct, Ofstreams* streams);
