@@ -4,8 +4,11 @@
 #include "dumper.h"
 #include "CoreUObject/UObject/UObjectBaseUtility.h"
 #include <iostream>
+#include <filesystem>
 
 #include "buildSettings.h"
+
+namespace fs = std::filesystem;
 
 bool MakeDirectories() // Lupus put this somewhere
 {
@@ -161,7 +164,7 @@ static void Main() {
     #endif
 
 	// Note: Just temp, you can remove this if you dont inject on startup
-     std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
 
 	// Milxnor hardcoded these in the sdk.cpp
 	// we still need to automatically find these

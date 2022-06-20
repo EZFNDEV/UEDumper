@@ -6,12 +6,9 @@
 #define SHORTNAME "FN"
 
 #define DUMP_JSON
-#define DUMP_SDK
 
-// #define INCLUDE_IN_UE
+#define INCLUDE_IN_UE
 
-// #define UE_FILTER_CLASS "FortniteGame"
+//#define UE_FILTER_CLASS "FortniteGame"
 
 // #define XOR
-
-#define GAMEVERSION "" // We could also pull this
