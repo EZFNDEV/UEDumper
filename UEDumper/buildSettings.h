@@ -6,6 +6,7 @@
 #define SHORTNAME "FN"
 
 #define DUMP_JSON
+#define DUMP_SDK
 
 // #define INCLUDE_IN_UE
 

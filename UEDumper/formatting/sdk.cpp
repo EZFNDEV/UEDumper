@@ -292,7 +292,7 @@ std::string SDKFormatting::UPropertyTypeToString(UProperty* Property, const std:
 
 		auto PropertyClass = ObjectProperty->GetPropertyClass();
 		if (PropertyClass) {
-			return GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + ((Property->GetArrayDim()) ? "*" : "");
+			return "class " + GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + ((Property->GetArrayDim()) ? "*" : "");
 		}
 		else {
 			return "MILXNOR?";
@@ -369,6 +369,7 @@ std::string SDKFormatting::UPropertyTypeToString(UProperty* Property, const std:
 
 		std::string ReturnType = "";
 		std::vector<std::pair<std::string, std::string>> Params; // Param Type, Param Name
+		// ^ If we use a phmap::btree it is faster but I'm dumb.
 
 		for (UProperty* Parameter = (UProperty*)Function->GetChildren(); Parameter; Parameter = (UProperty*)Parameter->GetNext())
 		{
@@ -465,8 +466,6 @@ void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
 	std::string funcResult = "";
 
 	std::string Additional = "";
-
-	
 
 	UStruct* SuperStruct = Class->GetSuperStruct();
 
@@ -607,10 +606,10 @@ void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
 				FullFunction += ParamsCombined;
 
 				auto oldRet = ReturnType; // ReturnType without static
-				const bool bIsStatic = (FunctionFlags & EFunctionFlags::FUNC_Static); // TODO: use this more
+				const bool bIsStatic = (FunctionFlags & EFunctionFlags::FUNC_Static);
 				ReturnType = (bIsStatic ? "static " : "") + ReturnType;
 				
-				auto nameDef = ReturnType + ' ' + GetPrefix(Class) + ClassName + "::" + FullFunction; // 0x2000 = STATIC
+				auto nameDef = ReturnType + ' ' + GetPrefix(Class) + ClassName + "::" + FullFunction;
 
 				funcResult += nameDef + R"()
 {)";
@@ -690,8 +689,8 @@ void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
 		
 	result += "\n};";
 
-	streams->Classes << result;
-	streams->Functions << funcResult;
+	streams->Classes.Write(result);
+	streams->Functions.Write(funcResult);
 }
 
 std::string SDKFormatting::CreateEnum(UEnum* Enum) {
@@ -759,7 +758,6 @@ std::string SDKFormatting::CreateStruct(UStruct* Struct) {
 
 		std::pair<int, int> OldProp; // Offset_Internal, Size
 		int padNum = 1;
-
 
 		int OffsetDifference = 0;
 

@@ -9,6 +9,9 @@
 #include "CoreUObject/UObject/UnrealTypePrivate.h"
 #include <unordered_map>
 #include "formatting/sdk.h"
+#include "include/parallel_hashmap/phmap.h"
+#include "include/parallel_hashmap/btree.h"
+#include <iostream>
 
 static uintptr_t GetRealFunction_Test() {
     // Let's find all UFunctions
@@ -144,9 +147,12 @@ struct UObject // https://github.com/EpicGames/UnrealEngine/blob/c3caf7b6bf12ae4
     return UObject;
 }
 
-void MakeSDKHeader()
+void MakeSDKHeader(const phmap::parallel_flat_hash_map<__int64, Ofstreams*>& streams) // I think im stupid because this isn't working
 {
-    std::ofstream SDKStream("SDK/SDK.hpp");
+    Stream SDKStream("SDK/SDK.hpp");
+
+    if (!SDKStream.IsOpen())
+        return;
 
     std::string SDKHeader = R"(
 #pragma once
@@ -166,9 +172,21 @@ void MakeSDKHeader()
 #include <vector>
 
 #include "FN_Core.hpp"
+
 )";
 
-    SDKStream << SDKHeader;
+    for (auto& Stream : streams) // (int i = 0; i < streams.size(); i++)
+    {
+		// auto Stream = streams.at(i);
+
+        if (Stream.second)
+        {
+            SDKHeader += "#include \"" + Stream.second->Classes.FileName + "\"\n";
+            SDKHeader += "#include \"" + Stream.second->Structs.FileName + "\"\n";
+        }
+    }
+
+    SDKStream.Write(SDKHeader);
 }
 
 std::string GenerateOffsets()
@@ -288,12 +306,23 @@ void Dumper::Dump() {
     static UClass* CoreUObjectPackage = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Package");
     static UClass* CoreUObjectEnum = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Enum");
 
-    std::unordered_map<__int64, Ofstreams*> packages; // TODO: Change to PHMap/Parallel Hashmap
+    // std::unordered_map<__int64, Ofstreams*> packages;
+    phmap::parallel_flat_hash_map<__int64, Ofstreams*> packages;
     auto Start = std::chrono::high_resolution_clock::now();
 
-#ifdef DUMP_JSON
+#ifdef DUMP_SDK
     std::vector<UEnum*> Enums; // enums have to generate first
     std::vector<UStruct*> Structs;
+	
+    std::vector<Ofstreams*> AllStreams;
+
+    // Didn't see a speed increase with these.
+
+    // phmap::parallel_flat_hash_set<UEnum*> Enums;
+    // phmap::btree_set<UStruct*> Structs; // Important: Structs HAVE to be ordered.
+
+    Enums.reserve(1000); // 1171 on login screen 3.5
+	Structs.reserve(2000); // 2286 on login screen 3.5
 
     for (uintptr_t i = 0; i < GUObjectArray.Num(); i++) {
         auto Item = GUObjectArray.IndexToObject(i);
@@ -303,8 +332,8 @@ void Dumper::Dump() {
             if (!Object)
                 continue;
 
-            if (Object->IsA(CoreUObjectClass)) {
-                std::unordered_map<__int64, Ofstreams*>::const_iterator res = packages.find((__int64)Object->GetOuter());
+            if (Object->IsA(CoreUObjectClass)) {				
+                auto res = packages.find((__int64)Object->GetOuter());
 
                 if (res == packages.end()) // Not found
                     continue;
@@ -329,30 +358,32 @@ void Dumper::Dump() {
                 if (name == UE_FILTER_CLASS)
 #endif
                 { // instead of looping every package just find the one to use.
-                    Ofstreams* streams = new Ofstreams{
-                            .Classes = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp")),
-                            .Functions = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp")),
-                            .Structs = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"))
-                    };
+                    // std::unique_ptr<Ofstreams> streams = std::make_unique<Ofstreams>();
+                    Ofstreams* streams = new Ofstreams();
+                    streams->Classes.Open("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp");
+                    streams->Functions.Open("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp");
+                    streams->Structs.Open("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp");
 
                     packages.emplace((__int64)Object, streams);
 
-                    streams->Classes << "#pragma once\n\n";
-                    streams->Structs << "#pragma once\n\n";
+                    streams->Classes.stream << "#pragma once\n\n";
+                    streams->Structs.stream << "#pragma once\n\n";
 
-                    std::string include = std::format("#include \"../SDK.hpp\"\n");
+                    const std::string include = std::format("#include \"../SDK.hpp\"\n");
 
-                    streams->Classes << include;
-                    streams->Functions << include;
-                    streams->Structs << include;
+                    streams->Classes.Write(include);
+                    streams->Functions.Write(include);
+                    streams->Structs.Write(include);
                 }
             }
         }
     }
 
-    for (auto& Enum : Enums)
+    for (size_t i = 0; i < Enums.size(); i++)
     {
-        std::unordered_map<__int64, Ofstreams*>::const_iterator res = packages.find((__int64)Enum->GetOuter());
+		auto Enum = Enums[i];
+
+        auto res = packages.find((__int64)Enum->GetOuter());
 
         if (res == packages.end()) // Not found
             continue;
@@ -361,37 +392,41 @@ void Dumper::Dump() {
 
         if (!streams) continue;
 
-        streams->Structs << SDKFormatting::CreateEnum(Enum);
+        streams->Structs.Write(SDKFormatting::CreateEnum(Enum));
     }
 
-    for (auto& Struct : Structs)
+    for (size_t i = 0; i < Structs.size(); i++)
     {
-        std::unordered_map<__int64, Ofstreams*>::const_iterator res = packages.find((__int64)Struct->GetOuter());
+		auto Struct = Structs[i];
 
-        if (res == packages.end()) // Not found
-            continue;
+        // if (Struct)
+        {
+            auto res = packages.find((__int64)Struct->GetOuter());
 
-        Ofstreams* streams = res->second;
+            if (res == packages.end()) // Not found
+                continue;
 
-        if (!streams) continue;
+            Ofstreams* streams = res->second;
 
-        streams->Structs << SDKFormatting::CreateStruct(Struct);
-    }
-#endif
+            if (!streams) continue;
 
-    for (auto const& [key, val] : packages)
-    {
-        val->Classes.close();
-        val->Structs.close();
-        val->Functions.close();
+            streams->Structs.Write(SDKFormatting::CreateStruct(Struct));
+        }
     }
 
     MakeCore();
-    MakeSDKHeader();
+    MakeSDKHeader(packages);
+
+    for (auto& Package : packages)
+    {
+        if (Package.second)
+            free(Package.second);
+    }
 
     auto End = std::chrono::steady_clock::now();
 
     printf("Generated SDK in %.02f ms\n", (End - Start).count() / 1000000.);
+#endif
 }
 
 void Dumper::DumpObjectNames() {

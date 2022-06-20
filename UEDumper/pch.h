@@ -20,12 +20,51 @@
 #include <chrono>
 #include <fstream>
 #include <format>
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
+struct Stream
+{
+    std::string FileName; // Bro stream doesnt save this
+    std::ofstream stream;
+
+	Stream(const std::string& fileName) { Open(fileName); }
+
+	Stream() {}
+
+	~Stream() { Close(); }
+
+	void Write(const std::string& str)
+	{
+		stream << str;
+	}
+
+	void Open(const std::string& fileName)
+	{
+		FileName = fileName;
+		stream.open(fileName);
+	}
+
+	bool IsOpen()
+	{
+		return stream.is_open();
+	}
+
+	void Close()
+	{
+		if (IsOpen())
+			stream.close();
+	}
+};
 
 struct Ofstreams {
-    std::ofstream Classes;
-    std::ofstream Functions;
-    std::ofstream Structs;
+    Stream Classes;
+    Stream Functions;
+    Stream Structs;
     // std::ofstream Parameters;
+
+	Ofstreams() {}
 };
 
 #include "include/memory.h"

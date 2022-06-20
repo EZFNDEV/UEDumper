@@ -4,11 +4,8 @@
 #include "dumper.h"
 #include "CoreUObject/UObject/UObjectBaseUtility.h"
 #include <iostream>
-#include <filesystem>
 
 #include "buildSettings.h"
-
-namespace fs = std::filesystem;
 
 bool MakeDirectories() // Lupus put this somewhere
 {
