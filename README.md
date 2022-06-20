@@ -4,9 +4,12 @@ Note: We released this early, for now it's working perfect for fortnite (lower t
 
 # Features
 ✔️ Dump all Object names  
-▶️ IN PROGRESS: Create a SDK
-
-# Supported Games
+▶️ IN PROGRESS: Create a SDK  
+  
+# Details  
+✔️ Getting the real UPROPERTY Specifiers  
+  
+# Supported Games  
 ✔️ Fortnite (3.5 - 6.21 work for sure)  
   
 More coming soon

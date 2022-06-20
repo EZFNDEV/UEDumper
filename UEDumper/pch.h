@@ -58,13 +58,20 @@ struct Stream
 	}
 };
 
-struct Ofstreams {
+/*struct Ofstreams {
     Stream Classes;
     Stream Functions;
     Stream Structs;
     // std::ofstream Parameters;
 
 	Ofstreams() {}
+};*/
+
+struct Ofstreams {
+	std::ofstream Classes;
+	std::ofstream Functions;
+	std::ofstream Structs;
+	// std::ofstream Parameters;
 };
 
 #include "include/memory.h"

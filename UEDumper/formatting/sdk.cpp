@@ -689,8 +689,8 @@ void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
 		
 	result += "\n};";
 
-	streams->Classes.Write(result);
-	streams->Functions.Write(funcResult);
+	streams->Classes << result;
+	streams->Functions << funcResult;
 }
 
 std::string SDKFormatting::CreateEnum(UEnum* Enum) {
