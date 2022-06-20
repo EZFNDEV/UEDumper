@@ -4,6 +4,7 @@
 #include "../CoreUObject/UObject/UObjectBaseUtility.h"
 #include "../CoreUObject/UObject/UnrealTypePrivate.h"
 #include <iostream>
+#include "formatting.h"
 
 // Returns a string because if you do a char it breaks stuff
 static std::string GetPrefix(UObjectBase* Object) // TODO: Move this to SDKFormatting;
@@ -16,198 +17,6 @@ static std::string GetPrefix(UObjectBase* Object) // TODO: Move this to SDKForma
 	}
 
 	return "F";
-}
-static std::string GetUPropertySpecifiers(EPropertyFlags Flags) {
-#ifdef INCLUDE_IN_UE
-	std::string result = "UPROPERTY(";
-#elif
-	std::string result = "// UPROPERTY(";
-#endif
-	// result += (Flags & EPropertyFlags::CPF_Edit) ? "EditAnywhere, " : ""; // TODO: Format like this
-	if (Flags & EPropertyFlags::CPF_Edit) {
-		result += "EditAnywhere, ";
-	}
-
-	if (Flags & EPropertyFlags::CPF_Edit & EPropertyFlags::CPF_DisableEditOnTemplate) {
-		result += "EditInstanceOnly, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_Edit & EPropertyFlags::CPF_DisableEditOnInstance) != 0)
-	{
-		result += "EditDefaultsOnly, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_Edit & EPropertyFlags::CPF_EditConst) != 0)
-	{
-		result += "VisibleAnywhere, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_Edit & EPropertyFlags::CPF_EditConst & EPropertyFlags::CPF_DisableEditOnTemplate) != 0)
-	{
-		result += "VisibleInstanceOnly, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_Edit & EPropertyFlags::CPF_EditConst & EPropertyFlags::CPF_DisableEditOnInstance) != 0)
-	{
-		result += "VisibleDefaultsOnly, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_BlueprintVisible) != 0)
-	{
-		if ((Flags & EPropertyFlags::CPF_BlueprintReadOnly) != 0)
-		{
-			result += "BlueprintReadOnly, ";
-		}
-		else {
-			result += "BlueprintReadWrite, ";
-		}
-	}
-
-	if ((Flags & EPropertyFlags::CPF_Config) != 0)
-	{
-		if ((Flags & EPropertyFlags::CPF_GlobalConfig) != 0)
-		{
-			result += "GlobalConfig, ";
-		}
-		else
-		{
-			result += "Config, ";
-		}
-	}
-
-	if ((Flags & EPropertyFlags::CPF_Transient) != 0)
-	{
-		result += "Transient, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_DuplicateTransient) != 0)
-	{
-		result += "DuplicateTransient, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_TextExportTransient) != 0)
-	{
-		result += "TextExportTransient, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_NonPIEDuplicateTransient) != 0)
-	{
-		result += "NonPIETransient, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_NonPIEDuplicateTransient) != 0)
-	{
-		result += "NonPIEDuplicateTransient, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_ExportObject) != 0)
-	{
-		result += "Export, ";
-	}
-
-	//  EditInline -> deprecated
-
-	if ((Flags & EPropertyFlags::CPF_NoClear) != 0)
-	{
-		result += "NoClear, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_EditFixedSize) != 0)
-	{
-		result += "EditFixedSize, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_Net) != 0)
-	{
-		result += "Replicated, ";
-
-		if ((Flags & EPropertyFlags::CPF_RepNotify) != 0)
-		{
-			result += "ReplicatedUsing, ";
-		}
-	}
-
-	// RepRetry -> deprecated
-
-	if ((Flags & EPropertyFlags::CPF_Edit & EPropertyFlags::CPF_BlueprintVisible & EPropertyFlags::CPF_Interp) != 0)
-	{
-		result += "Interp, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_NonTransactional) != 0)
-	{
-		result += "NonTransactional, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_PersistentInstance & EPropertyFlags::CPF_ExportObject & EPropertyFlags::CPF_InstancedReference) != 0)
-	{
-		result += "Instanced, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_BlueprintAssignable) != 0)
-	{
-		result += "BlueprintAssignable, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_BlueprintCallable) != 0)
-	{
-		result += "BlueprintCallable, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_BlueprintAuthorityOnly) != 0)
-	{
-		result += "BlueprintAuthorityOnly, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_AssetRegistrySearchable) != 0)
-	{
-		result += "AssetRegistrySearchable, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_SimpleDisplay) != 0)
-	{
-		result += "SimpleDisplay, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_AdvancedDisplay) != 0)
-	{
-		result += "AdvancedDisplay, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_SaveGame) != 0)
-	{
-		result += "SaveGame, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_SkipSerialization) != 0)
-	{
-		result += "SkipSerialization, ";
-	}
-
-	// if (VariableCategory != EVariableCategory::Member)
-
-	if ((Flags & EPropertyFlags::CPF_ConstParm) != 0)
-	{
-		result += "Const, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_OutParm & EPropertyFlags::CPF_ReferenceParm) != 0)
-	{
-		result += "Ref, ";
-	}
-
-	if ((Flags & EPropertyFlags::CPF_RepSkip) != 0)
-	{
-		result += "NotReplicated, ";
-		result += "ReplicatedParameter, ";
-	}
-
-	auto idx = result.find_last_of(", ");
-
-	if (idx != std::string::npos)
-		result = result.erase(idx - 1, idx);
-
-	return result + ");";
 }
 
 std::string SDKFormatting::UPropertyTypeToString(UProperty* Property) {
@@ -260,7 +69,9 @@ std::string SDKFormatting::UPropertyTypeToString(UProperty* Property) {
 	else if (ClassPrivate == Int8Prop)
 		return "int8_t";
 	else if (ClassPrivate == TextProp)
-		return "FText";
+		return "struct FText";
+
+	// TODO: Clean up a bit, maybe speed up too (yea, speedup...)
 
 	else if (ClassPrivate == ArrayProp) {
 		UArrayProperty* ArrayProperty = (UArrayProperty*)Property;
@@ -273,11 +84,11 @@ std::string SDKFormatting::UPropertyTypeToString(UProperty* Property) {
 	} else if (ClassPrivate == StructProp) {
 		UStructProperty* StructProperty = (UStructProperty*)Property;
 		
-		return GetPrefix(StructProperty) + Utils::UKismetStringLibrary::Conv_NameToString(StructProperty->GetStruct()->GetFName()).ToString() + ((Property->GetArrayDim()) ? "*" : "");
+		return "struct " + GetPrefix(StructProperty) + Utils::UKismetStringLibrary::Conv_NameToString(StructProperty->GetStruct()->GetFName()).ToString() + ((Property->GetArrayDim() > 1) ? "*" : "");
 	} else if (ClassPrivate == ClassProp) {
 		auto MetaClass = *(UStruct**)(__int64(Property) + 120);
-
-		return GetPrefix(MetaClass) + Utils::UKismetStringLibrary::Conv_NameToString(MetaClass->GetFName()).ToString() + ((Property->GetArrayDim()) ? "*" : "");
+		// Classes are always pointers?
+		return "class " + GetPrefix(MetaClass) + Utils::UKismetStringLibrary::Conv_NameToString(MetaClass->GetFName()).ToString() + "*"/* + ((Property->GetArrayDim() > 1) ? "*" : "")*/;
 	}
 	else if (ClassPrivate == BoolProp) {
 		// todo: do some bitfield stuff kms
@@ -292,7 +103,7 @@ std::string SDKFormatting::UPropertyTypeToString(UProperty* Property) {
 
 		auto PropertyClass = ObjectProperty->GetPropertyClass();
 		if (PropertyClass) {
-			return GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + ((Property->GetArrayDim()) ? "*" : "");
+			return "struct " + GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + ((Property->GetArrayDim()) ? "*" : "");
 		}
 		else {
 			return "MILXNOR?";
@@ -304,7 +115,7 @@ std::string SDKFormatting::UPropertyTypeToString(UProperty* Property) {
 		if (PropertyClass) {
 			std::string inner = GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + ((Property->GetArrayDim()) ? "*" : "");
 			#ifdef INCLUDE_IN_UE
-				return std::format("TSoftObjectPtr<{}>", inner);
+				return std::format("struct TSoftObjectPtr<struct {}>", inner);
 			#else
 				return inner;
 			#endif
@@ -414,7 +225,7 @@ std::string SDKFormatting::UPropertyTypeToString(UProperty* Property) {
 
 			// Probably, bc SuperStuct is null?
 			
-			printf("Function: %p\n", Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Function).ToString().c_str());
+		//	printf("Function: %p\n", Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Function).ToString().c_str());
 			
 			// if (Function->GetClass() == Delegate) {
 				
@@ -427,11 +238,11 @@ std::string SDKFormatting::UPropertyTypeToString(UProperty* Property) {
 				UDelegateProperty* DelegateProperty = (UDelegateProperty*)Function;
 
 
-				printf("DelegateProperty: %p\n", DelegateProperty);
+			//	printf("DelegateProperty: %p\n", DelegateProperty);
 				
 
-				printf("Func: %p\n", DelegateProperty->GetSignatureFunction());
-				printf("Outer: %s\n", Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)DelegateProperty->GetOuter()).ToString().c_str());
+			//	printf("Func: %p\n", DelegateProperty->GetSignatureFunction());
+			//	printf("Outer: %s\n", Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)DelegateProperty->GetOuter()).ToString().c_str());
 			// }
 
 			
@@ -451,6 +262,98 @@ std::string GetFullCPPName() // TODO: Do this
 	
 }
 
+void SDKFormatting::LupusFormatUClass(UClass* Class, Ofstreams* streams) {
+	static UClass* FunctionClass = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Function");
+	static UClass* BoolProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.BoolProperty");
+
+	// Get the proper name
+	UStruct* SuperStruct = Class->GetSuperStruct();
+
+	std::string name = Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Class).ToString();
+	#ifdef INCLUDE_IN_UE
+		streams->Classes << "\n\nUCLASS(BlueprintType)\n";
+	#endif
+	if (SuperStruct) {
+		streams->Classes << std::format(
+			"class {}{}", GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString(), // TODO: Use split and then get the stuff
+			" : public " + GetPrefix(Class->GetSuperStruct()) + ((UObjectBaseUtility*)Class->GetSuperStruct())->GetName().ToString()
+		);
+	} else {
+		streams->Classes << std::format(
+			"class {}", GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString()
+		);
+	}
+
+	streams->Classes << "\n{\n	public:\n";
+
+	int offset = 0;
+	int unknownProps = 0;
+	if (Class->GetChildren()) {
+		offset = ((UProperty*)Class->GetChildren())->GetOffset_Internal();
+
+		if (SuperStruct) {
+			if (SuperStruct->GetPropertiesSize() < offset) {
+				streams->Classes << std::format("	    char UnknownData{}[0x{:x}];\n", unknownProps, offset - SuperStruct->GetPropertiesSize());
+				unknownProps++;
+			}
+		}
+
+		for (UField* Property = (UField*)Class->GetChildren(); Property; Property = Property ? Property->GetNext() : 0) {
+			std::string propName = Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString();
+
+			if (Property->GetClass() == FunctionClass) {
+				// TODO: FUNCTION!!
+				// streams->Classes << std::format("	    {} {}; // 0x{:x} Size: 0x{:x}\n", "void", propName, ((UProperty*)Property)->GetOffset_Internal(), ((UProperty*)Property)->GetElementSize());
+
+				offset += ((UProperty*)Property)->GetElementSize();
+			} else {
+				if (
+					Property->GetClass() != BoolProp &&
+					((UProperty*)Property)->GetOffset_Internal() != offset
+				) {
+					if (((UProperty*)Property)->GetOffset_Internal() < offset) {
+						// Logic issue?
+						streams->Classes << std::format(
+							"	    char UnknownData{}[0x{:x}]; // 0x{:x}\n", unknownProps,
+							-(((UProperty*)Property)->GetOffset_Internal() - offset),
+							offset
+						);
+					} else {
+						streams->Classes << std::format(
+							"	    char UnknownData{}[0x{:x}]; // 0x{:x}\n", unknownProps,
+							((UProperty*)Property)->GetOffset_Internal() - offset,
+							offset
+						);
+					}
+
+					offset = ((UProperty*)Property)->GetOffset_Internal();
+					unknownProps++;
+				}
+
+				std::string propType = UPropertyTypeToString((UObjectPropertyBase*)Property);
+				streams->Classes << std::format("	    {} {}; // 0x{:x} Size: 0x{:x}\n", propType, propName, ((UProperty*)Property)->GetOffset_Internal(), ((UProperty*)Property)->GetElementSize());
+
+				offset += ((UProperty*)Property)->GetElementSize();
+			}
+		}
+	}
+
+	if (offset != Class->GetPropertiesSize()) {
+		streams->Classes << std::format("	    char UnknownData{}[0x{:x}];\n", unknownProps, Class->GetPropertiesSize() - offset);
+		unknownProps++;
+	}
+
+	if (Class->GetChildProperties()) {
+
+	}
+
+	#ifndef INCLUDE_IN_UE
+		streams->Classes << "\n		static UClass* StaticClass()\n	    {\n			static auto ptr = UObject::FindClass(\"" << Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Class).ToString() << "\");\n			return ptr;\n		};\n";
+	#endif
+
+	streams->Classes << "\n};\n\n";
+}
+
 void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
 	static UClass* FunctionProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Function");
 	static UClass* SoftObjectProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SoftObjectProperty");
@@ -465,9 +368,7 @@ void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
 	std::string funcResult = "";
 
 	std::string Additional = "";
-
 	
-
 	UStruct* SuperStruct = Class->GetSuperStruct();
 
 	if (SuperStruct)
@@ -546,8 +447,9 @@ void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
 				
 				if (!bUnhandledType)
 				{
-					result += "    " + GetUPropertySpecifiers(((UProperty*)Property)->GetPropertyFlags()) + "\n";
-					
+					#ifdef INCLUDE_IN_UE
+						result += "    " + Formatting::GetUPropertySpecifiers(((UProperty*)Property)->GetPropertyFlags()) + "\n";
+					#endif
 					pName += (ArrayDim > 1) ? std::format("[0x{:x}]", ArrayDim) : ""; // do like CharacterParts[0x8];
 
 					result += std::format("    {} {}; // 0x{:x}\n", pType, pName, ((UProperty*)Property)->GetOffset_Internal());
@@ -807,8 +709,9 @@ std::string SDKFormatting::CreateStruct(UStruct* Struct) {
 
 					if (!bUnhandledType)
 					{
-						result += "    " + GetUPropertySpecifiers(((UProperty*)Property)->GetPropertyFlags()) + "\n";
-
+						#ifdef INLUCDE_IN_UE
+							result += "    " + Formatting::GetUPropertySpecifiers(((UProperty*)Property)->GetPropertyFlags()) + "\n";
+						#endif
 						pName += (ArrayDim > 1) ? std::format("[0x{:x}]", ArrayDim) : ""; // do like CharacterParts[0x8];
 
 						result += std::format("    {} {}; // 0x{:x}\n", pType, pName, ((UProperty*)Property)->GetOffset_Internal());
@@ -823,4 +726,132 @@ std::string SDKFormatting::CreateStruct(UStruct* Struct) {
 	}
 
 	return result;
+}
+
+/*
+std::string GenerateNameStruct()
+{
+	std::string FName = R"(
+struct FName // https://github.com/EpicGames/UnrealEngine/blob/c3caf7b6bf12ae4c8e09b606f10a09776b4d1f38/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L403
+{
+	uint32_t ComparisonIndex;
+	uint32_t Number;
+};
+)";
+
+	return FName;
+}
+
+std::string GenerateObjectItem()
+{
+	std::string FUObjectItem = R"(
+struct FUObjectItem // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/CoreUObject/Public/UObject/UObjectArray.h#L26
+{
+	UObject* Object;
+	int32_t Flags;
+	int32_t ClusterRootIndex;
+	int32_t SerialNumber;
+	// int pad_01;
+};
+)";
+
+	return FUObjectItem;
+}
+
+std::string GenerateObjectStruct() // We could calcuate where each thing goes or padding
+{
+	std::string UObject = R"(
+
+struct UObject // https://github.com/EpicGames/UnrealEngine/blob/c3caf7b6bf12ae4c8e09b606f10a09776b4d1f38/Engine/Source/Runtime/CoreUObject/Public/UObject/UObjectBase.h#L20
+{
+	void** VFTable;
+	int32_t ObjectFlags;
+	int32_t InternalIndex;
+	UObject* ClassPrivate;
+	FName NamePrivate;
+	UObject* OuterPrivate;
+})";
+
+	return UObject;
+}
+
+std::string GenerateOffsets()
+{
+	auto Base = (uintptr_t)GetModuleHandleW(0);
+	std::string Offsets = std::format("static const int ObjObjectsOffset = 0x{:x};\n", (Offsets::GObjects - Base));
+	Offsets += std::format("static const int ProcessEventOffset = 0x{:x};\n", (Offsets::ProcessEvent - Base));
+	Offsets += std::format("static const int StaticFindObjectOffset = 0x{:x};\n", (Offsets::StaticFindObject - Base));
+
+	return Offsets;
+}
+
+std::string GenerateInitialization()
+{
+	std::string Initialization = R"(
+void Initialize()
+{
+    auto Base = (uintptr_t)GetModuleHandleW(0);
+    ObjObjects = decltype(ObjObjects)(Base + ObjObjectsOffset);
+    ProcessEventO = decltype(ProcessEventO)(Base + ProcessEventOffset);
+    _StaticFindObject = decltype(_StaticFindObject)(Base + StaticFindObjectOffset);
+}
+)";
+
+	return Initialization;
+}
+
+void GenerateCore()
+{
+	std::ofstream CoreStream("SDK/" + std::string(SHORTNAME) + "_Core.hpp");
+
+	std::string Pre = R"(
+#pragma once
+
+#include <Windows.h>
+#include <string>
+#include <locale>
+#include <format>
+#include <iostream>
+
+static inline void* (*ProcessEventO)(void*, void*, void*); // Original ProcessEvent
+static inline uintptr_t* (__fastcall* _StaticFindObject) (uintptr_t* ObjectClass, uintptr_t* InObjectPackage, const wchar_t* OrigInName, bool ExactClass) = 0;
+)";
+
+	CoreStream << Pre;
+	CoreStream << GenerateOffsets() << '\n';
+	CoreStream << GenerateNameStruct();
+	CoreStream << GenerateObjectStruct() << "\n";
+	CoreStream << GenerateInitialization();
+}*/
+
+void SDKFormatting::CreateSDKHeader(std::ofstream& header) {
+	std::string StaticFindObjectOffset = "";
+	std::string ProcessEventOffset = "";
+
+	header << R"(
+#pragma once
+
+#include <Windows.h>
+#include <string>
+#include <locale>
+#include <format>
+#include <iostream>
+
+namespace SDK {
+	// https://github.com/EpicGames/UnrealEngine/blob/99b6e203a15d04fc7bbbf554c421a985c1ccb8f1/Engine/Source/Runtime/CoreUObject/Private/UObject/UObjectGlobals.cpp#L327
+	static inline uintptr_t* (__fastcall* _StaticFindObject) (uintptr_t* ObjectClass, uintptr_t* InObjectPackage, const wchar_t* OrigInName, bool ExactClass) = 0;
+
+	// https://github.com/EpicGames/UnrealEngine/blob/c3caf7b6bf12ae4c8e09b606f10a09776b4d1f38/Engine/Source/Runtime/CoreUObject/Private/UObject/ScriptCore.cpp#L1822
+	static inline void* (__fastcall* _ProcessEvent) (uintptr_t* Object, uintptr_t* Function, void* Params) = 0;
+
+	static void Init() {
+		_StaticFindObject = decltype(_StaticFindObject)((uintptr_t)GetModuleHandle(0) + 0x0);
+		_ProcessEvent = decltype(_ProcessEvent)((uintptr_t)GetModuleHandle(0) + 0x0);
+	};
+
+	// Needed types
+	
+};)";
+	
+
 }

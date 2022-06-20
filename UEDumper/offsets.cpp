@@ -501,3 +501,96 @@ uintptr_t OffsetsFinder::FindGObjects() {
 
 	return 0;
 }
+
+
+bool OffsetsFinder::FindAll() {
+    Offsets::StaticFindObject = OffsetsFinder::FindStaticFindObject();
+    if (!Offsets::StaticFindObject) {
+        printf("Failed to find StaticFindObject\n");
+        return false;
+    }
+
+    Utils::_StaticFindObject = decltype(Utils::_StaticFindObject)(Offsets::StaticFindObject);
+
+    Offsets::UFunction::Func = OffsetsFinder::FindUFunctionOffset_Func();
+    // TODO: FIND!
+    Offsets::UFunction::FunctionFlags = Offsets::UFunction::Func - 0x28;
+
+    Offsets::ProcessEvent = OffsetsFinder::FindProcessEvent();
+    if (!Offsets::ProcessEvent) {
+        printf("Failed to find ProcessEvent\n");
+        return false;
+    }
+
+    Utils::_ProcessEvent = decltype(Utils::_ProcessEvent)(Offsets::ProcessEvent);
+
+    Offsets::UObject::ProcessEvent = OffsetsFinder::FindUObject_PEVTableIndex();
+
+    Offsets::UObject::InternalIndex = OffsetsFinder::FindUObjectInternalIndex();
+    if (!Offsets::UObject::InternalIndex) {
+        printf("Failed to find the offset for UObject::InternalIndex\n");
+    }
+    else if (Offsets::UObject::InternalIndex != 0xC) {
+        printf("UObject::InternalIndex is not 0x0C? Lol (Oh, maybe this will fail for you then...)");
+    }
+
+    Offsets::UObjectBase::ClassPrivate = OffsetsFinder::FindUObjectBase_ClassPrivate();
+
+
+    uint16_t UPropertyEnd = OffsetsFinder::FindUObjectPropertyBase_PropertyClass();
+	
+    Offsets::UObjectPropertyBase::PropertyClass = UPropertyEnd;
+
+    Offsets::UArrayProperty::Inner = Offsets::UObjectPropertyBase::PropertyClass;
+    Offsets::UEnumProperty::UnderlyingProp = Offsets::UObjectPropertyBase::PropertyClass;
+    Offsets::UEnumProperty::Enum = Offsets::UEnumProperty::UnderlyingProp + 8;
+
+    Offsets::UMulticastDelegateProperty::SignatureFunction = Offsets::UObjectPropertyBase::PropertyClass;
+    Offsets::UDelegateProperty::SignatureFunction = Offsets::UMulticastDelegateProperty::SignatureFunction;
+
+    Offsets::UStructProperty::Struct = Offsets::UObjectPropertyBase::PropertyClass;
+
+    Offsets::UStruct::ChildProperties = OffsetsFinder::FindUStruct_ChildProperties();
+
+    Offsets::UStruct::SuperStruct = OffsetsFinder::FindUStruct_SuperStruct();
+
+    // This required ChildProperties and Children
+    Offsets::UObjectBase::NamePrivate = OffsetsFinder::FindUObjectBase_NamePrivate();
+
+    Offsets::GObjects = OffsetsFinder::FindGObjects();
+    if (!Offsets::GObjects) {
+        printf("Failed to find GObjects\n");
+        return false;
+    }
+
+    Offsets::UStruct::Children = Offsets::UStruct::ChildProperties;
+
+    // For the next offsets we need some more stuff
+    while (!Utils::UKismetStringLibrary::Init()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    while (!Utils::UKismetSystemLibrary::Init()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    Offsets::UField::Next = OffsetsFinder::FindUField_Next();
+
+    Offsets::UProperty::Offset_Internal = OffsetsFinder::FindUProperty_OffsetInternal();
+
+    Offsets::UObjectPropertyBase::PropertyClass = OffsetsFinder::FindUObjectPropertyBase_PropertyClass();
+
+    Offsets::UStruct::PropertiesSize = Offsets::UStruct::Children + 8;
+    Offsets::UProperty::ElementSize = 0x34;
+
+	// UProperties
+	// NOTE: We can "hardcode" them, because we know how they are built, no 
+    // game would modify that...
+
+    Offsets::UBoolProperty::FieldSize = UPropertyEnd;
+    Offsets::UBoolProperty::ByteOffset = UPropertyEnd + 1;
+    Offsets::UBoolProperty::ByteMask = UPropertyEnd + 2;
+    Offsets::UBoolProperty::FieldMask = UPropertyEnd + 3;
+
+    return true; // TODO: Check if all are valid
+}

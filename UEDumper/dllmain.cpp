@@ -39,149 +39,75 @@ static void Main() {
     freopen_s(&file, "CONOUT$", "w", stdout);
 
     #ifdef SEARCH_OFFSETS 
-    // Some of this is "dumb", for example we search a function 2 times, but we do that
-    // to make the code a bit more clear, it also only takes a few milliseconds so yea...
+        // Some of this is "dumb", for example we search a function 2 times, but we do that
+        // to make the code a bit more clear, it also only takes a few milliseconds so yea...
+        printf("Searching for offsets\n");
 
-    printf("Searching for offsets\n");
+	    // Small delay since it crashes sometimes
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-	// Small delay since it crashes sometimes
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-    Offsets::StaticFindObject = OffsetsFinder::FindStaticFindObject();
-    if (!Offsets::StaticFindObject) {
-        printf("Failed to find StaticFindObject\n");
-        return;
-    }
-
-    Utils::_StaticFindObject = decltype(Utils::_StaticFindObject)(Offsets::StaticFindObject);
-
-    Offsets::UFunction::Func = OffsetsFinder::FindUFunctionOffset_Func();
-    // TODO: FIND!
-    Offsets::UFunction::FunctionFlags = Offsets::UFunction::Func - 0x28;
-
-    Offsets::ProcessEvent = OffsetsFinder::FindProcessEvent();
-    if (!Offsets::ProcessEvent) {
-        printf("Failed to find ProcessEvent\n");
-        return;
-    }
-
-    Utils::_ProcessEvent = decltype(Utils::_ProcessEvent)(Offsets::ProcessEvent);
-
-    Offsets::UObject::ProcessEvent = OffsetsFinder::FindUObject_PEVTableIndex();
-
-    Offsets::UObject::InternalIndex = OffsetsFinder::FindUObjectInternalIndex();
-    if (!Offsets::UObject::InternalIndex) {
-        printf("Failed to find the offset for UObject::InternalIndex\n");
-    }
-    else if (Offsets::UObject::InternalIndex != 0xC) {
-        printf("UObject::InternalIndex is not 0x0C? Lol (Oh, maybe this will fail for you then...)");
-    }
-
-    Offsets::UObjectBase::ClassPrivate = OffsetsFinder::FindUObjectBase_ClassPrivate();
-
-
-    // TOOD: Idk, but we use this for everything, because its the first after UProperty, so we can calucate everything
-    // else with it, it if we should
-    // SOAHDSAIHDISABDVASDVASIUDVFASBFSAHIFG
-    Offsets::UObjectPropertyBase::PropertyClass = OffsetsFinder::FindUObjectPropertyBase_PropertyClass();
-
-	Offsets::UArrayProperty::Inner = Offsets::UObjectPropertyBase::PropertyClass;
-    Offsets::UEnumProperty::UnderlyingProp = Offsets::UObjectPropertyBase::PropertyClass;
-    Offsets::UEnumProperty::Enum = Offsets::UEnumProperty::UnderlyingProp + 8;
-
-    Offsets::UMulticastDelegateProperty::SignatureFunction = Offsets::UObjectPropertyBase::PropertyClass;
-    Offsets::UDelegateProperty::SignatureFunction = Offsets::UMulticastDelegateProperty::SignatureFunction;
-	
-	Offsets::UStructProperty::Struct = Offsets::UObjectPropertyBase::PropertyClass;
-        
-     Offsets::UStruct::ChildProperties = OffsetsFinder::FindUStruct_ChildProperties();
-
-    Offsets::UStruct::SuperStruct = OffsetsFinder::FindUStruct_SuperStruct();
-
-    // This required ChildProperties and Children
-    Offsets::UObjectBase::NamePrivate = OffsetsFinder::FindUObjectBase_NamePrivate();
-
-    Offsets::GObjects = OffsetsFinder::FindGObjects();
-    if (!Offsets::GObjects) {
-        printf("Failed to find GObjects\n");
-        return;
-    }
-
-    Offsets::UStruct::Children = Offsets::UStruct::ChildProperties;
-
-    // For the next offsets we need some more stuff
-    while (!Utils::UKismetStringLibrary::Init()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-
-    while (!Utils::UKismetSystemLibrary::Init()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-
-    Offsets::UField::Next = OffsetsFinder::FindUField_Next();
-
-    Offsets::UProperty::Offset_Internal = OffsetsFinder::FindUProperty_OffsetInternal();
-	
-    Offsets::UObjectPropertyBase::PropertyClass = OffsetsFinder::FindUObjectPropertyBase_PropertyClass();
-
+        if (!OffsetsFinder::FindAll()) {
+            printf("Please check which offsets were not found, or which do look invalid, you can then manually patch them or open a bug report so we can fix it.\n");
+            return;
+        }
     #else
-	// Set your offsets here
-    Offsets::ProcessEvent = 0;
+	    // Set your offsets here
+        Offsets::ProcessEvent = 0;
     #endif
 
-        
+    // Milxnor hardcoded these in the sdk.cpp
+    // we still need to automatically find these
+	// Fortnite 3.5 till 6.21
+    Offsets::UProperty::PropertyFlags = 0x38;
+    Offsets::UProperty::ArrayDim = 0x30;
+
+    // TODO: (Inside offsets.cpp maybe) Check if child properties exists, or if it is children
 	
-    // A few checks to make sure ChildProperties doesn't exist
-
-        // TODO: Take the check from Dump::Dump and put it into here (not possible bc then the array will be 0 in dump, fuck... Milxnor help)
-
-    printf("Memory base: %p\n", GetModuleHandle(0));
-
     #ifdef PRINT_OFFSETS
-    printf("ProcessEvent: %p\n", Offsets::ProcessEvent);
-    printf("StaticFindObject: %p\n", Offsets::StaticFindObject);
-    printf("GObjects: %p\n", Offsets::GObjects);
+        printf("Memory base: %p\n", GetModuleHandle(0));
+        printf("ProcessEvent: %p\n", Offsets::ProcessEvent);
+        printf("StaticFindObject: %p\n", Offsets::StaticFindObject);
+        printf("GObjects: %p\n", Offsets::GObjects);
 
-    printf("    UFunction:\n");
-    printf("        Func: %p\n", Offsets::UFunction::Func);
+        printf("    UFunction:\n");
+        printf("        Func: %p\n", Offsets::UFunction::Func);
 
-    printf("    UObject:\n");
-    printf("        InternalIndex: %p\n", Offsets::UObject::InternalIndex);
-    printf("        ProcessEvent VTable Index: %p\n", Offsets::UObject::ProcessEvent);
+        printf("    UObject:\n");
+        printf("        InternalIndex: %p\n", Offsets::UObject::InternalIndex);
+        printf("        ProcessEvent VTable Index: %p\n", Offsets::UObject::ProcessEvent);
 
-    printf("    UObjectBase:\n");
-    printf("        ClassPrivate: %p\n", Offsets::UObjectBase::ClassPrivate);
+        printf("    UObjectBase:\n");
+        printf("        ClassPrivate: %p\n", Offsets::UObjectBase::ClassPrivate);
 
-    printf("    UStruct:\n");
-    printf("        ChildProperties: %p\n", Offsets::UStruct::ChildProperties);
-    printf("        SuperStruct: %p\n", Offsets::UStruct::SuperStruct);
+        printf("    UStruct:\n");
+        printf("        ChildProperties: %p\n", Offsets::UStruct::ChildProperties);
+        printf("        SuperStruct: %p\n", Offsets::UStruct::SuperStruct);
 
-    printf("    UObjectPropertyBase:\n");
-    printf("        PropertyClass: %p\n", Offsets::UObjectPropertyBase::PropertyClass);
+        printf("    UObjectPropertyBase:\n");
+        printf("        PropertyClass: %p\n", Offsets::UObjectPropertyBase::PropertyClass);
 
-    printf("    UProperty:\n");
-    printf("        Offset_Internal: %p\n", Offsets::UProperty::Offset_Internal);
+        printf("    UProperty:\n");
+        printf("        Offset_Internal: %p\n", Offsets::UProperty::Offset_Internal);
     #endif
 
-	// Note: Just temp, you can remove this if you dont inject on startup
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
-
-	// Milxnor hardcoded these in the sdk.cpp
-	// we still need to automatically find these
-     Offsets::UProperty::PropertyFlags = 0x38;
-     Offsets::UProperty::ArrayDim = 0x30;
-
-    if (!MakeDirectories())
+    // if (!MakeDirectories())
     {
-        printf("Failed to create directories!\n");
-        FreeLibraryAndExitThread(GetModuleHandleW(0), 0);
+       // printf("Failed to create directories!\n");
+       // FreeLibraryAndExitThread(GetModuleHandleW(0), 0);
         // return;
     }
 
-    #ifdef DUMP
-    printf("Dumping SDK!\n");
-    CreateThread(0, 0, (LPTHREAD_START_ROUTINE)Dumper::DumpObjectNames, 0, 0, 0); // Tbh if we dump object names and sdk we might as well just loop objects once
-    Dumper::Dump();
+	// Note: Just temp, you can remove this if you dont inject on startup
+    // std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
+
+    #ifdef DUMP_OBJECT_NAMES
+        CreateThread(0, 0, (LPTHREAD_START_ROUTINE)Dumper::DumpObjectNames, 0, 0, 0); // Tbh if we dump object names and sdk we might as well just loop objects once
+    #endif
+
+    #if defined(DUMP_AS_JSON) || defined(DUMP_AS_SDK)
+        auto Start = std::chrono::high_resolution_clock::now();
+        Dumper::Dump();
+        printf("Generated SDK in %.02f ms\n", (std::chrono::steady_clock::now() - Start).count() / 1000000.);
     #endif
 }
 

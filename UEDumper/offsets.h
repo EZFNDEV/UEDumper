@@ -56,6 +56,7 @@ namespace Offsets {
 		extern inline uint16_t Children = 0;
 		extern inline uint16_t SuperStruct = 48;
 		extern inline uint16_t ChildProperties = 0;
+		extern inline uint16_t PropertiesSize = 0;
 	}
 
 	namespace FName {
@@ -89,10 +90,18 @@ namespace Offsets {
 		extern inline uint16_t Inner = 0;
 	}
 
+	namespace UBoolProperty {
+		extern inline uint16_t FieldSize = 0;
+		extern inline uint16_t ByteOffset = 0;
+		extern inline uint16_t ByteMask = 0;
+		extern inline uint16_t FieldMask = 0;
+	}
+
 	namespace UProperty {
 		extern inline uint16_t ArrayDim = 0;
 		extern inline uint16_t PropertyFlags = 0;
 		extern inline uint16_t Offset_Internal = 0;
+		extern inline uint16_t ElementSize = 0;
 	}
 }
 
@@ -128,4 +137,6 @@ namespace OffsetsFinder {
 
 	// Util
 	extern uintptr_t FindRealFunction(uintptr_t* Function);
+
+	extern bool FindAll();
 }

@@ -138,6 +138,9 @@
     <ClInclude Include="CoreUObject\UObject\FastReferenceCollectorOptions.h">
       <Filter>Header Files\CoreUObject\UObject</Filter>
     </ClInclude>
+    <ClInclude Include="formatting\formatting.h">
+      <Filter>Header Files\formatting</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -208,6 +211,9 @@
     </ClCompile>
     <ClCompile Include="CoreUObject\UObject\FastReferenceCollectorOptions.cpp">
       <Filter>Source Files\CoreUObject\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="formatting\formatting.cpp">
+      <Filter>Source Files\formatting</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

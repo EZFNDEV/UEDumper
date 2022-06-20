@@ -64,17 +64,17 @@ static uintptr_t GetRealFunction_Test() {
         if (NameAddr == 0) continue; // Not the function we want
 
         FName* Name = (FName*)(NameAddr);
-        printf("Name: %i\n", Name->GetComparisonIndex().Value);
+        //printf("Name: %i\n", Name->GetComparisonIndex().Value);
 		
 
-        printf("Function Start: %p\n", FunctionStart);
-        printf("UFunction: %p\n", LastAddress);
+       // printf("Function Start: %p\n", FunctionStart);
+       // printf("UFunction: %p\n", LastAddress);
 
 
         found += 1;
     }
 
-    printf("Found: %i UFunctions!\n", found);
+  //  printf("Found: %i UFunctions!\n", found);
 
     return 0;
 }
@@ -91,119 +91,14 @@ static bool IsOldObjectArray() {
     }
 }
 
-std::string GenerateNameStruct()
-{
-    std::string FName = R"(
-struct FName // https://github.com/EpicGames/UnrealEngine/blob/c3caf7b6bf12ae4c8e09b606f10a09776b4d1f38/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L403
-{
-	uint32_t ComparisonIndex;
-	uint32_t Number;
-};
-)";
-
-    return FName;
-}
-
-std::string GenerateObjectItem()
-{
-    std::string FUObjectItem = R"(
-struct FUObjectItem // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/CoreUObject/Public/UObject/UObjectArray.h#L26
-{
-	UObject* Object;
-	int32_t Flags;
-	int32_t ClusterRootIndex;
-	int32_t SerialNumber;
-	// int pad_01;
-};
-)";
-
-    return FUObjectItem;
-}
-
-std::string GenerateObjectStruct() // We could calcuate where each thing goes or padding
-{
-    std::string UObject = R"(
-
-struct UObject // https://github.com/EpicGames/UnrealEngine/blob/c3caf7b6bf12ae4c8e09b606f10a09776b4d1f38/Engine/Source/Runtime/CoreUObject/Public/UObject/UObjectBase.h#L20
-{
-	void** VFTable;
-	int32_t ObjectFlags;
-	int32_t InternalIndex;
-	UObject* ClassPrivate;
-	FName NamePrivate;
-	UObject* OuterPrivate;
-})";
-
-    return UObject;
-}
-
-std::string GenerateOffsets()
-{
-    auto Base = (uintptr_t)GetModuleHandleW(0);
-    std::string Offsets = std::format("static const int ObjObjectsOffset = 0x{:x};\n", (Offsets::GObjects - Base));
-	Offsets += std::format("static const int ProcessEventOffset = 0x{:x};\n", (Offsets::ProcessEvent - Base));
-    Offsets += std::format("static const int StaticFindObjectOffset = 0x{:x};\n", (Offsets::StaticFindObject - Base));
-	
-    return Offsets;
-}
-
-std::string GenerateInitialization()
-{
-    std::string Initialization = R"(
-void Initialize()
-{
-    auto Base = (uintptr_t)GetModuleHandleW(0);
-    ObjObjects = decltype(ObjObjects)(Base + ObjObjectsOffset);
-    ProcessEventO = decltype(ProcessEventO)(Base + ProcessEventOffset);
-    _StaticFindObject = decltype(_StaticFindObject)(Base + StaticFindObjectOffset);
-}
-)";
-
-    return Initialization;
-}
-
-void GenerateCore()
-{
-    std::ofstream CoreStream("SDK/" + std::string(SHORTNAME) + "_Core.hpp");
-
-    std::string Pre = R"(
-#pragma once
-
-#include <Windows.h>
-#include <string>
-#include <locale>
-#include <format>
-#include <iostream>
-
-static inline void* (*ProcessEventO)(void*, void*, void*); // Original ProcessEvent
-static inline uintptr_t* (__fastcall* _StaticFindObject) (uintptr_t* ObjectClass, uintptr_t* InObjectPackage, const wchar_t* OrigInName, bool ExactClass) = 0;
-)";
-
-    CoreStream << Pre;
-    CoreStream << GenerateOffsets() << '\n';
-    CoreStream << GenerateNameStruct();
-    CoreStream << GenerateObjectStruct() << "\n";
-    CoreStream << GenerateInitialization();
-}
-
 void Dumper::Dump() {
-    // GetRealFunction_Test();
-    // return;
-    printf("Creating a whole dump now, this will take longer, if you don't need everything please change the settings.\n");
-
     bool bNewObjectArray = IsOldObjectArray();
     GUObjectArray = *new FUObjectArray(Offsets::GObjects, !bNewObjectArray);
 
-    // NOTE: Milxnor
-    // If PropertiesSize is higher than maxint, we do know that it also has ChildProperties, meaning we need to loop them too
-    // otherwise we need to chcek if its 0, if its 0 it might also just be a empty ChildProperty, but if its 0 and Children is 0 too
-    // we do know that its PropertiesSize so yea, what we gonna do is Get the first obj from GObjects (it has no children) and then check everything :)
-
-    // Cases:
-        // 1. PropertiesSize isnt actual a int32
-        // 2. PropertiesSize is 0
-
     UObjectBaseUtility* Object = (UObjectBaseUtility*)GUObjectArray.IndexToObject(0)->Object;
+
+	// TODO: Check some stuff related to ChildProperties
+	// TOOD: Move this into offsets.cpp
 	
     static UClass* CoreUObjectFunction = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Function");
     static UClass* CoreUObjectClass = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Class");
@@ -212,26 +107,32 @@ void Dumper::Dump() {
     static UClass* CoreUObjectPackage = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Package");
     static UClass* CoreUObjectEnum = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Enum");
 
-    std::unordered_map<__int64, Ofstreams*> packages;
-    auto Start = std::chrono::high_resolution_clock::now();
+	// TODO: CLEAN UP SDK.CPP
+    #ifdef DUMP_AS_SDK
+        std::unordered_map<__int64, Ofstreams*> packagesSDK;
 
-    #ifdef DUMP_JSON
-        for (uintptr_t i = 0; i < GUObjectArray.Num(); i++) {
-            auto Item = GUObjectArray.IndexToObject(i);
-            if (Item) {
-                Object = (UObjectBaseUtility*)Item->Object;
+        std::ofstream Core(("SDK/SDK.hpp"));
+
+        SDKFormatting::CreateSDKHeader(Core);
+    #endif
+
+    for (uintptr_t i = 0; i < GUObjectArray.Num(); i++) {
+        auto Item = GUObjectArray.IndexToObject(i);
+        if (Item) {
+            Object = (UObjectBaseUtility*)Item->Object;
 				
-                if (!Object)
-                    continue;
+            if (!Object)
+                continue;
 
-                if (Object->IsA(CoreUObjectClass)) {
+            if (Object->IsA(CoreUObjectClass)) {
+                #ifdef DUMP_AS_SDK
                     std::ofstream Classes;
                     std::ofstream Functions;
                     std::ofstream Structs;
 
                     Ofstreams* streams = 0;
-					
-                    for (auto const& [key, val] : packages)
+
+                    for (auto const& [key, val] : packagesSDK)
                     {
                         if (key == (__int64)Object->GetOuter()) {
                             streams = val;
@@ -240,16 +141,18 @@ void Dumper::Dump() {
                     }
 
                     if (!streams) continue;
-                    
-                    SDKFormatting::FormatUClass((UClass*)Object, streams);
-                } else if (Object->IsA(CoreUObjectEnum) || Object->IsA(CoreUObjectScriptStruct) || Object->IsA(CoreUObjectStruct)) {
+
+                    SDKFormatting::LupusFormatUClass((UClass*)Object, streams);
+                #endif
+            } else if (Object->IsA(CoreUObjectEnum) || Object->IsA(CoreUObjectScriptStruct) || Object->IsA(CoreUObjectStruct)) {
+				#ifdef DUMP_AS_SDK
                     std::ofstream Classes;
                     std::ofstream Functions;
                     std::ofstream Structs;
 
                     Ofstreams* streams = 0;
 
-                    for (auto const& [key, val] : packages)
+                    for (auto const& [key, val] : packagesSDK)
                     {
                         if (key == (__int64)Object->GetOuter()) {
                             streams = val;
@@ -260,66 +163,49 @@ void Dumper::Dump() {
                     if (!streams) continue;
 					
                     streams->Structs << SDKFormatting::CreateStruct((UStruct*)Object);
-                } else if (Object->IsA(CoreUObjectPackage)) {
+				#endif
+            } else if (Object->IsA(CoreUObjectPackage)) {
+                #ifdef DUMP_AS_SDK
                     std::string name = Object->GetName().ToString();
                     name = name.substr(name.find_last_of("/") + 1, name.length());
 
                     #ifdef UE_FILTER_CLASS
-                        if (name == UE_FILTER_CLASS) {
-                            Ofstreams* streams = new Ofstreams{
-                                    .Classes = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp")),
-                                    .Functions = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp")),
-                                    .Structs = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"))
-                            };
-
-                            packages.emplace((__int64)Object, streams);
-
-                            streams->Classes << "#pragma once\n\n";
-                            streams->Structs << "#pragma once\n\n";
-
-                            std::string include = std::format("#include ../\"{}\"\n", std::string(SHORTNAME) + "_Core.hpp");
-
-                            streams->Classes << include;
-                            streams->Functions << include;
-                            streams->Structs << include;
-                        }
+                        if (name == UE_FILTER_CLASS) 
                     #else
+                    #endif
+                    {
                         Ofstreams* streams = new Ofstreams{
-                            .Classes = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp")),
-                            .Functions = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp")),
-                            .Structs = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"))
+                                .Classes = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp")),
+                                .Functions = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp")),
+                                .Structs = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"))
                         };
 
-                        packages.emplace((__int64)Object, streams);
+                        packagesSDK.emplace((__int64)Object, streams);
 
-                        streams->Classes << "#pragma once\n\n";
-                        streams->Structs << "#pragma once\n\n";
+                        streams->Classes << ((std::format("#pragma once\n\n#include \"../{}\"\n\n", std::string(SHORTNAME) + "_Core.hpp")) + "namespace SDK {\n\n\n");
+                        streams->Functions << std::format("#include \"../{}\"\n\n", std::string(SHORTNAME) + "_Core.hpp");
+                        streams->Structs << ((std::format("#pragma once\n\n#include \"../{}\"\n\n", std::string(SHORTNAME) + "_Core.hpp")) + "namespace SDK {\n\n\n");
 
-                        std::string include = std::format("#include ../\"{}\"\n", std::string(SHORTNAME) + "_Core.hpp");
-
-                        streams->Classes << include;
-                        streams->Functions << include;
-                        streams->Structs << include;
-                    #endif
-
-                    
-                }
+                        Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp"));
+                        Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.hpp"));
+                        Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"));
+                    }
+				#endif
             }
         }
-    #endif
-
-    for (auto const& [key, val] : packages)
-    {
-        val->Classes.close();
-        val->Structs.close();
-        val->Functions.close();
     }
-	
-    GenerateCore();
 
-    auto End = std::chrono::steady_clock::now();
-
-    printf("Generated SDK in %.02f ms\n", (End - Start).count() / 1000000.);
+    #ifdef DUMP_AS_SDK
+        for (auto const& [key, val] : packagesSDK)
+        {
+            val->Classes << "\n}";
+            val->Structs << "\n}";
+			
+            val->Classes.close();
+            val->Structs.close();
+            val->Functions.close();
+        }
+    #endif
 }
 
 void Dumper::DumpObjectNames() {

@@ -9,4 +9,8 @@ namespace SDKFormatting {
 
 	// Faster
 	void FormatUClass(UClass* Struct, Ofstreams* streams);
+	// faster again
+	void LupusFormatUClass(UClass* Class, Ofstreams* streams);
+
+	void CreateSDKHeader(std::ofstream& header);
 }

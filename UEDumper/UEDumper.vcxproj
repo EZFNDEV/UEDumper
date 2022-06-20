@@ -176,6 +176,7 @@
     <ClInclude Include="Core\Templates\Tuple.h" />
     <ClInclude Include="Core\UObject\NameTypes.h" />
     <ClInclude Include="dumper.h" />
+    <ClInclude Include="formatting\formatting.h" />
     <ClInclude Include="formatting\sdk.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="include\memory.h" />
@@ -203,6 +204,7 @@
     <ClCompile Include="Core\UObject\NameTypes.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="dumper.cpp" />
+    <ClCompile Include="formatting\formatting.cpp" />
     <ClCompile Include="formatting\sdk.cpp" />
     <ClCompile Include="offsets.cpp" />
     <ClCompile Include="pch.cpp">

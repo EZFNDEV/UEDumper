@@ -12,7 +12,7 @@ class UProperty : public UField
 		}
 
 		int32_t GetElementSize() {
-			return 0;
+			return *(int32_t*)((__int64)this + Offsets::UProperty::ElementSize);
 		}
 
 		EPropertyFlags GetPropertyFlags() {
@@ -83,22 +83,22 @@ class UBoolProperty : public UProperty {
 	public:
 		/** Size of the bitfield/bool property. Equal to ElementSize but used to check if the property has been properly initialized (0-8, where 0 means uninitialized). */
 		uint8_t GetFieldSize() {
-			return 0; // TODOL
+			return *(uint8_t*)((__int64)this + Offsets::UBoolProperty::FieldSize);
 		}
 
 		/** Offset from the memeber variable to the byte of the property (0-7). */
 		uint8_t GetByteOffset() {
-			return 0;
+			return *(uint8_t*)((__int64)this + Offsets::UBoolProperty::ByteOffset);
 		}
 
 		/** Mask of the byte with the property value. */
 		uint8_t GetByteMask() {
-			return 0;
+			return *(uint8_t*)((__int64)this + Offsets::UBoolProperty::ByteMask);
 		}
 		
 		/** Mask of the field with the property value. Either equal to ByteMask or 255 in case of 'bool' type. */
 		uint8_t GetFieldMask() {
-			return 0;
+			return *(uint8_t*)((__int64)this + Offsets::UBoolProperty::FieldMask);
 		}
 
 		/**

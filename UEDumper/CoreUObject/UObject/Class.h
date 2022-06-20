@@ -113,6 +113,10 @@ class UStruct : public UField
 			
 			return 0;
 		}
+
+		int32_t GetPropertiesSize() {
+			return *(int32_t*)((__int64)this + Offsets::UStruct::PropertiesSize);
+		}
 };
 
 /**
