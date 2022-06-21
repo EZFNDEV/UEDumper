@@ -98,7 +98,7 @@ static void Main() {
     }
 
 	// Note: Just temp, you can remove this if you dont inject on startup
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
+    // std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
 
     #ifdef DUMP_OBJECT_NAMES
         CreateThread(0, 0, (LPTHREAD_START_ROUTINE)Dumper::DumpObjectNames, 0, 0, 0); // Tbh if we dump object names and sdk we might as well just loop objects once

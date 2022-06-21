@@ -64,17 +64,17 @@ static uintptr_t GetRealFunction_Test() {
         if (NameAddr == 0) continue; // Not the function we want
 
         FName* Name = (FName*)(NameAddr);
-        //printf("Name: %i\n", Name->GetComparisonIndex().Value);
+        printf("Name: %s\n", Utils::UKismetStringLibrary::Conv_NameToString(Name).ToString().c_str());
 		
 
-       // printf("Function Start: %p\n", FunctionStart);
+        printf("Function Start: %p\n", FunctionStart);
        // printf("UFunction: %p\n", LastAddress);
 
 
         found += 1;
     }
 
-  //  printf("Found: %i UFunctions!\n", found);
+   printf("Found: %i UFunctions!\n", found);
 
     return 0;
 }
@@ -92,6 +92,10 @@ static bool IsOldObjectArray() {
 }
 
 void Dumper::Dump() {
+	// We need that for our gameserver (Remove on release)
+    // GetRealFunction_Test();
+    // return;
+
     bool bNewObjectArray = IsOldObjectArray();
     GUObjectArray = *new FUObjectArray(Offsets::GObjects, !bNewObjectArray);
 
@@ -242,9 +246,9 @@ void Dumper::Dump() {
                         streams->Functions << std::format("#include \"../{}\"\n\n", std::string(SHORTNAME) + "_Core.hpp");
                         streams->Structs << ((std::format("#pragma once\n\n#include \"../{}\"\n\n", std::string(SHORTNAME) + "_Core.hpp")) + "namespace SDK {\n\n\n");
 
-                        Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"));
-                        Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp"));
-                        Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp"));
+                        // Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"));
+                        // Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp"));
+                        // Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp"));
                     }
 				#endif
             }

@@ -490,10 +490,7 @@ std::string SDKFormatting::UPropertyTypeToString(UProperty* Property) {
 			//	printf("Func: %p\n", DelegateProperty->GetSignatureFunction());
 			//	printf("Outer: %s\n", Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)DelegateProperty->GetOuter()).ToString().c_str());
 			// }
-
-			
 		}
-
 		
 		return "struct FScriptMulticastDelegate"; // Stolen from kn4cker, i think this can be done better but too lazy rn
 		return Utils::UKismetStringLibrary::Conv_NameToString(Property->GetClass()->GetFName()).ToString();
@@ -1209,14 +1206,20 @@ namespace SDK {
 	static inline void* (__fastcall* _ProcessEvent) (uintptr_t* Object, uintptr_t* Function, void* Params) = 0;
 
 )";
+
 	
 	header << GenerateInitFunction() << '\n';
 	header << GenerateNameStruct() << '\n';
-
 	header << GenerateTArray() << '\n';
 	header << GenerateFString() << '\n';
 
 	header << GenerateOthers() << '\n';
 
 	header << "\n}\n\n\n";
+
+	// Include CoreUObject
+	header << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + "CoreUObject_structs.hpp"));
+	header << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + "CoreUObject_classes.hpp"));
+	header << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + "CoreUObject_functions.cpp"));
+
 }
