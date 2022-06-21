@@ -310,6 +310,8 @@ uint16_t OffsetsFinder::FindUObjectPropertyBase_PropertyClass() {
 uint16_t OffsetsFinder::FindUProperty_OffsetInternal() {
     // NOTE: THIS IS EVEN MORE WORSE, BUT IT WORKS FOR THE VERSIONS I TESTED
 
+	
+
     uintptr_t* Function = Utils::StaticFindObject(L"Engine.KismetSystemLibrary.SetVectorPropertyByName");
     if (!Function) return 0;
 
@@ -349,6 +351,10 @@ uint16_t OffsetsFinder::FindUObject_PEVTableIndex() {
 
     return 0;
 }
+
+
+// Things below are tricky and might not always work, if it fails you need to hardcode them, or try to fix it :)
+
 
 static bool VerifyProcessEvent(uintptr_t Address)
 {

@@ -111,9 +111,14 @@ void Dumper::Dump() {
     #ifdef DUMP_AS_SDK
         std::unordered_map<__int64, Ofstreams*> packagesSDK;
 
-        std::ofstream Core(("SDK/SDK.hpp"));
+        std::ofstream Core(("SDK/" + std::string(SHORTNAME) + "_Core.hpp"));
 
         SDKFormatting::CreateSDKHeader(Core);
+		
+		// Im brain dead atm, I will just try something then 
+		// explain how the sorting algorithm works
+        std::unordered_map<__int64, __int64> packageStructs;
+        std::vector<__int64> structsAdded;
     #endif
 
     for (uintptr_t i = 0; i < GUObjectArray.Num(); i++) {
@@ -144,7 +149,7 @@ void Dumper::Dump() {
 
                     SDKFormatting::LupusFormatUClass((UClass*)Object, streams);
                 #endif
-            } else if (Object->IsA(CoreUObjectEnum) || Object->IsA(CoreUObjectScriptStruct) || Object->IsA(CoreUObjectStruct)) {
+            } else if (Object->IsA(CoreUObjectEnum)) { // Slow
 				#ifdef DUMP_AS_SDK
                     std::ofstream Classes;
                     std::ofstream Functions;
@@ -162,9 +167,60 @@ void Dumper::Dump() {
 
                     if (!streams) continue;
 					
-                    streams->Structs << SDKFormatting::CreateStruct((UStruct*)Object);
+                    SDKFormatting::LupusFormatStruct((UClass*)Object, streams, &packageStructs, true, false, false, &structsAdded, packagesSDK);
+					
+                    //packageStructs.emplace((__int64)Object, i);
+                    //streams->Structs << SDKFormatting::CreateStruct((UStruct*)Object, stru);
 				#endif
-            } else if (Object->IsA(CoreUObjectPackage)) {
+            } else if (Object->IsA(CoreUObjectScriptStruct)) {  
+                #ifdef DUMP_AS_SDK
+                    std::ofstream Classes;
+                    std::ofstream Functions;
+                    std::ofstream Structs;
+
+                    Ofstreams* streams = 0;
+
+                    for (auto const& [key, val] : packagesSDK)
+                    {
+                        if (key == (__int64)Object->GetOuter()) {
+                            streams = val;
+                            break;
+                        }
+                    }
+
+                    if (!streams) continue;
+
+                    SDKFormatting::LupusFormatStruct((UClass*)Object, streams, &packageStructs, false, true, false, &structsAdded, packagesSDK);
+
+                    //packageStructs.emplace((__int64)Object, i);
+                    //streams->Structs << SDKFormatting::CreateStruct((UStruct*)Object, stru);
+                #endif
+            }
+            else if (Object->IsA(CoreUObjectStruct)) {
+                #ifdef DUMP_AS_SDK
+                    std::ofstream Classes;
+                    std::ofstream Functions;
+                    std::ofstream Structs;
+
+                    Ofstreams* streams = 0;
+
+                    for (auto const& [key, val] : packagesSDK)
+                    {
+                        if (key == (__int64)Object->GetOuter()) {
+                            streams = val;
+                            break;
+                        }
+                    }
+
+                    if (!streams) continue;
+
+                    SDKFormatting::LupusFormatStruct((UClass*)Object, streams, &packageStructs, false, false, true, &structsAdded, packagesSDK);
+
+                    //packageStructs.emplace((__int64)Object, i);
+                    //streams->Structs << SDKFormatting::CreateStruct((UStruct*)Object, stru);
+                #endif
+            }
+            else if (Object->IsA(CoreUObjectPackage)) {
                 #ifdef DUMP_AS_SDK
                     std::string name = Object->GetName().ToString();
                     name = name.substr(name.find_last_of("/") + 1, name.length());
@@ -186,9 +242,9 @@ void Dumper::Dump() {
                         streams->Functions << std::format("#include \"../{}\"\n\n", std::string(SHORTNAME) + "_Core.hpp");
                         streams->Structs << ((std::format("#pragma once\n\n#include \"../{}\"\n\n", std::string(SHORTNAME) + "_Core.hpp")) + "namespace SDK {\n\n\n");
 
-                        Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp"));
-                        Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.hpp"));
                         Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"));
+                        Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp"));
+                        Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp"));
                     }
 				#endif
             }
@@ -196,6 +252,31 @@ void Dumper::Dump() {
     }
 
     #ifdef DUMP_AS_SDK
+	    // All that were not generated until now, must be generated now...
+    for (auto const& [key, val] : packageStructs)
+    {
+        
+        // if (((UObjectBaseUtility*)val)->IsA(Core))
+
+        Ofstreams* Nestreams = 0;
+
+        for (auto const& [key, val] : packagesSDK)
+        {
+            if (key == (__int64)((UClass*)val)->GetOuter()) {
+                Nestreams = val;
+                break;
+            }
+        }
+
+        if (!Nestreams) break;
+
+
+
+        SDKFormatting::LupusFormatStruct((UClass*)val, Nestreams, &packageStructs, false, true, false, &structsAdded, packagesSDK);
+        break;
+    }
+
+	
         for (auto const& [key, val] : packagesSDK)
         {
             val->Classes << "\n}";
@@ -219,11 +300,8 @@ void Dumper::DumpObjectNames() {
 
     for (uintptr_t i = 0; i < GUObjectArray.Num(); i++) {
         auto Item = GUObjectArray.IndexToObject(i);
-        //printf("Item: %p\n", Item);
         if (Item) {
             auto Object = (uintptr_t*)Item->Object;
-            // printf("Object: %p\n", Object);
-
             ObjectsDump << std::format("[{}] {}\n", i, Utils::UKismetSystemLibrary::GetPathName(Object).ToString());
         }
     }

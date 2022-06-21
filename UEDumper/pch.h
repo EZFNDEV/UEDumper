@@ -20,6 +20,7 @@
 #include <chrono>
 #include <fstream>
 #include <format>
+#include <unordered_map>
 
 struct Ofstreams {
     std::ofstream Classes;
