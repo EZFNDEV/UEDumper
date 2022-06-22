@@ -2,6 +2,7 @@
 
 #include "Core/UObject/NameTypes.h"
 #include "Core/Containers/UnrealString.h"
+#include <filesystem>
 
 namespace Utils {
 	// https://github.com/EpicGames/UnrealEngine/blob/99b6e203a15d04fc7bbbf554c421a985c1ccb8f1/Engine/Source/Runtime/CoreUObject/Private/UObject/UObjectGlobals.cpp#L327
@@ -74,4 +75,20 @@ namespace Utils {
 		extern inline FString GetObjectName(uintptr_t* Object);
 		extern inline FString GetPathName(uintptr_t* Object);
 	}
+}
+
+static void MakeDirs() // TODO: Move into utils
+{
+	if (!std::filesystem::exists("SDK/"))
+		std::filesystem::create_directory("SDK/");
+
+	if (!std::filesystem::exists("SDK/Packages/"))
+		std::filesystem::create_directory("SDK/Packages/");
+}
+
+static std::wstring GetCurrentDir() {
+	TCHAR buffer[MAX_PATH] = { 0 };
+	GetModuleFileName(NULL, buffer, MAX_PATH);
+	std::wstring::size_type pos = std::wstring(buffer).find_last_of(L"\\/");
+	return std::wstring(buffer).substr(0, pos);
 }

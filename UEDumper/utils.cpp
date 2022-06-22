@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "utils.h"
+#include <windows.h>
+#include <string>
+#include <iostream>
 
 uintptr_t* Utils::StaticFindObject(const wchar_t* ObjectName) {
 	return _StaticFindObject(nullptr, nullptr, ObjectName, false);

@@ -9,41 +9,8 @@
 #include "buildSettings.h"
 #include "offsets/CoreUObject.h"
 
-namespace fs = std::filesystem;
-
-bool MakeDirectories() // TODO: Move into utils
-{
-    bool a = true;
-
-    if (!fs::exists("SDK/"))
-    {
-        auto b = fs::create_directory("SDK/");
-    }
-
-    if (!fs::exists("SDK/Packages/"))
-    {
-        auto b = fs::create_directory("SDK/Packages/");
-    }
-
-    return true;
-}
-
-
-#include <windows.h>
-#include <string>
-#include <iostream>
-
-std::wstring ExePath() {
-    TCHAR buffer[MAX_PATH] = { 0 };
-    GetModuleFileName(NULL, buffer, MAX_PATH);
-    std::wstring::size_type pos = std::wstring(buffer).find_last_of(L"\\/");
-    return std::wstring(buffer).substr(0, pos);
-}
-
 static void Main() {
-
     AllocConsole();
-
     FILE* file;
     freopen_s(&file, "CONOUT$", "w", stdout);
 
@@ -103,17 +70,11 @@ static void Main() {
         printf("        Next: %p\n", Offsets::UField::Next);
     #endif
 
-    if (!MakeDirectories())
-    {
-        printf("Failed to create directories!\n");
-        FreeLibraryAndExitThread(GetModuleHandleW(0), 0);
-        return;
-    }
-
 	// Note: Just temp, you can remove this if you dont inject on startup
-    // std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
 
-    wprintf(L"Output path: %s\\SDK\\\n", ExePath().c_str());
+    MakeDirs();
+    wprintf(L"Output path: %s\\SDK\\\n", GetCurrentDir().c_str());
 
     #ifdef DUMP_OBJECT_NAMES
         CreateThread(0, 0, (LPTHREAD_START_ROUTINE)Dumper::DumpObjectNames, 0, 0, 0); // Tbh if we dump object names and sdk we might as well just loop objects once

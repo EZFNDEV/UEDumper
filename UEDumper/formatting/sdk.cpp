@@ -458,6 +458,8 @@ std::string SDKFormatting::UPropertyTypeToString(UProperty* Property) {
 				FullFunction += ", ";
 		}
 
+		FullFunction += ")";
+
 		return (FunctionFlags & EFunctionFlags::FUNC_Static) ? "static " + FullFunction : FullFunction;
 	}
 	 else if (ClassPrivate == MulticastDelegateProp) {
@@ -543,41 +545,142 @@ void SDKFormatting::LupusFormatUClass(UClass* Class, Ofstreams* streams) {
 
 		for (UField* Property = (UField*)Class->GetChildren(); Property; Property = Property ? Property->GetNext() : 0) {
 			std::string propName = Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString();
-
-			if (Property->GetClass() == FunctionClass) {
-				// TODO: FUNCTION!!
-				// streams->Classes << std::format("	    {} {}; // 0x{:x} Size: 0x{:x}\n", "void", propName, ((UProperty*)Property)->GetOffset_Internal(), ((UProperty*)Property)->GetElementSize());
-
-				offset += ((UProperty*)Property)->GetElementSize();
-			} else {
-				if (
-					Property->GetClass() != BoolProp &&
-					((UProperty*)Property)->GetOffset_Internal() != offset
-				) {
-					if (((UProperty*)Property)->GetOffset_Internal() < offset) {
-						// Logic issue?
-						streams->Classes << std::format(
-							"	    char UnknownData{}[0x{:x}]; // 0x{:x}\n", unknownProps,
-							-(((UProperty*)Property)->GetOffset_Internal() - offset),
-							offset
-						);
-					} else {
-						streams->Classes << std::format(
-							"	    char UnknownData{}[0x{:x}]; // 0x{:x}\n", unknownProps,
-							((UProperty*)Property)->GetOffset_Internal() - offset,
-							offset
-						);
-					}
-
-					offset = ((UProperty*)Property)->GetOffset_Internal();
-					unknownProps++;
+			
+			if (
+				Property->GetClass() != BoolProp &&
+				((UProperty*)Property)->GetOffset_Internal() != offset
+			) {
+				if (((UProperty*)Property)->GetOffset_Internal() < offset) {
+					// Logic issue?
+					streams->Classes << std::format(
+						"	    char UnknownData{}[0x{:x}]; // 0x{:x}\n", unknownProps,
+						-(((UProperty*)Property)->GetOffset_Internal() - offset),
+						offset
+					);
+				} else {
+					streams->Classes << std::format(
+						"	    char UnknownData{}[0x{:x}]; // 0x{:x}\n", unknownProps,
+						((UProperty*)Property)->GetOffset_Internal() - offset,
+						offset
+					);
 				}
 
-				std::string propType = UPropertyTypeToString((UObjectPropertyBase*)Property);
-				streams->Classes << std::format("	    {} {}; // 0x{:x} Size: 0x{:x}\n", propType, propName, ((UProperty*)Property)->GetOffset_Internal(), ((UProperty*)Property)->GetElementSize());
-
-				offset += ((UProperty*)Property)->GetElementSize();
+				offset = ((UProperty*)Property)->GetOffset_Internal();
+				unknownProps++;
 			}
+
+			std::string propType = UPropertyTypeToString((UObjectPropertyBase*)Property);
+			if (Property->GetClass() == FunctionClass) {
+				UFunction* Function = (UFunction*)Property;
+
+				std::string ReturnValueType;
+
+				EFunctionFlags FunctionFlags = Function->GetFunctionFlags();
+
+				std::string ReturnType = "";
+				std::vector<std::pair<std::string, std::string>> Params; // Param Type, Param Name
+
+				for (UProperty* Parameter = (UProperty*)Function->GetChildren(); Parameter; Parameter = (UProperty*)Parameter->GetNext())
+				{
+					auto PropertyFlags = Parameter->GetPropertyFlags();
+					auto ArrayDim = Parameter->GetArrayDim();
+					auto ParamType = UPropertyTypeToString((UObjectPropertyBase*)Parameter);
+
+					if (PropertyFlags & 0x400)
+					{
+						ReturnType = ParamType;
+					}
+					else if (PropertyFlags & 0x80) // Param Flag
+					{
+						Params.push_back({
+							ParamType,
+							Utils::UKismetStringLibrary::Conv_NameToString(Parameter->GetFName()).ToString()
+							});
+					}
+				}
+
+				if (ReturnType == "")
+					ReturnType = "void";
+
+				auto FullFunction = std::format("{}(", Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString());
+				std::string ParamsCombined = "";
+
+				for (int i = 0; i < Params.size(); i++)
+				{
+					auto& Param = Params[i];
+					ParamsCombined += Param.first + ' ' + Param.second;
+					if (i != Params.size() - 1)
+						ParamsCombined += ", ";
+				}
+
+				FullFunction += ParamsCombined;
+
+				auto oldRet = ReturnType; // ReturnType without static
+				ReturnType = ((FunctionFlags & EFunctionFlags::FUNC_Static) ? "static " : "") + ReturnType;
+
+				auto nameDef = ReturnType + ' ' + GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString() + "::" + FullFunction; // 0x2000 = STATIC
+
+				streams->Functions << nameDef + R"()
+{)";
+				if (Params.size() > 0 || oldRet != "void")
+				{
+					streams->Functions << R"(
+	struct {
+)";
+					if (Params.size() > 0)
+					{
+						for (int i = 0; i < Params.size(); i++)
+						{
+							auto& Param = Params[i];
+							streams->Functions << "            " + Param.first + ' ' + Param.second + ";";
+							if (i != (((Params.size() + ((oldRet == "void") ? 0 : 1))) - 1))
+								streams->Functions <<  "\n";
+						}
+					}
+
+					if (ReturnType != "void")
+						streams->Functions << "            " + oldRet + ' ' + "ReturnValue;";
+
+					streams->Functions << R"(
+	} params{ )";
+					if (Params.size() > 0)
+					{
+						for (int i = 0; i < Params.size(); i++)
+						{
+							auto& Param = Params[i];
+							streams->Functions << Param.second;
+							if (i < Params.size() - 1)
+								streams->Functions << ",";
+							streams->Functions << " ";
+						}
+					}
+
+					streams->Functions << "};\n";
+				}
+
+				// TODO: VTable
+				// streams->Functions << "\n    static auto fn = UObject::FindObject<UFunction>(this::StaticClass(), \"" + propName + "\");\n";
+				streams->Functions << "\n    static auto fn = UObject::FindObject<UFunction>(\"" + Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Property).ToString() + "\");\n";
+				streams->Functions << "    ProcessEvent(this, fn, " + std::string(((Params.size() > 0) ? "&params" : "nullptr")) + ");";
+
+				if (ReturnType != "void")
+					streams->Functions << "\n\n    return params.ReturnValue; ";
+
+				// END
+
+				streams->Functions << R"(
+}
+)" + std::string("\n");
+
+				if (Property->GetNext())
+					streams->Functions << "\n";
+
+				streams->Classes << std::format("	    {}; // 0x{:x} Size: 0x{:x}\n", propType, ((UProperty*)Property)->GetOffset_Internal(), ((UProperty*)Property)->GetElementSize());
+			} else {
+				streams->Classes << std::format("	    {} {}; // 0x{:x} Size: 0x{:x}\n", propType, propName, ((UProperty*)Property)->GetOffset_Internal(), ((UProperty*)Property)->GetElementSize());
+			}
+			
+			offset += ((UProperty*)Property)->GetElementSize();
 		}
 	}
 
@@ -751,22 +854,15 @@ void SDKFormatting::LupusFormatStruct(UClass* Class, Ofstreams* streams, std::un
 		result += "\n};\n\n";
 	}
 
-	
-
 	streams->Structs << result;
-
 	structsAdded->emplace_back((__int64)Class->GetFName());
-//	printf("Added: %s\n", Utils::UKismetStringLibrary::Conv_NameToString(Class->GetFName()).ToString().c_str());
 
 	// Sorting
 	// If this is a package that was needed for another one, 
 	// we need to add the other one after this
 	for (auto const& [key, val] : *packageStructs)
 	{
-		//printf(Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)key).ToString().c_str());
 		if (Class->GetFName() == key) {
-			// if (((UObjectBaseUtility*)val)->IsA(Core))
-
 			Ofstreams* Nestreams = 0;
 
 			for (auto const& [key2, val2] : allstreams)
@@ -777,259 +873,13 @@ void SDKFormatting::LupusFormatStruct(UClass* Class, Ofstreams* streams, std::un
 				}
 			}
 
-			if (!Nestreams) {
-				printf("FAILED TO FIND THE REAL THINGY\n");
+			if (!Nestreams)
 				break;
-			}
 			
-			
-			printf("Adding %s because of %s\n", Utils::UKismetStringLibrary::Conv_NameToString(((UClass*)val)->GetFName()).ToString().c_str(), Utils::UKismetStringLibrary::Conv_NameToString(Class->GetFName()).ToString().c_str());
-
 			LupusFormatStruct((UClass*)val, Nestreams, packageStructs, false, true, false, structsAdded, allstreams);
 			break;
 		}
 	}
-}
-
-void SDKFormatting::FormatUClass(UClass* Class, Ofstreams* streams) {
-	static UClass* FunctionProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Function");
-	static UClass* SoftObjectProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SoftObjectProperty");
-	static UClass* SoftClassProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SoftClassProperty");
-	static UClass* DelegateFuncProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.DelegateFunction");
-	static UClass* WeakObjProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.WeakObjectProperty");
-	static UClass* MulticastDelegateProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.MulticastDelegateProperty");
-	static UClass* SetProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SetProperty");
-	static UClass* DelegateProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.DelegateProperty");
-
-	std::string result = "";
-	std::string funcResult = "";
-
-	std::string Additional = "";
-	
-	UStruct* SuperStruct = Class->GetSuperStruct();
-
-	if (SuperStruct)
-		Additional = " : public " + GetPrefix(Class->GetSuperStruct()) + ((UObjectBaseUtility*)Class->GetSuperStruct())->GetName().ToString();
-	else
-		Additional = " : public UObject";
-
-	auto name = std::format("class {}{}", GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString(), Additional);
-
-	#ifdef INCLUDE_IN_UE
-	result += "\n\nUCLASS(BlueprintType)\n";
-	#endif
-
-	result += name + "\n{\npublic:\n";
-
-	if ((Class->GetChildren())) {
-		int SuperStructSize = 0;
-
-		if (SuperStruct)
-			SuperStructSize = *(uint32_t*)((__int64)SuperStruct + 0x40);
-
-		std::pair<int, int> OldProp; // Offset_Internal, Size
-		int padNum = 1;
-		
-
-		bool bIsFirstAFunction = (Class->GetChildren()->GetClass() == FunctionProp);
-		int OffsetDifference = 0;
-
-		if (!bIsFirstAFunction && SuperStructSize) // make sure it inherits something and it has a member
-		{
-			OffsetDifference = ((UProperty*)Class->GetChildren())->GetOffset_Internal() - SuperStructSize; // Get the first child's offset and subtract the two
-
-			if (OffsetDifference > 0)
-			{
-				result += std::format("    char UnknownData{}[0x{:x}];\n", padNum, OffsetDifference);
-				padNum++;
-			}
-		}
-
-		for (UField* Property = (UField*)Class->GetChildren(); Property; Property = Property->GetNext()) {
-			std::string pType = UPropertyTypeToString((UObjectPropertyBase*)Property);
-			std::string pName = Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString();
-			bool bIsAFunction = (Property->GetClass() == FunctionProp);
-
-			if (!bIsAFunction)
-			{
-				auto thisElementSize = *(int32_t*)(__int64(Property) + 0x34);
-				bool bUnhandledType = false;
-
-				if ( // Properties we do not have implemented
-					Property->GetClass() == SoftClassProp ||
-					Property->GetClass() == WeakObjProp ||
-					// Property->GetClass() == DelegateFuncProp ||
-					Property->GetClass() == DelegateProp ||
-					Property->GetClass() == MulticastDelegateProp)
-				{
-					result += std::format("    char UnknownData{}[0x{:x}]; // UNHANDLED {}\n", padNum, thisElementSize, pType + " " + pName);
-					padNum++;
-					bUnhandledType = true;
-				}
-
-				if (OldProp.first && OldProp.second)
-				{
-					OffsetDifference = ((UProperty*)Property)->GetOffset_Internal() - (OldProp.first + OldProp.second);
-					if (OffsetDifference > 0)
-					{
-						result += std::format("    char UnknownData{}[0x{:x}];\n", padNum, OffsetDifference);
-						padNum++;
-					}
-				}
-
-				OldProp.first = ((UProperty*)Property)->GetOffset_Internal();
-				OldProp.second = thisElementSize;
-
-				auto ArrayDim = ((UProperty*)Property)->GetArrayDim();
-				
-				if (!bUnhandledType)
-				{
-					#ifdef INCLUDE_IN_UE
-						result += "    " + Formatting::GetUPropertySpecifiers(((UProperty*)Property)->GetPropertyFlags()) + "\n";
-					#endif
-					pName += (ArrayDim > 1) ? std::format("[0x{:x}]", ArrayDim) : ""; // do like CharacterParts[0x8];
-
-					result += std::format("    {} {}; // 0x{:x}\n", pType, pName, ((UProperty*)Property)->GetOffset_Internal());
-				}
-
-				if (Property->GetNext())
-					result += "\n";
-			}
-			else
-			{
-				UFunction* Function = (UFunction*)Property;
-
-				std::string ReturnValueType;
-
-				EFunctionFlags FunctionFlags = Function->GetFunctionFlags();
-
-				std::string ReturnType = "";
-				std::vector<std::pair<std::string, std::string>> Params; // Param Type, Param Name
-
-				for (UProperty* Parameter = (UProperty*)Function->GetChildren(); Parameter; Parameter = (UProperty*)Parameter->GetNext())
-				{
-					auto PropertyFlags = Parameter->GetPropertyFlags();
-					auto ArrayDim = Parameter->GetArrayDim();
-					auto ParamType = UPropertyTypeToString((UObjectPropertyBase*)Parameter);
-
-					if (PropertyFlags & 0x400)
-					{
-						ReturnType = ParamType;
-					}
-					else if (PropertyFlags & 0x80) // Param Flag
-					{
-						Params.push_back({
-							ParamType,
-							Utils::UKismetStringLibrary::Conv_NameToString(Parameter->GetFName()).ToString()
-							});
-					}
-				}
-
-				if (ReturnType == "")
-					ReturnType = "void";
-
-				auto FullFunction = std::format("{}(", Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString());
-				std::string ParamsCombined = "";
-
-				for (int i = 0; i < Params.size(); i++)
-				{
-					auto& Param = Params[i];
-					ParamsCombined += Param.first + ' ' + Param.second;
-					if (i != Params.size() - 1)
-						ParamsCombined += ", ";
-				}
-
-				FullFunction += ParamsCombined;
-
-				auto oldRet = ReturnType; // ReturnType without static
-				ReturnType = ((FunctionFlags & EFunctionFlags::FUNC_Static) ? "static " : "") + ReturnType;
-
-				auto nameDef = ReturnType + ' ' + GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString() + "::" + FullFunction; // 0x2000 = STATIC
-
-				funcResult += nameDef + R"()
-{)";
-				if (Params.size() > 0 || oldRet != "void")
-				{
-					funcResult += R"(
-	struct {
-)";
-					if (Params.size() > 0)
-					{
-						for (int i = 0; i < Params.size(); i++)
-						{
-							auto& Param = Params[i];
-							funcResult += "            " + Param.first + ' ' + Param.second + ";";
-							if (i != (((Params.size() + ((oldRet == "void") ? 0 : 1))) - 1))
-								funcResult += "\n";
-						}
-					}
-
-					if (ReturnType != "void")
-						funcResult += "            " + oldRet + ' ' + "ReturnValue;";
-
-					funcResult += R"(
-	} params{ )";
-					if (Params.size() > 0)
-					{
-						for (int i = 0; i < Params.size(); i++)
-						{
-							auto& Param = Params[i];
-							funcResult += Param.second;
-							if (i < Params.size() - 1)
-								funcResult += ",";
-							funcResult += " ";
-						}
-					}
-
-					funcResult += "};\n";
-				}
-
-				// TODO: VTable
-				funcResult += "\n    static auto fn = UObject::FindObject<UFunction>(this::StaticClass(), \"" + pName + "\");\n";
-				funcResult += "    ProcessEvent(this, fn, " + std::string(((Params.size() > 0) ? "&params" : "nullptr")) + ");";
-
-				if (ReturnType != "void")
-					funcResult += "\n\n    return params.ReturnValue; ";
-
-				// END
-
-				funcResult += R"(
-}
-)" + std::string("\n");
-
-
-
-
-
-			result += "    " + pType + ");";
-
-			if (Property->GetNext())
-				result += "\n";
-			}
-		}
-	}
-
-	#ifndef INCLUDE_IN_UE
-
-		/*result += "\n" + std::string(R"(
-		static UClass* StaticClass()
-		{
-			static UClass* ptr = UObject::FindObject<UClass>(")" + Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Class).ToString() + R"(");
-			return ptr;
-		}
-	)"); */// i don't know why but format doesnt work
-	result += "\n" + std::string(R"(
-		static UClass* StaticClass()
-		{
-			return 0;
-		}
-	)");
-	#endif
-		
-	result += "\n};";
-
-	streams->Classes << result;
-	streams->Functions << funcResult;
 }
 
 std::string SDKFormatting::CreateStruct(UStruct* Struct) {
