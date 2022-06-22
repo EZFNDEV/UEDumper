@@ -7,28 +7,37 @@
 #include <filesystem>
 
 #include "buildSettings.h"
+#include "offsets/CoreUObject.h"
 
 namespace fs = std::filesystem;
 
-bool MakeDirectories() // Lupus put this somewhere
+bool MakeDirectories() // TODO: Move into utils
 {
     bool a = true;
 
-    if (fs::exists("SDK/"))
+    if (!fs::exists("SDK/"))
     {
-        try {
-            a = fs::remove_all("SDK/");
-        } catch (...) {
-			return false;
-		}
+        auto b = fs::create_directory("SDK/");
     }
-	
-    auto b = fs::create_directory("SDK/");
-    auto c = fs::create_directory("SDK/Packages/");
 
-    printf("Created directories!\n");
+    if (!fs::exists("SDK/Packages/"))
+    {
+        auto b = fs::create_directory("SDK/Packages/");
+    }
 
-    return a && b && c;
+    return true;
+}
+
+
+#include <windows.h>
+#include <string>
+#include <iostream>
+
+std::wstring ExePath() {
+    TCHAR buffer[MAX_PATH] = { 0 };
+    GetModuleFileName(NULL, buffer, MAX_PATH);
+    std::wstring::size_type pos = std::wstring(buffer).find_last_of(L"\\/");
+    return std::wstring(buffer).substr(0, pos);
 }
 
 static void Main() {
@@ -62,7 +71,7 @@ static void Main() {
     Offsets::UProperty::ArrayDim = 0x30;
 
     // TODO: (Inside offsets.cpp maybe) Check if child properties exists, or if it is children
-	
+
     #ifdef PRINT_OFFSETS
         printf("Memory base: %p\n", GetModuleHandle(0));
         printf("ProcessEvent: %p\n", Offsets::ProcessEvent);
@@ -77,6 +86,7 @@ static void Main() {
         printf("        ProcessEvent VTable Index: %p\n", Offsets::UObject::ProcessEvent);
 
         printf("    UObjectBase:\n");
+        printf("        NamePrivate: %p\n", Offsets::UObjectBase::NamePrivate);
         printf("        ClassPrivate: %p\n", Offsets::UObjectBase::ClassPrivate);
 
         printf("    UStruct:\n");
@@ -88,17 +98,22 @@ static void Main() {
 
         printf("    UProperty:\n");
         printf("        Offset_Internal: %p\n", Offsets::UProperty::Offset_Internal);
+
+        printf("    UField:\n");
+        printf("        Next: %p\n", Offsets::UField::Next);
     #endif
 
-    // if (!MakeDirectories())
+    if (!MakeDirectories())
     {
-       // printf("Failed to create directories!\n");
-       // FreeLibraryAndExitThread(GetModuleHandleW(0), 0);
-        // return;
+        printf("Failed to create directories!\n");
+        FreeLibraryAndExitThread(GetModuleHandleW(0), 0);
+        return;
     }
 
 	// Note: Just temp, you can remove this if you dont inject on startup
     // std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
+
+    wprintf(L"Output path: %s\\SDK\\\n", ExePath().c_str());
 
     #ifdef DUMP_OBJECT_NAMES
         CreateThread(0, 0, (LPTHREAD_START_ROUTINE)Dumper::DumpObjectNames, 0, 0, 0); // Tbh if we dump object names and sdk we might as well just loop objects once

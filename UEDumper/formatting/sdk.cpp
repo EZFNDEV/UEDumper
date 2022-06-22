@@ -502,7 +502,7 @@ std::string SDKFormatting::UPropertyTypeToString(UProperty* Property) {
 
 std::string GetFullCPPName() // TODO: Do this
 {
-	
+	return "";
 }
 
 void SDKFormatting::LupusFormatUClass(UClass* Class, Ofstreams* streams) {

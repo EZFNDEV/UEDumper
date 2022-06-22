@@ -9,6 +9,7 @@
 #include "CoreUObject/UObject/UnrealTypePrivate.h"
 #include <unordered_map>
 #include "formatting/sdk.h"
+#include "offsets/CoreUObject.h"
 
 static uintptr_t GetRealFunction_Test() {
     // Let's find all UFunctions
@@ -67,15 +68,14 @@ static uintptr_t GetRealFunction_Test() {
         printf("Name: %s\n", Utils::UKismetStringLibrary::Conv_NameToString(Name).ToString().c_str());
 		
 
-        printf("Function Start: %p\n", FunctionStart);
-       // printf("UFunction: %p\n", LastAddress);
+        printf("Function Start: %p\n", FunctionStart - (uintptr_t)GetModuleHandle(0));
+        printf("UFunction: %p\n", LastAddress);
 
 
         found += 1;
     }
 
-   printf("Found: %i UFunctions!\n", found);
-
+    printf("Found: %i UFunctions!\n", found);
     return 0;
 }
 
@@ -93,8 +93,8 @@ static bool IsOldObjectArray() {
 
 void Dumper::Dump() {
 	// We need that for our gameserver (Remove on release)
-    // GetRealFunction_Test();
-    // return;
+    //GetRealFunction_Test();
+   // return;
 
     bool bNewObjectArray = IsOldObjectArray();
     GUObjectArray = *new FUObjectArray(Offsets::GObjects, !bNewObjectArray);

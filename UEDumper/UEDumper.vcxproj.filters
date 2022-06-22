@@ -55,6 +55,12 @@
     <Filter Include="Header Files\Core\Templates">
       <UniqueIdentifier>{2fa29675-9313-4be4-8cd9-17e606da04f9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\offsets">
+      <UniqueIdentifier>{fe73cb59-5241-4721-a512-4d1b99b0ccc0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\offsets">
+      <UniqueIdentifier>{e64f9170-a50b-444c-a60f-989a52f20423}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -141,6 +147,9 @@
     <ClInclude Include="formatting\formatting.h">
       <Filter>Header Files\formatting</Filter>
     </ClInclude>
+    <ClInclude Include="offsets\CoreUObject.h">
+      <Filter>Header Files\offsets</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -214,6 +223,9 @@
     </ClCompile>
     <ClCompile Include="formatting\formatting.cpp">
       <Filter>Source Files\formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="offsets\CoreUObject.cpp">
+      <Filter>Source Files\offsets</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

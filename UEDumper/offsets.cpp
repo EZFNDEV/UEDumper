@@ -5,6 +5,7 @@
 #include <iostream>
 #include "utils.h"
 #include "CoreUObject/UObject/Class.h"
+#include "offsets/CoreUObject.h"
 
 // Utils
 uintptr_t OffsetsFinder::FindRealFunction(uintptr_t* _Function) { // THIS ONLY WORKS FOR UKISMETSYSTEMLIBRARY 
@@ -245,7 +246,7 @@ uint16_t OffsetsFinder::FindUFunctionOffset_Func() {
 
 uint16_t OffsetsFinder::FindUField_Next() {
 	// We are smart
-
+    printf("ASOIDASNDASD\n");
     uintptr_t* (__fastcall * _StaticFindObject) (uintptr_t * ObjectClass, uintptr_t * InObjectPackage, const wchar_t* OrigInName, bool ExactClass);
     _StaticFindObject = decltype(_StaticFindObject)(Offsets::StaticFindObject);
 
@@ -261,7 +262,7 @@ uint16_t OffsetsFinder::FindUField_Next() {
 
     if (!Object) return 0;
 
-    // printf("WE got the engine: %p\n", Object);
+    printf("WE got the engine: %p\n", Object);
 
 	// I hate life
 
@@ -278,7 +279,9 @@ uint16_t OffsetsFinder::FindUField_Next() {
             if (
 				*(uint64_t*)((__int64)Property + Offsets::UObjectBase::NamePrivate) == TinyFontName
             ) {
-                // printf("Well um yea sorry milxnor: %i\n", i);
+
+                printf("Well um yea sorry milxnor: %i\n", i);
+                printf("FirstProperty: %p\n", FirstProperty);
                 return i;
             }
         }
@@ -527,20 +530,30 @@ bool OffsetsFinder::FindAll() {
         printf("Failed to find ProcessEvent\n");
         return false;
     }
+    Offsets::GObjects = OffsetsFinder::FindGObjects();
+    if (!Offsets::GObjects) {
+        printf("Failed to find GObjects\n");
+        return false;
+    }
 
     Utils::_ProcessEvent = decltype(Utils::_ProcessEvent)(Offsets::ProcessEvent);
 
     Offsets::UObject::ProcessEvent = OffsetsFinder::FindUObject_PEVTableIndex();
 
-    Offsets::UObject::InternalIndex = OffsetsFinder::FindUObjectInternalIndex();
-    if (!Offsets::UObject::InternalIndex) {
-        printf("Failed to find the offset for UObject::InternalIndex\n");
-    }
-    else if (Offsets::UObject::InternalIndex != 0xC) {
-        printf("UObject::InternalIndex is not 0x0C? Lol (Oh, maybe this will fail for you then...)");
-    }
+    CoreUObjectOffsetFinder::Init();
+	
+    Offsets::UObjectBase::ClassPrivate = CoreUObjectOffsetFinder::_UObjectBase::FindClassPrivate();
+    Offsets::UObjectBase::NamePrivate = CoreUObjectOffsetFinder::_UObjectBase::FindNamePrivate();
 
-    Offsets::UObjectBase::ClassPrivate = OffsetsFinder::FindUObjectBase_ClassPrivate();
+    Offsets::UObject::InternalIndex = 0xC;
+
+    Offsets::UStruct::SuperStruct = CoreUObjectOffsetFinder::_UStruct::FindSuperStruct();
+    Offsets::UStruct::Children = CoreUObjectOffsetFinder::_UStruct::FindChildren();
+    Offsets::UStruct::ChildProperties = CoreUObjectOffsetFinder::_UStruct::FindChildProperties();
+
+    Offsets::UField::Next = CoreUObjectOffsetFinder::_UField::FindNext();
+
+    Offsets::UProperty::Offset_Internal = CoreUObjectOffsetFinder::_UProperty::FindOffset_Internal();
 
 
     uint16_t UPropertyEnd = OffsetsFinder::FindUObjectPropertyBase_PropertyClass();
@@ -556,33 +569,7 @@ bool OffsetsFinder::FindAll() {
 
     Offsets::UStructProperty::Struct = Offsets::UObjectPropertyBase::PropertyClass;
 
-    Offsets::UStruct::ChildProperties = OffsetsFinder::FindUStruct_ChildProperties();
-
-    Offsets::UStruct::SuperStruct = OffsetsFinder::FindUStruct_SuperStruct();
-
-    // This required ChildProperties and Children
-    Offsets::UObjectBase::NamePrivate = OffsetsFinder::FindUObjectBase_NamePrivate();
-
-    Offsets::GObjects = OffsetsFinder::FindGObjects();
-    if (!Offsets::GObjects) {
-        printf("Failed to find GObjects\n");
-        return false;
-    }
-
-    Offsets::UStruct::Children = Offsets::UStruct::ChildProperties;
-
-    // For the next offsets we need some more stuff
-    while (!Utils::UKismetStringLibrary::Init()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-
-    while (!Utils::UKismetSystemLibrary::Init()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-
-    Offsets::UField::Next = OffsetsFinder::FindUField_Next();
-
-    Offsets::UProperty::Offset_Internal = OffsetsFinder::FindUProperty_OffsetInternal();
+    
 
     Offsets::UObjectPropertyBase::PropertyClass = OffsetsFinder::FindUObjectPropertyBase_PropertyClass();
 
