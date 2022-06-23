@@ -64,6 +64,7 @@ static void Main() {
         printf("        PropertyClass: %p\n", Offsets::UObjectPropertyBase::PropertyClass);
 
         printf("    UProperty:\n");
+        printf("        ElementSize: %p\n", CoreUObjectOffsetFinder::_UProperty::FindElementSize());
         printf("        Offset_Internal: %p\n", Offsets::UProperty::Offset_Internal);
 
         printf("    UField:\n");
@@ -71,7 +72,7 @@ static void Main() {
     #endif
 
 	// Note: Just temp, you can remove this if you dont inject on startup
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
+    // std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
 
     MakeDirs();
     wprintf(L"Output path: %s\\SDK\\\n", GetCurrentDir().c_str());

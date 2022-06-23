@@ -82,8 +82,8 @@ static void MakeDirs() // TODO: Move into utils
 	if (!std::filesystem::exists("SDK/"))
 		std::filesystem::create_directory("SDK/");
 
-	if (!std::filesystem::exists("SDK/Packages/"))
-		std::filesystem::create_directory("SDK/Packages/");
+	if (!std::filesystem::exists("SDK/SDK/"))
+		std::filesystem::create_directory("SDK/SDK/");
 }
 
 static std::wstring GetCurrentDir() {

@@ -27,9 +27,7 @@ GObjects: 00007FF77FE45940
   
 # Details  
 ✔️ Getting the real UPROPERTY Specifiers  
-  
-# Supported Games  
-✔️ Fortnite (3.5 - 6.21 work for sure)  
+✔️ Automatically find most (often all) offsets
 
 # TODO:
 Check all functions if they contain the offset for a property

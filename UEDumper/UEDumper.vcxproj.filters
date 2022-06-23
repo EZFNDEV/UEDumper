@@ -150,6 +150,9 @@
     <ClInclude Include="offsets\CoreUObject.h">
       <Filter>Header Files\offsets</Filter>
     </ClInclude>
+    <ClInclude Include="offsets\analyze.h">
+      <Filter>Header Files\offsets</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -225,6 +228,9 @@
       <Filter>Source Files\formatting</Filter>
     </ClCompile>
     <ClCompile Include="offsets\CoreUObject.cpp">
+      <Filter>Source Files\offsets</Filter>
+    </ClCompile>
+    <ClCompile Include="offsets\analyze.cpp">
       <Filter>Source Files\offsets</Filter>
     </ClCompile>
   </ItemGroup>

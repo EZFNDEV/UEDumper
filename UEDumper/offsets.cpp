@@ -556,7 +556,7 @@ bool OffsetsFinder::FindAll() {
     Offsets::UProperty::Offset_Internal = CoreUObjectOffsetFinder::_UProperty::FindOffset_Internal();
 
 
-    uint16_t UPropertyEnd = OffsetsFinder::FindUObjectPropertyBase_PropertyClass();
+    uint16_t UPropertyEnd = CoreUObjectOffsetFinder::_UObjectPropertyBase::FindPropertyClass();
 	
     Offsets::UObjectPropertyBase::PropertyClass = UPropertyEnd;
 
@@ -571,10 +571,12 @@ bool OffsetsFinder::FindAll() {
 
     
 
-    Offsets::UObjectPropertyBase::PropertyClass = OffsetsFinder::FindUObjectPropertyBase_PropertyClass();
+    Offsets::UObjectPropertyBase::PropertyClass = CoreUObjectOffsetFinder::_UObjectPropertyBase::FindPropertyClass();
 
+    // NOTE: This could be wrong... But tbh I have no idea how to auto find it
     Offsets::UStruct::PropertiesSize = Offsets::UStruct::Children + 8;
-    Offsets::UProperty::ElementSize = 0x34;
+
+    Offsets::UProperty::ElementSize = CoreUObjectOffsetFinder::_UProperty::FindElementSize();
 
 	// UProperties
 	// NOTE: We can "hardcode" them, because we know how they are built, no 

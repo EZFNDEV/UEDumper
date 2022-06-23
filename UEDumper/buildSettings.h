@@ -13,3 +13,6 @@
 
 // #define INCLUDE_IN_UE
 // #define UE_FILTER_CLASS "FortniteGame"
+
+// #define ANALYZE
+// #define FILTER_ANALYZE_OBJECT "AGameMode"

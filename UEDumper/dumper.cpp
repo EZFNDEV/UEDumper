@@ -115,8 +115,10 @@ void Dumper::Dump() {
     #ifdef DUMP_AS_SDK
         std::unordered_map<__int64, Ofstreams*> packagesSDK;
 
-        std::ofstream Core(("SDK/" + std::string(SHORTNAME) + "_Core.hpp"));
+        std::ofstream Basic(("SDK/SDK/" + std::string(SHORTNAME) + "_Basic.hpp"));
+        std::ofstream Core(("SDK/SDK.hpp"));
 
+        SDKFormatting::CreateBasics(Basic);
         SDKFormatting::CreateSDKHeader(Core);
 		
 		// Im brain dead atm, I will just try something then 
@@ -235,16 +237,16 @@ void Dumper::Dump() {
                     #endif
                     {
                         Ofstreams* streams = new Ofstreams{
-                                .Classes = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp")),
-                                .Functions = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp")),
-                                .Structs = std::ofstream(("SDK/Packages/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"))
+                                .Classes = std::ofstream(("SDK/SDK/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp")),
+                                .Functions = std::ofstream(("SDK/SDK/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp")),
+                                .Structs = std::ofstream(("SDK/SDK/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"))
                         };
 
                         packagesSDK.emplace((__int64)Object, streams);
 
-                        streams->Classes << ((std::format("#pragma once\n\n#include \"../{}\"\n\n", std::string(SHORTNAME) + "_Core.hpp")) + "namespace SDK {\n\n\n");
-                        streams->Functions << std::format("#include \"../{}\"\n\n", std::string(SHORTNAME) + "_Core.hpp");
-                        streams->Structs << ((std::format("#pragma once\n\n#include \"../{}\"\n\n", std::string(SHORTNAME) + "_Core.hpp")) + "namespace SDK {\n\n\n");
+                        streams->Classes << ((std::format("#pragma once\n\n#include \"../{}\"\n\n", "SDK.hpp")) + "namespace SDK {\n\n\n");
+                        streams->Functions << std::format("#include \"../{}\"\n\n", "SDK.hpp");
+                        streams->Structs << ((std::format("#pragma once\n\n#include \"../{}\"\n\n", "SDK.hpp")) + "namespace SDK {\n\n\n");
 
                         // Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"));
                         // Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp"));

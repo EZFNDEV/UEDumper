@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "sdk.h"
 
+#include "../offsets/analyze.h"
 #include "../CoreUObject/UObject/UObjectBaseUtility.h"
 #include "../CoreUObject/UObject/UnrealTypePrivate.h"
 #include <iostream>
@@ -514,10 +515,13 @@ void SDKFormatting::LupusFormatUClass(UClass* Class, Ofstreams* streams) {
 	// Get the proper name
 	UStruct* SuperStruct = Class->GetSuperStruct();
 
+	std::string fullName = Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Class).ToString();
+
 	std::string name = Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Class).ToString();
 	#ifdef INCLUDE_IN_UE
 		streams->Classes << "\n\nUCLASS(BlueprintType)\n";
 	#endif
+
 	if (SuperStruct) {
 		streams->Classes << std::format(
 			"class {}{}", GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString(), // TODO: Use split and then get the stuff
@@ -677,7 +681,15 @@ void SDKFormatting::LupusFormatUClass(UClass* Class, Ofstreams* streams) {
 
 				streams->Classes << std::format("	    {}; // 0x{:x} Size: 0x{:x}\n", propType, ((UProperty*)Property)->GetOffset_Internal(), ((UProperty*)Property)->GetElementSize());
 			} else {
-				streams->Classes << std::format("	    {} {}; // 0x{:x} Size: 0x{:x}\n", propType, propName, ((UProperty*)Property)->GetOffset_Internal(), ((UProperty*)Property)->GetElementSize());
+			
+				//#if defined(ANALYZE) && defined(FILTER_ANALYZE_OBJECT) // Without FILTER_ANALYZE_OBJECT it would probably take hours-days
+				//	if (fullName.find("GameState") != -1) {
+				//		streams->Classes << std::format("{}\n	    {} {}; // 0x{:x} Size: 0x{:x}\n", Analyze::ReturnReferenceInfo((UProperty*)Property), propType, propName, ((UProperty*)Property)->GetOffset_Internal(), ((UProperty*)Property)->GetElementSize());
+				//	}
+			
+				//#else
+					streams->Classes << std::format("	    {} {}; // 0x{:x} Size: 0x{:x}\n", propType, propName, ((UProperty*)Property)->GetOffset_Internal(), ((UProperty*)Property)->GetElementSize());
+				//#endif
 			}
 			
 			offset += ((UProperty*)Property)->GetElementSize();
@@ -694,8 +706,7 @@ void SDKFormatting::LupusFormatUClass(UClass* Class, Ofstreams* streams) {
 	}
 
 	#ifndef INCLUDE_IN_UE
-		// streams->Classes << "\n		static UClass* StaticClass()\n	    {\n			static auto ptr = UObject::FindClass(\"" << Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Class).ToString() << "\");\n			return ptr;\n		};\n";
-	streams->Classes << "\n		static class UClass* StaticClass()\n	    {\n			return 0;\n		};\n";
+		streams->Classes << "\n		static UClass* StaticClass()\n	    {\n			static auto ptr = UObject::FindClass(\"" << fullName << "\");\n			return ptr;\n		};\n";
 	#endif
 
 	streams->Classes << "\n};\n\n";
@@ -1036,6 +1047,15 @@ std::string SDKFormatting::GenerateInitFunction() {
 }
 
 void SDKFormatting::CreateSDKHeader(std::ofstream& header) {
+	// Include CoreUObject and Basic
+	header << std::format("#include \"{}\"\n", ("SDK/" + std::string(SHORTNAME) + "_" + "Basic.hpp"));
+
+	header << std::format("#include \"{}\"\n", ("SDK/" + std::string(SHORTNAME) + "_" + "CoreUObject_structs.hpp"));
+	header << std::format("#include \"{}\"\n", ("SDK/" + std::string(SHORTNAME) + "_" + "CoreUObject_classes.hpp"));
+	header << std::format("#include \"{}\"\n", ("SDK/" + std::string(SHORTNAME) + "_" + "CoreUObject_functions.cpp"));
+}
+
+void SDKFormatting::CreateBasics(std::ofstream& header) {
 	std::string StaticFindObjectOffset = "";
 	std::string ProcessEventOffset = "";
 
@@ -1048,6 +1068,8 @@ void SDKFormatting::CreateSDKHeader(std::ofstream& header) {
 #include <format>
 #include <iostream>
 
+#include "../SDK.hpp"
+
 namespace SDK {
 	// https://github.com/EpicGames/UnrealEngine/blob/99b6e203a15d04fc7bbbf554c421a985c1ccb8f1/Engine/Source/Runtime/CoreUObject/Private/UObject/UObjectGlobals.cpp#L327
 	static inline uintptr_t* (__fastcall* _StaticFindObject) (uintptr_t* ObjectClass, uintptr_t* InObjectPackage, const wchar_t* OrigInName, bool ExactClass) = 0;
@@ -1057,7 +1079,7 @@ namespace SDK {
 
 )";
 
-	
+
 	header << GenerateInitFunction() << '\n';
 	header << GenerateNameStruct() << '\n';
 	header << GenerateTArray() << '\n';
@@ -1068,8 +1090,7 @@ namespace SDK {
 	header << "\n}\n\n\n";
 
 	// Include CoreUObject
-	header << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + "CoreUObject_structs.hpp"));
-	header << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + "CoreUObject_classes.hpp"));
-	header << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + "CoreUObject_functions.cpp"));
-
+	header << std::format("#include \"{}\"\n", ("SDK/" + std::string(SHORTNAME) + "_" + "CoreUObject_structs.hpp"));
+	header << std::format("#include \"{}\"\n", ("SDK/" + std::string(SHORTNAME) + "_" + "CoreUObject_classes.hpp"));
+	header << std::format("#include \"{}\"\n", ("SDK/" + std::string(SHORTNAME) + "_" + "CoreUObject_functions.cpp"));
 }

@@ -39,7 +39,7 @@ namespace CoreUObjectOffsetFinder {
 
 	namespace _UProperty {
 		extern inline uint16_t ArrayDim = 0;
-		extern inline uint16_t ElementSize = 0;
+		extern inline uint16_t FindElementSize();
 		extern inline uint16_t PropertyFlags = 0;
 		extern inline uint16_t RepIndex = 0;
 		extern inline uint16_t BlueprintReplicationCondition = 0;
@@ -49,5 +49,9 @@ namespace CoreUObjectOffsetFinder {
 		extern inline uint16_t NextRef = 0;
 		extern inline uint16_t DestructorLinkNext = 0;
 		extern inline uint16_t PostConstructLinkNext = 0;
+	}
+
+	namespace _UObjectPropertyBase {
+		extern inline uint16_t FindPropertyClass();
 	}
 }

@@ -15,6 +15,8 @@ namespace SDKFormatting {
 	void LupusFormatStruct(UClass* Class, Ofstreams* streams, std::unordered_map<__int64, __int64>* packageStructs, bool isEnum, bool isScriptStruct, bool isStruct, std::vector<__int64>* structsAdded, std::unordered_map<__int64, Ofstreams*> allstreams);
 
 	void CreateSDKHeader(std::ofstream& header);
+	void CreateBasics(std::ofstream& header);
+
 	static std::string GenerateInitFunction();
 	static std::string GenerateNameStruct() {
 		return R"(
