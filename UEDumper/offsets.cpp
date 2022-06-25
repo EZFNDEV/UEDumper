@@ -568,7 +568,7 @@ bool OffsetsFinder::FindAll() {
     Offsets::UDelegateProperty::SignatureFunction = Offsets::UMulticastDelegateProperty::SignatureFunction;
 
     Offsets::UStructProperty::Struct = Offsets::UObjectPropertyBase::PropertyClass;
-
+    Offsets::UClassProperty::MetaClass = Offsets::UObjectPropertyBase::PropertyClass + 8;
     
 
     Offsets::UObjectPropertyBase::PropertyClass = CoreUObjectOffsetFinder::_UObjectPropertyBase::FindPropertyClass();

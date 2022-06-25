@@ -4,7 +4,7 @@
 
 namespace SDKFormatting {
 
-	std::string UPropertyTypeToString(UProperty* Property);
+	// std::string UPropertyTypeToString(UProperty* Property);
 	std::string CreateStruct(UStruct* Struct);
 
 	// Faster
@@ -34,6 +34,8 @@ namespace SDKFormatting {
 	struct FScriptMulticastDelegate {
 		char Unknown[0x10];
 	};
+
+	struct FText {};
 )"; // I think the size is always 0x10, but we need to improve this...
 	}
 	

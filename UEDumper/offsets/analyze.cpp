@@ -35,3 +35,9 @@ std::string Analyze::ReturnReferenceInfo(UProperty* Property) {
 
 	return result;
 }
+
+uintptr_t Analyze::FindMoreObjectFunction(UObject* Class) {
+    // Find (for now virtual) functions that contain the function name, example: 
+
+    return 0;
+}

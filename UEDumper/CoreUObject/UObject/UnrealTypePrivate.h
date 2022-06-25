@@ -137,7 +137,7 @@ class USoftObjectProperty : public UObjectPropertyBase {
 class UClassProperty : public UObjectProperty {
 	public: 
 		UClass* GetMetaClass() {
-			return 0;
+			return *(UClass**)((__int64)this + Offsets::UClassProperty::MetaClass);
 		}
 };
 

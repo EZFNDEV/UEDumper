@@ -20,7 +20,6 @@ static std::string GetPrefix(UObjectBase* Object) // TODO: Move this to SDKForma
 	return "F";
 }
 
-// Best sorting algorithm lmfao
 static std::string UPropertyTypeToStringHacky(UProperty* Property) {
 	static UClass* DoubleProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.DoubleProperty");
 	static UClass* FloatProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.FloatProperty");
@@ -63,7 +62,7 @@ static std::string UPropertyTypeToStringHacky(UProperty* Property) {
 	else if (ClassPrivate == NameProp)
 		return "FName";
 	else if (ClassPrivate == StrProp)
-		return "FString";
+		return "struct FString";
 	else if (ClassPrivate == UInt64Prop)
 		return "uint64_t";
 	else if (ClassPrivate == Int64Prop)
@@ -91,7 +90,8 @@ static std::string UPropertyTypeToStringHacky(UProperty* Property) {
 			return "struct " + GetPrefix(StructProperty) + Utils::UKismetStringLibrary::Conv_NameToString(StructProperty->GetStruct()->GetFName()).ToString() + ((Property->GetArrayDim() > 1) ? "*" : "");
 		}
 		else if (ClassPrivate == ClassProp) {
-			auto MetaClass = *(UStruct**)(__int64(Property) + 120);
+			UClassProperty* ClassProperty = (UClassProperty*)Property;
+			UClass* MetaClass = ClassProperty->GetMetaClass();
 			// Classes are always pointers?
 			return "class " + GetPrefix(MetaClass) + Utils::UKismetStringLibrary::Conv_NameToString(MetaClass->GetFName()).ToString() + "*"/* + ((Property->GetArrayDim() > 1) ? "*" : "")*/;
 		}
@@ -121,11 +121,7 @@ static std::string UPropertyTypeToStringHacky(UProperty* Property) {
 			auto PropertyClass = SoftObjectProperty->GetPropertyClass();
 			if (PropertyClass) {
 				std::string inner = GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + ((Property->GetArrayDim()) ? "*" : "");
-#ifdef INCLUDE_IN_UE
 				return std::format("struct TSoftObjectPtr<struct {}>", inner);
-#else
-				return inner;
-#endif
 			}
 			else {
 				return "FAILED";
@@ -151,11 +147,7 @@ static std::string UPropertyTypeToStringHacky(UProperty* Property) {
 			auto PropertyClass = LazyObjectProperty->GetPropertyClass();
 			if (PropertyClass) {
 				std::string inner = GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + ((Property->GetArrayDim()) ? "*" : "");
-#ifdef INCLUDE_IN_UE
 				return std::format("TLazyObjectPtr<{}>", inner);
-#else
-				return inner;
-#endif
 			}
 			else {
 				return "FAILED";
@@ -167,11 +159,7 @@ static std::string UPropertyTypeToStringHacky(UProperty* Property) {
 			auto PropertyClass = WeakObjectProperty->GetPropertyClass();
 			if (PropertyClass) {
 				std::string inner = GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + ((Property->GetArrayDim()) ? "*" : "");
-#ifdef INCLUDE_IN_UE
 				return std::format("TWeakObjectPtr<{}>", inner);
-#else
-				return inner;
-#endif
 			}
 			else {
 				return "FAILED";
@@ -191,15 +179,14 @@ static std::string UPropertyTypeToStringHacky(UProperty* Property) {
 
 			for (UProperty* Parameter = (UProperty*)Function->GetChildren(); Parameter; Parameter = (UProperty*)Parameter->GetNext())
 			{
-				auto PropertyFlags = *(uint64_t*)(__int64(Parameter) + 0x38);
-				auto ArrayDim = *(uint32_t*)(__int64(Parameter) + 0x30);
+				auto PropertyFlags = Parameter->GetPropertyFlags();
 				auto ParamType = UPropertyTypeToStringHacky((UObjectPropertyBase*)Parameter);
 
-				if (PropertyFlags & 0x400)
+				if (PropertyFlags & EPropertyFlags::CPF_ReturnParm)
 				{
 					ReturnType = ParamType;
 				}
-				else if (PropertyFlags & 0x80) // Param Flag
+				else if (PropertyFlags & EPropertyFlags::CPF_Parm)
 				{
 					Params.push_back({
 						ParamType,
@@ -266,242 +253,6 @@ static std::string UPropertyTypeToStringHacky(UProperty* Property) {
 	}
 }
 
-std::string SDKFormatting::UPropertyTypeToString(UProperty* Property) {
-	static UClass* DoubleProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.DoubleProperty");
-	static UClass* FloatProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.FloatProperty");
-	static UClass* IntProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.IntProperty");
-	static UClass* Int16Prop = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Int16Property");
-	static UClass* BoolProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.BoolProperty");
-	static UClass* ObjectProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.ObjectProperty");
-	static UClass* FunctionProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Function");
-	static UClass* StructProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.StructProperty");
-	static UClass* ClassProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.ClassProperty");
-	static UClass* ArrayProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.ArrayProperty");
-	static UClass* ByteProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.ByteProperty");
-	static UClass* MulticastDelegateProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.MulticastDelegateProperty");
-	static UClass* EnumProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.EnumProperty");
-	static UClass* StrProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.StrProperty");
-	static UClass* NameProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.NameProperty");
-	static UClass* UInt32Prop = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.UInt32Property");
-	static UClass* UInt64Prop = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.UInt64Property");
-	static UClass* Int64Prop = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Int64Property");
-	static UClass* Int8Prop = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Int8Property");
-	static UClass* TextProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.TextProperty");
-	static UClass* SoftObjectProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SoftObjectProperty");
-	static UClass* SoftClassProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SoftClassProperty");
-	static UClass* WeakObjectProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.WeakObjectProperty");
-	static UClass* LazyObjectProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.LazyObjectProperty");
-
-	UClass* ClassPrivate = Property->GetClass();
-
-	// "Easy" props first
-	if (ClassPrivate == DoubleProp)
-		return "double";
-	else if (ClassPrivate == FloatProp)
-		return "float";
-	else if (ClassPrivate == IntProp)
-		return "int";
-	else if (ClassPrivate == Int16Prop)
-		return "int16_t";
-	else if (ClassPrivate == UInt32Prop)
-		return "uint32_t";
-	else if (ClassPrivate == NameProp)
-		return "FName";
-	else if (ClassPrivate == StrProp)
-		return "FString";
-	else if (ClassPrivate == UInt64Prop)
-		return "uint64_t";
-	else if (ClassPrivate == Int64Prop)
-		return "int64_t";
-	else if (ClassPrivate == Int8Prop)
-		return "int8_t";
-	else if (ClassPrivate == TextProp)
-		return "struct FText";
-
-	// TODO: Clean up a bit, maybe speed up too (yea, speedup...)
-
-	else if (ClassPrivate == ArrayProp) {
-		UArrayProperty* ArrayProperty = (UArrayProperty*)Property;
-
-		return std::format("TArray<{}>", UPropertyTypeToString(ArrayProperty->GetInner()));
-	} else if (ClassPrivate == EnumProp) {
-		UEnumProperty* Enum = (UEnumProperty*)Property;
-
-		return Utils::UKismetStringLibrary::Conv_NameToString(Enum->GetEnum()->GetFName()).ToString();
-	} else if (ClassPrivate == StructProp) {
-		UStructProperty* StructProperty = (UStructProperty*)Property;
-		
-		return "struct " + GetPrefix(StructProperty) + Utils::UKismetStringLibrary::Conv_NameToString(StructProperty->GetStruct()->GetFName()).ToString() + ((Property->GetArrayDim() > 1) ? "*" : "");
-	} else if (ClassPrivate == ClassProp) {
-		auto MetaClass = *(UStruct**)(__int64(Property) + 120);
-		// Classes are always pointers?
-		return "class " + GetPrefix(MetaClass) + Utils::UKismetStringLibrary::Conv_NameToString(MetaClass->GetFName()).ToString() + "*"/* + ((Property->GetArrayDim() > 1) ? "*" : "")*/;
-	}
-	else if (ClassPrivate == BoolProp) {
-		// todo: do some bitfield stuff kms
-		return "bool";
-	} else if (ClassPrivate == ByteProp)
-		return "char";	// return std::format("TEnumAsByte<{}>", Utils::UKismetStringLibrary::Conv_NameToString(Property->GetFName()).ToString());
-
-	
-	// UObjectPropertyBase
-	else if (ClassPrivate == ObjectProp) {
-		UObjectPropertyBase* ObjectProperty = (UObjectPropertyBase*)Property;
-
-		auto PropertyClass = ObjectProperty->GetPropertyClass();
-		if (PropertyClass) {
-			return "class " + GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + ((Property->GetArrayDim()) ? "*" : "");
-		}
-		else {
-			return "MILXNOR?";
-		}
-	} else if (ClassPrivate == SoftObjectProp) {
-		USoftObjectProperty* SoftObjectProperty = (USoftObjectProperty*)Property;
-
-		auto PropertyClass = SoftObjectProperty->GetPropertyClass();
-		if (PropertyClass) {
-			std::string inner = GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + ((Property->GetArrayDim()) ? "*" : "");
-			#ifdef INCLUDE_IN_UE
-				return std::format("struct TSoftObjectPtr<struct {}>", inner);
-			#else
-				return inner;
-			#endif
-		}
-		else {
-			return "FAILED";
-		}
-	} /*else if (ClassPrivate == SoftObjectProp) { // TODO: MetaClass
-		USoftClassProperty* SoftClassProperty = (USoftClassProperty*)Property;
-
-		auto PropertyClass = SoftClassProperty->GetPropertyClass();
-		if (PropertyClass) {
-			std::string inner = GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + ((Property->GetArrayDim()) ? "*" : "");
-			#ifdef INCLUDE_IN_UE
-				return std::format("TSoftClassPtr<{}>", inner);
-			#else
-				return inner;
-			#endif
-		}
-		else {
-			return "FAILED";
-		}
-	}*/ else if (ClassPrivate == LazyObjectProp) {
-		ULazyObjectProperty* LazyObjectProperty = (ULazyObjectProperty*)Property;
-
-		auto PropertyClass = LazyObjectProperty->GetPropertyClass();
-		if (PropertyClass) {
-			std::string inner = GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + ((Property->GetArrayDim()) ? "*" : "");
-			#ifdef INCLUDE_IN_UE
-				return std::format("TLazyObjectPtr<{}>", inner);
-			#else
-				return inner;
-			#endif
-		}
-		else {
-			return "FAILED";
-		}
-	} else if (ClassPrivate == WeakObjectProp) {
-		UWeakObjectProperty* WeakObjectProperty = (UWeakObjectProperty*)Property;
-
-		auto PropertyClass = WeakObjectProperty->GetPropertyClass();
-		if (PropertyClass) {
-			std::string inner = GetPrefix(PropertyClass) + Utils::UKismetStringLibrary::Conv_NameToString(PropertyClass->GetFName()).ToString() + ((Property->GetArrayDim()) ? "*" : "");
-			#ifdef INCLUDE_IN_UE
-				return std::format("TWeakObjectPtr<{}>", inner);
-			#else
-				return inner;
-			#endif
-		}
-		else {
-			return "FAILED";
-		}
-	}
-	
-	// Functions
-	
-	if (ClassPrivate == FunctionProp) {
-		std::string ReturnValueType;
-		UFunction* Function = (UFunction*)Property;
-
-		EFunctionFlags FunctionFlags = Function->GetFunctionFlags();
-
-		std::string ReturnType = "";
-		std::vector<std::pair<std::string, std::string>> Params; // Param Type, Param Name
-
-		for (UProperty* Parameter = (UProperty*)Function->GetChildren(); Parameter; Parameter = (UProperty*)Parameter->GetNext())
-		{
-			auto PropertyFlags = *(uint64_t*)(__int64(Parameter) + 0x38);
-			auto ArrayDim = *(uint32_t*)(__int64(Parameter) + 0x30);
-			auto ParamType = UPropertyTypeToString((UObjectPropertyBase*)Parameter);
-
-			if (PropertyFlags & 0x400)
-			{
-				ReturnType = ParamType;
-			}
-			else if (PropertyFlags & 0x80) // Param Flag
-			{
-				Params.push_back({
-					ParamType,
-					Utils::UKismetStringLibrary::Conv_NameToString(Parameter->GetFName()).ToString()
-				});
-			}
-		}
-
-		if (ReturnType == "")
-			ReturnType = "void";
-
-		auto FullFunction = std::format("{} {}(", ReturnType, Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString());
-		for (int i = 0; i < Params.size(); i++)
-		{
-			auto& Param = Params[i];
-			FullFunction += Param.first + ' ' + Param.second;
-			if (i != Params.size() - 1)
-				FullFunction += ", ";
-		}
-
-		FullFunction += ")";
-
-		return (FunctionFlags & EFunctionFlags::FUNC_Static) ? "static " + FullFunction : FullFunction;
-	}
-	 else if (ClassPrivate == MulticastDelegateProp) {
-		// Get the UFunction
-		UMulticastDelegateProperty* Delegate = (UMulticastDelegateProperty*)Property;
-		UFunction* Function = Delegate->GetSignatureFunction();
-
-		if (Function) { 
-			// Note: "Function" won't be in the SDK dump? (Maybe a bug when filtering out?)
-			// for now lets just add them manually
-
-			// Probably, bc SuperStuct is null?
-			
-		//	printf("Function: %p\n", Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Function).ToString().c_str());
-			
-			// if (Function->GetClass() == Delegate) {
-				
-				//printf(Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Function).ToString().c_str());
-
-				//printf("Function: %p\n", Function);
-				//printf("Func: %p\n", Function->GetFunc());
-				// TODO: Take a deeper look into it...
-
-				UDelegateProperty* DelegateProperty = (UDelegateProperty*)Function;
-
-
-			//	printf("DelegateProperty: %p\n", DelegateProperty);
-				
-
-			//	printf("Func: %p\n", DelegateProperty->GetSignatureFunction());
-			//	printf("Outer: %s\n", Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)DelegateProperty->GetOuter()).ToString().c_str());
-			// }
-		}
-		
-		return "struct FScriptMulticastDelegate"; // Stolen from kn4cker, i think this can be done better but too lazy rn
-		return Utils::UKismetStringLibrary::Conv_NameToString(Property->GetClass()->GetFName()).ToString();
-	}
-	 else {
-		return "__int64" + std::string("/*") + Utils::UKismetStringLibrary::Conv_NameToString(Property->GetClass()->GetFName()).ToString() + "*/";
-	}
-}
 
 std::string GetFullCPPName() // TODO: Do this
 {
@@ -511,6 +262,7 @@ std::string GetFullCPPName() // TODO: Do this
 void SDKFormatting::LupusFormatUClass(UClass* Class, Ofstreams* streams) {
 	static UClass* FunctionClass = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Function");
 	static UClass* BoolProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.BoolProperty");
+	static __int64 RealUObject = Utils::UKismetStringLibrary::Conv_StringToName_G(L"Object");
 
 	// Get the proper name
 	UStruct* SuperStruct = Class->GetSuperStruct();
@@ -521,6 +273,19 @@ void SDKFormatting::LupusFormatUClass(UClass* Class, Ofstreams* streams) {
 	#ifdef INCLUDE_IN_UE
 		streams->Classes << "\n\nUCLASS(BlueprintType)\n";
 	#endif
+
+	if (Class->GetFName() == RealUObject) {
+		streams->Classes << R"(
+class UObject {
+	public:
+		static uintptr_t* FindObject(std::string ClassName) {
+			return 0;
+		}
+};
+)";
+
+		return;
+	}
 
 	if (SuperStruct) {
 		streams->Classes << std::format(
@@ -573,7 +338,7 @@ void SDKFormatting::LupusFormatUClass(UClass* Class, Ofstreams* streams) {
 				unknownProps++;
 			}
 
-			std::string propType = UPropertyTypeToString((UObjectPropertyBase*)Property);
+			std::string propType = UPropertyTypeToStringHacky((UObjectPropertyBase*)Property);
 			if (Property->GetClass() == FunctionClass) {
 				UFunction* Function = (UFunction*)Property;
 
@@ -588,7 +353,7 @@ void SDKFormatting::LupusFormatUClass(UClass* Class, Ofstreams* streams) {
 				{
 					auto PropertyFlags = Parameter->GetPropertyFlags();
 					auto ArrayDim = Parameter->GetArrayDim();
-					auto ParamType = UPropertyTypeToString((UObjectPropertyBase*)Parameter);
+					auto ParamType = UPropertyTypeToStringHacky((UObjectPropertyBase*)Parameter);
 
 					if (PropertyFlags & 0x400)
 					{
@@ -605,6 +370,8 @@ void SDKFormatting::LupusFormatUClass(UClass* Class, Ofstreams* streams) {
 
 				if (ReturnType == "")
 					ReturnType = "void";
+
+				ReturnType = "void"; // Testing compiling lol
 
 				auto FullFunction = std::format("{}(", Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString());
 				std::string ParamsCombined = "";
@@ -664,11 +431,11 @@ void SDKFormatting::LupusFormatUClass(UClass* Class, Ofstreams* streams) {
 
 				// TODO: VTable
 				// streams->Functions << "\n    static auto fn = UObject::FindObject<UFunction>(this::StaticClass(), \"" + propName + "\");\n";
-				streams->Functions << "\n    static auto fn = UObject::FindObject<UFunction>(\"" + Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Property).ToString() + "\");\n";
-				streams->Functions << "    ProcessEvent(this, fn, " + std::string(((Params.size() > 0) ? "&params" : "nullptr")) + ");";
+				//streams->Functions << "\n    static auto fn = UObject::FindObject<UFunction>(\"" + Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Property).ToString() + "\");\n";
+				//streams->Functions << "    ProcessEvent(this, fn, " + std::string(((Params.size() > 0) ? "&params" : "nullptr")) + ");";
 
-				if (ReturnType != "void")
-					streams->Functions << "\n\n    return params.ReturnValue; ";
+				//if (ReturnType != "void")
+				//	streams->Functions << "\n\n    return params.ReturnValue; ";
 
 				// END
 
@@ -706,7 +473,7 @@ void SDKFormatting::LupusFormatUClass(UClass* Class, Ofstreams* streams) {
 	}
 
 	#ifndef INCLUDE_IN_UE
-		streams->Classes << "\n		static UClass* StaticClass()\n	    {\n			static auto ptr = UObject::FindClass(\"" << fullName << "\");\n			return ptr;\n		};\n";
+		streams->Classes << "\n		static class UClass* StaticClass()\n	    {\n			static auto ptr = UObject::FindObject(\"" << fullName << "\");\n			return (class UClass*)ptr;\n		};\n";
 	#endif
 
 	streams->Classes << "\n};\n\n";
@@ -727,7 +494,7 @@ void SDKFormatting::LupusFormatStruct(UClass* Class, Ofstreams* streams, std::un
 
 		if (Names.Num())
 		{
-			result += std::format("\n\nenum class {} : uint8_t", ((UObjectBaseUtility*)Enum)->GetName().ToString()) + "\n{\n";
+			result += std::format("\n\nenum class {} : uint8_t", ((UObjectBaseUtility*)Enum)->GetName().ToString()) + "\n{\n"; // Todo, check if it's really uint8
 
 			for (int i = 0; i < Names.Num(); i++)
 			{
@@ -763,6 +530,8 @@ void SDKFormatting::LupusFormatStruct(UClass* Class, Ofstreams* streams, std::un
 				"struct {}{}", GetPrefix(Class) + ((UObjectBaseUtility*)Class)->GetName().ToString(), // TODO: Use split and then get the stuff
 				" : public " + GetPrefix(Class->GetSuperStruct()) + ((UObjectBaseUtility*)Class->GetSuperStruct())->GetName().ToString()
 			);
+
+			// TODO: Check if Class->GetSuperStruct() is already defined, otherwise make this pending too...
 		}
 		else {
 			result += std::format(
@@ -820,6 +589,8 @@ void SDKFormatting::LupusFormatStruct(UClass* Class, Ofstreams* streams, std::un
 
 					static UClass* StructProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.StructProperty");
 					static UClass* EnumProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.EnumProperty");
+					static UClass* ArrayProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.ArrayProperty");
+
 					if (Property->GetClass() == StructProp) {
 						static uint64_t FVectorName = Utils::UKismetStringLibrary::Conv_StringToName(L"Vector").GetComparisonIndex().Value;
 						
@@ -840,6 +611,13 @@ void SDKFormatting::LupusFormatStruct(UClass* Class, Ofstreams* streams, std::un
 
 						if (!(std::find(structsAdded->begin(), structsAdded->end(), (__int64)EnumProp->GetEnum()->GetFName()) != structsAdded->end())) {
 							packageStructs->emplace((__int64)EnumProp->GetEnum()->GetFName(), (__int64)Class);
+							return;
+						}
+					} else if (Property->GetClass() == ArrayProp) {
+						UArrayProperty* ArrayProperty = (UArrayProperty*)Property;
+
+						if (!(std::find(structsAdded->begin(), structsAdded->end(), (__int64)ArrayProperty->GetInner()->GetFName()) != structsAdded->end())) {
+							packageStructs->emplace((__int64)ArrayProperty->GetInner()->GetFName(), (__int64)Class);
 							return;
 						}
 					}
@@ -893,145 +671,6 @@ void SDKFormatting::LupusFormatStruct(UClass* Class, Ofstreams* streams, std::un
 	}
 }
 
-std::string SDKFormatting::CreateStruct(UStruct* Struct) {
-	static UClass* CoreUObjectStruct = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Struct");
-	static UClass* CoreUObjectScriptStruct = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.ScriptStruct");
-	static UClass* CoreUObjectEnum = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Enum");
-	static UClass* SoftObjectProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SoftObjectProperty");
-	static UClass* SoftClassProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.SoftClassProperty");
-	static UClass* DelegateFuncProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.DelegateFunction");
-	static UClass* WeakObjProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.WeakObjectProperty");
-	static UClass* MulticastDelegateProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.MulticastDelegateProperty");
-	static UClass* DelegateProp = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.DelegateProperty");
-	
-	std::string result;
-
-	// we are checking what it is twice, which is slow.
-
-	if (((UObjectBaseUtility*)Struct)->IsA(CoreUObjectEnum))
-	{
-		auto Enum = (UEnum*)Struct;
-		auto Names = Enum->GetNames();
-		
-		if (Names.Num())
-		{
-			result += std::format("\n\nenum class {} : uint8_t", ((UObjectBaseUtility*)Enum)->GetName().ToString()) + "\n{\n";
-
-			for (int i = 0; i < Names.Num(); i++)
-			{
-				// result += std::format("\n	{} = {}", Utils::UKismetStringLibrary::Conv_NameToString(Enum->GetNameByIndex(i)).ToString(), i);
-
-				auto& Pair = Names[i];
-				auto Name = Pair.Key;
-				auto Value = Pair.Value;
-
-				auto NameStr = Utils::UKismetStringLibrary::Conv_NameToString(Name).ToString();
-
-				auto pos = NameStr.find_last_of(':');
-				if (pos != std::string::npos) // theres probably a more modern c++ way of doing this
-				{
-					NameStr = NameStr.substr(pos + 1);
-				}
-
-				result += std::format("    {} = {}", NameStr, Value);
-				
-				if (i != Names.Num() - 1)
-					result += ",\n";
-			}
-
-			result += "\n};";
-		}
-	}
-
-	else if (/* ((UObjectBaseUtility*)Struct)->IsA(CoreUObjectStruct) || */ ((UObjectBaseUtility*)Struct)->IsA(CoreUObjectScriptStruct))
-	{		
-		std::string Additional = "";
-
-		if (Struct->GetSuperStruct())
-			Additional = " : public " + GetPrefix(Struct->GetSuperStruct()) + ((UObjectBaseUtility*)Struct->GetSuperStruct())->GetName().ToString();
-
-		auto name = std::format("\n\nstruct {}{}", GetPrefix(Struct) + ((UObjectBaseUtility*)Struct)->GetName().ToString(), Additional);
-
-		result += name + "\n{\n";
-
-		if ((Struct->GetChildren())) { // TODO: basically copy this whole thing from CreateClass when we are done with CreateClass.
-			int SuperStructSize = 0;
-
-			if (Struct->GetSuperStruct())
-				SuperStructSize = *(uint32_t*)((__int64)Struct->GetSuperStruct() + 0x40);
-
-			std::pair<int, int> OldProp; // Offset_Internal, Size
-			int padNum = 1;
-
-
-			int OffsetDifference = 0;
-
-			if (SuperStructSize) // make sure it inherits something and it has a member
-			{
-				OffsetDifference = ((UProperty*)Struct->GetChildren())->GetOffset_Internal() - SuperStructSize; // Get the first child's offset and subtract the two
-
-				if (OffsetDifference > 0)
-				{
-					result += std::format("    char UnknownData{}[0x{:x}];\n", padNum, OffsetDifference);
-					padNum++;
-				}
-			}
-
-			for (UField* Property = (UField*)Struct->GetChildren(); Property; Property = Property->GetNext()) {
-				std::string pType = UPropertyTypeToString((UObjectPropertyBase*)Property);
-				std::string pName = Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString();
-				{
-					auto thisElementSize = *(int32_t*)(__int64(Property) + 0x34);
-					bool bUnhandledType = false;
-
-					if ( // Properties we do not have implemented
-						Property->GetClass() == SoftClassProp ||
-						Property->GetClass() == WeakObjProp ||
-						// Property->GetClass() == DelegateFuncProp ||
-						Property->GetClass() == DelegateProp ||
-						Property->GetClass() == MulticastDelegateProp)
-					{
-						result += std::format("    char UnknownData{}[0x{:x}]; // UNHANDLED {}\n", padNum, thisElementSize, pType + " " + pName);
-						padNum++;
-						bUnhandledType = true;
-					}
-
-					if (OldProp.first && OldProp.second)
-					{
-						OffsetDifference = ((UProperty*)Property)->GetOffset_Internal() - (OldProp.first + OldProp.second);
-						if (OffsetDifference > 0)
-						{
-							result += std::format("    char UnknownData{}[0x{:x}];\n", padNum, OffsetDifference);
-							padNum++;
-						}
-					}
-
-					OldProp.first = ((UProperty*)Property)->GetOffset_Internal();
-					OldProp.second = thisElementSize;
-
-					auto ArrayDim = ((UProperty*)Property)->GetArrayDim();
-
-					if (!bUnhandledType)
-					{
-						#ifdef INLUCDE_IN_UE
-							result += "    " + Formatting::GetUPropertySpecifiers(((UProperty*)Property)->GetPropertyFlags()) + "\n";
-						#endif
-						pName += (ArrayDim > 1) ? std::format("[0x{:x}]", ArrayDim) : ""; // do like CharacterParts[0x8];
-
-						result += std::format("    {} {}; // 0x{:x}\n", pType, pName, ((UProperty*)Property)->GetOffset_Internal());
-					}
-
-					if (Property->GetNext())
-						result += "\n";
-				}
-			}
-		}
-		result += "\n};";
-	}
-
-	return result;
-}
-
 std::string SDKFormatting::GenerateInitFunction() {
 	std::string result = "\n	static void Init() {\n		_StaticFindObject = decltype(_StaticFindObject)((uintptr_t)GetModuleHandle(0) + ";
 
@@ -1048,6 +687,8 @@ std::string SDKFormatting::GenerateInitFunction() {
 
 void SDKFormatting::CreateSDKHeader(std::ofstream& header) {
 	// Include CoreUObject and Basic
+	header << std::format("#pragma once\n");
+
 	header << std::format("#include \"{}\"\n", ("SDK/" + std::string(SHORTNAME) + "_" + "Basic.hpp"));
 
 	header << std::format("#include \"{}\"\n", ("SDK/" + std::string(SHORTNAME) + "_" + "CoreUObject_structs.hpp"));

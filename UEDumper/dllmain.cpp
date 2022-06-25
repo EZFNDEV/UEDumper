@@ -31,9 +31,7 @@ static void Main() {
         Offsets::ProcessEvent = 0;
     #endif
 
-    // Milxnor hardcoded these in the sdk.cpp
-    // we still need to automatically find these
-	// Fortnite 3.5 till 6.21
+    // TODO: Find them automatically,
     Offsets::UProperty::PropertyFlags = 0x38;
     Offsets::UProperty::ArrayDim = 0x30;
 

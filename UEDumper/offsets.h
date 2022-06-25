@@ -69,6 +69,10 @@ namespace Offsets {
 		extern inline uint16_t PropertyClass = 0x70;
 	}
 
+	namespace UClassProperty {
+		extern inline uint16_t MetaClass = 0x78;
+	}
+
 	namespace UEnumProperty {
 		extern inline uint16_t UnderlyingProp = 0x70;
 		extern inline uint16_t Enum = 0;

@@ -174,9 +174,6 @@ void Dumper::Dump() {
                     if (!streams) continue;
 					
                     SDKFormatting::LupusFormatStruct((UClass*)Object, streams, &packageStructs, true, false, false, &structsAdded, packagesSDK);
-					
-                    //packageStructs.emplace((__int64)Object, i);
-                    //streams->Structs << SDKFormatting::CreateStruct((UStruct*)Object, stru);
 				#endif
             } else if (Object->IsA(CoreUObjectScriptStruct)) {  
                 #ifdef DUMP_AS_SDK
@@ -197,9 +194,6 @@ void Dumper::Dump() {
                     if (!streams) continue;
 
                     SDKFormatting::LupusFormatStruct((UClass*)Object, streams, &packageStructs, false, true, false, &structsAdded, packagesSDK);
-
-                    //packageStructs.emplace((__int64)Object, i);
-                    //streams->Structs << SDKFormatting::CreateStruct((UStruct*)Object, stru);
                 #endif
             }
             else if (Object->IsA(CoreUObjectStruct)) {
@@ -221,9 +215,6 @@ void Dumper::Dump() {
                     if (!streams) continue;
 
                     SDKFormatting::LupusFormatStruct((UClass*)Object, streams, &packageStructs, false, false, true, &structsAdded, packagesSDK);
-
-                    //packageStructs.emplace((__int64)Object, i);
-                    //streams->Structs << SDKFormatting::CreateStruct((UStruct*)Object, stru);
                 #endif
             }
             else if (Object->IsA(CoreUObjectPackage)) {
