@@ -11,6 +11,9 @@
 
 #define DUMP_OBJECT_NAMES
 
+// Slower, only enable if you need it
+#define DUMP_BLUEPRINTS
+
 // #define INCLUDE_IN_UE
 // #define UE_FILTER_CLASS "FortniteGame"
 

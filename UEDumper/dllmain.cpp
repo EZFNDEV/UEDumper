@@ -70,7 +70,7 @@ static void Main() {
     #endif
 
 	// Note: Just temp, you can remove this if you dont inject on startup
-    // std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 60));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000 * 15));
 
     MakeDirs();
     wprintf(L"Output path: %s\\SDK\\\n", GetCurrentDir().c_str());

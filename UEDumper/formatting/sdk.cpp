@@ -279,7 +279,8 @@ void SDKFormatting::LupusFormatUClass(UClass* Class, Ofstreams* streams) {
 class UObject {
 	public:
 		static uintptr_t* FindObject(std::string ClassName) {
-			return 0;
+			// TODO: Class
+			return _StaticFindObject(0, 0, std::wstring(ClassName.begin(), ClassName.end()).c_str(), false);
 		}
 };
 )";
@@ -371,8 +372,6 @@ class UObject {
 				if (ReturnType == "")
 					ReturnType = "void";
 
-				ReturnType = "void"; // Testing compiling lol
-
 				auto FullFunction = std::format("{}(", Utils::UKismetStringLibrary::Conv_NameToString(((UObjectPropertyBase*)Property)->GetFName()).ToString());
 				std::string ParamsCombined = "";
 
@@ -430,12 +429,12 @@ class UObject {
 				}
 
 				// TODO: VTable
-				// streams->Functions << "\n    static auto fn = UObject::FindObject<UFunction>(this::StaticClass(), \"" + propName + "\");\n";
-				//streams->Functions << "\n    static auto fn = UObject::FindObject<UFunction>(\"" + Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Property).ToString() + "\");\n";
-				//streams->Functions << "    ProcessEvent(this, fn, " + std::string(((Params.size() > 0) ? "&params" : "nullptr")) + ");";
+				// streams->Functions << "\n    static auto fn = UObject::FindObject(this::StaticClass(), \"" + propName + "\");\n";
+				streams->Functions << "\n    static auto fn = UObject::FindObject(\"" + Utils::UKismetSystemLibrary::GetPathName((uintptr_t*)Property).ToString() + "\");\n";
+				streams->Functions << "    _ProcessEvent((uintptr_t*)this, (uintptr_t*)fn, " + std::string(((Params.size() > 0) ? "&params" : "nullptr")) + ");";
 
-				//if (ReturnType != "void")
-				//	streams->Functions << "\n\n    return params.ReturnValue; ";
+				if (ReturnType != "void")
+					streams->Functions << "\n\n    return params.ReturnValue; ";
 
 				// END
 
@@ -446,7 +445,7 @@ class UObject {
 				if (Property->GetNext())
 					streams->Functions << "\n";
 
-				streams->Classes << std::format("	    {}; // 0x{:x} Size: 0x{:x}\n", propType, ((UProperty*)Property)->GetOffset_Internal(), ((UProperty*)Property)->GetElementSize());
+				streams->Classes << std::format("	    {}); // 0x{:x} Size: 0x{:x}\n", propType, ((UProperty*)Property)->GetOffset_Internal(), ((UProperty*)Property)->GetElementSize());
 			} else {
 			
 				//#if defined(ANALYZE) && defined(FILTER_ANALYZE_OBJECT) // Without FILTER_ANALYZE_OBJECT it would probably take hours-days
@@ -475,6 +474,8 @@ class UObject {
 	#ifndef INCLUDE_IN_UE
 		streams->Classes << "\n		static class UClass* StaticClass()\n	    {\n			static auto ptr = UObject::FindObject(\"" << fullName << "\");\n			return (class UClass*)ptr;\n		};\n";
 	#endif
+
+	// streams->Classes << Analyze::GetVirtualFunctionSize(Class);
 
 	streams->Classes << "\n};\n\n";
 }
@@ -566,11 +567,11 @@ void SDKFormatting::LupusFormatStruct(UClass* Class, Ofstreams* streams, std::un
 					if (
 						Property->GetClass() != BoolProp &&
 						((UProperty*)Property)->GetOffset_Internal() != offset
-						) {
+					) {
 						if (((UProperty*)Property)->GetOffset_Internal() < offset) {
 							// Logic issue?
 							result += std::format(
-								"	    char UnknownData{}[0x{:x}]; // 0x{:x}\n", unknownProps,
+								"	    Yea, we fucked up; // 0x{:x}\n", unknownProps,
 								-(((UProperty*)Property)->GetOffset_Internal() - offset),
 								offset
 							);

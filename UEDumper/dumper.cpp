@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include "formatting/sdk.h"
 #include "offsets/CoreUObject.h"
+#include "offsets/analyze.h"
 
 static uintptr_t GetRealFunction_Test() {
     // Let's find all UFunctions
@@ -75,6 +76,25 @@ static uintptr_t GetRealFunction_Test() {
         found += 1;
     }
 
+    static UClass* CoreUObjectClass = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Function");
+
+    UObjectBaseUtility* Object = 0;
+    for (uintptr_t i = 0; i < GUObjectArray.Num(); i++) {
+        auto Item = GUObjectArray.IndexToObject(i);
+        if (Item) {
+            Object = (UObjectBaseUtility*)Item->Object;
+
+            if (!Object)
+                continue;
+
+            if (Object->IsA(CoreUObjectClass)) {
+                UFunction* Function = (UFunction*)Object;
+                printf("UFunction: %p\n", Function);
+                printf("UFunction: %p\n", Function->GetFunc());
+            }
+        }
+    }
+
     printf("Found: %i UFunctions!\n", found);
     return 0;
 }
@@ -93,8 +113,8 @@ static bool IsOldObjectArray() {
 
 void Dumper::Dump() {
 	// We need that for our gameserver (Remove on release)
-    //GetRealFunction_Test();
-   // return;
+    // GetRealFunction_Test();
+    // return;
 
     bool bNewObjectArray = IsOldObjectArray();
     GUObjectArray = *new FUObjectArray(Offsets::GObjects, !bNewObjectArray);
@@ -110,6 +130,8 @@ void Dumper::Dump() {
     static UClass* CoreUObjectScriptStruct = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.ScriptStruct");
     static UClass* CoreUObjectPackage = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Package");
     static UClass* CoreUObjectEnum = (UClass*)Utils::StaticFindObject(L"/Script/CoreUObject.Enum");
+
+    static UClass* CoreUObjectBlueprint = (UClass*)Utils::StaticFindObject(L"/Script/Engine.BlueprintGeneratedClass");
 
 	// TODO: CLEAN UP SDK.CPP
     #ifdef DUMP_AS_SDK
@@ -135,7 +157,35 @@ void Dumper::Dump() {
             if (!Object)
                 continue;
 
-            if (Object->IsA(CoreUObjectClass)) {
+            #ifdef DUMP_BLUEPRINTS
+            if (Object->GetClass() == CoreUObjectBlueprint) {
+                #ifdef DUMP_AS_SDK
+                    std::string name = ((UObjectBaseUtility*)Object)->GetName().ToString();
+                    #ifdef UE_FILTER_CLASS
+                        if (name == UE_FILTER_CLASS)
+                    #else
+                    #endif
+                    {
+                        Ofstreams* streams = new Ofstreams{
+                                .Classes = std::ofstream(("SDK/SDK/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp")),
+                                .Functions = std::ofstream(("SDK/SDK/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp")),
+                                .Structs = std::ofstream(("SDK/SDK/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"))
+                        };
+
+                        streams->Classes << ((std::format("#pragma once\n\n#include \"../{}\"\n\n", "SDK.hpp")) + "namespace SDK {\n\n\n");
+                        streams->Functions << std::format("#include \"../{}\"\n\n", "SDK.hpp");
+                        streams->Structs << ((std::format("#pragma once\n\n#include \"../{}\"\n\n", "SDK.hpp")) + "namespace SDK {\n\n\n");
+
+                        SDKFormatting::LupusFormatUClass((UClass*)Object, streams);
+
+                        streams->Classes.close();
+                        streams->Functions.close();
+                        streams->Structs.close();
+                    }
+				#endif
+            }
+            #endif
+            else if (Object->IsA(CoreUObjectClass)) {
                 #ifdef DUMP_AS_SDK
                     std::ofstream Classes;
                     std::ofstream Functions;
@@ -219,6 +269,9 @@ void Dumper::Dump() {
             }
             else if (Object->IsA(CoreUObjectPackage)) {
                 #ifdef DUMP_AS_SDK
+                    // if enabled, blueprints wont work
+
+
                     std::string name = Object->GetName().ToString();
                     name = name.substr(name.find_last_of("/") + 1, name.length());
 
@@ -238,10 +291,6 @@ void Dumper::Dump() {
                         streams->Classes << ((std::format("#pragma once\n\n#include \"../{}\"\n\n", "SDK.hpp")) + "namespace SDK {\n\n\n");
                         streams->Functions << std::format("#include \"../{}\"\n\n", "SDK.hpp");
                         streams->Structs << ((std::format("#pragma once\n\n#include \"../{}\"\n\n", "SDK.hpp")) + "namespace SDK {\n\n\n");
-
-                        // Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_structs.hpp"));
-                        // Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_classes.hpp"));
-                        // Core << std::format("#include \"{}\"\n", ("./Packages/" + std::string(SHORTNAME) + "_" + name + "_functions.cpp"));
                     }
 				#endif
             }
